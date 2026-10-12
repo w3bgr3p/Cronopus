@@ -48,3 +48,30 @@ test('commit warning transitions at 90 and 97 percent', () => {
     for (const [used, expected] of [[89.9, 'normal'], [90, 'warning'], [96.9, 'warning'], [97, 'critical']])
         assert.equal(ctx.memoryPressure({ committed: used, limit: 100 }), expected);
 });
+
+test('treemap area matches allocation share without overlap', () => {
+    const { ctx } = context({});
+    const tiles = ctx.memoryLayout([{ name: 'a', value: 70 }, { name: 'b', value: 20 }, { name: 'c', value: 10 }]);
+    for (const tile of tiles) {
+        assert.ok(Math.abs(tile.width * tile.height / 420000 - tile.value / 100) < 1e-10);
+        assert.ok(tile.x >= 0 && tile.y >= 0 && tile.x + tile.width <= 1000.00001 && tile.y + tile.height <= 420.00001);
+    }
+    for (let i = 0; i < tiles.length; i++) for (let j = i + 1; j < tiles.length; j++) {
+        const a = tiles[i], b = tiles[j];
+        const overlap = Math.max(0, Math.min(a.x + a.width, b.x + b.width) - Math.max(a.x, b.x)) *
+            Math.max(0, Math.min(a.y + a.height, b.y + b.height) - Math.max(a.y, b.y));
+        assert.ok(overlap < 1e-8);
+    }
+});
+
+test('treemap changes ranking between private allocation and RAM and omits zero values', () => {
+    const { ctx } = context({});
+    const rows = [['chrome', '100', '20', '2', '0'], ['python', '25', '200', '1', '0'], ['empty', '0', '0', '1', '0']];
+    ctx.renderMemoryTreemap(rows);
+    assert.equal(vm.runInContext('memoryTiles[0].name', ctx), 'chrome');
+    vm.runInContext("memoryMetric = 'RAM_MB'", ctx);
+    ctx.renderMemoryTreemap(rows);
+    assert.equal(vm.runInContext('memoryTiles[0].name', ctx), 'python');
+    assert.equal(vm.runInContext('memoryTiles.length', ctx), 2);
+    assert.match(ctx.renderMemoryTreemap([]), /No measured processes/);
+});

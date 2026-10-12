@@ -47,6 +47,15 @@ body {
 .memory-details strong { color: var(--text); }
 .memory-commit.critical { color: var(--red); }
 .memory-commit.warning { color: var(--yellow); }
+.memory-map-toolbar { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: var(--sp-8); margin: var(--sp-8) 0; }
+.memory-map-toolbar select { background: var(--bg1); color: var(--text); border: 1px solid var(--border); padding: var(--sp-4); font: inherit; }
+.memory-treemap { display: block; width: 100%; border: 1px solid var(--border); background: var(--bg1); }
+.memory-tile { cursor: pointer; outline: none; }
+.memory-tile rect { stroke: var(--bg); stroke-width: 1; vector-effect: non-scaling-stroke; }
+.memory-tile text { fill: #fff; font-size: 12px; font-family: var(--mono); pointer-events: none; }
+.memory-tile:hover rect, .memory-tile:focus rect, .memory-tile.selected rect { stroke: #fff; stroke-width: 3; }
+.memory-selection { padding: var(--sp-8); border: 1px solid var(--border); margin-top: var(--sp-8); line-height: 1.6; }
+.memory-members { display: flex; flex-wrap: wrap; gap: var(--sp-6); max-height: 180px; overflow-y: auto; margin: var(--sp-8) 0; }
 .header-right { margin-left: auto; display: flex; gap: var(--sp-6); align-items: center; }
 
 /* ── Toolbar ── */

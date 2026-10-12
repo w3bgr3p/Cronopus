@@ -22,7 +22,7 @@ The theme and the screen edge are set there too; the dock has no theme button. `
 | `system` | [[System Snapshot]] | — |
 | `dllGraph` | [[dllGraph]] | `Alt+G` |
 | `docsVault` | [[docsVault]] | `Alt+H` |
-| `sql` | [[SQLite]] | — |
+| `sql` | [[SQL]] | — |
 
 ## Hotkeys without a dock item
 
@@ -44,5 +44,10 @@ These are bound in `nav.js` rather than in the item list, and they open nothing:
 | `Alt+P` | moves the dock to the next edge |
 
 ## Also in the dock
+
+Minimizing the window keeps z3nDash on the taskbar. Closing the main window hides
+it to the tray. `Ctrl+Alt+Z` hides a visible window or restores a hidden/minimized
+one. Double-clicking the tray icon also restores the window; `Exit` in the tray
+menu quits the application.
 
 The dock carries an OTP generator. The secret stays on the current page and is used only to compute a one-time code.

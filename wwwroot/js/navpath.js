@@ -24,7 +24,7 @@ window.NAV_CONFIG = {
         { id: 'json',      label: 'JSON',       href: '/json',           hotkey: '6' },
         { id: 'text',      label: 'Text',       href: '/?page=text',     hotkey: '7' },
         { id: 'clips',     label: 'Clips',      href: '/?page=clips',    hotkey: 'C' },
-        { id: 'sql',       label: 'sql',         href: '/?page=sqlite',       hotkey: '-' },
+        { id: 'sql',       label: 'SQL',         href: '/?page=sqlite',       hotkey: '-' },
         { id: 'system',    label: 'System',         href: '/?page=system',       hotkey: 'S' },
         { id: 'docsVault', label: 'docsVault',  href: '/docsVault',       hotkey: 'H' },
         { id: 'dllGraph',  label: 'dllGraph',   href: '/?page=dllGraph', hotkey: 'G' },

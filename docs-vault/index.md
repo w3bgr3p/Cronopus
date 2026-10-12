@@ -32,7 +32,7 @@ z3nDash — дашборд для расписаний, ZennoPoster-узлов, 
 | [[System Snapshot]] | Снимки состояния Windows и инструменты машины | — |
 | [[dllGraph]] | Граф C#-кода | `Alt+G` |
 | [[docsVault]] | Этот vault | `Alt+H` |
-| [[SQLite]] | Просмотр выбранной SQLite-базы | — |
+| [[SQL]] | SQLite-файлы и запросы PostgreSQL только для чтения | — |
 
 ## Хранилище
 

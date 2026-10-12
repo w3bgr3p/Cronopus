@@ -1,5 +1,19 @@
 /* nav.js */
 
+// Click that started on one element and ended on another is a drag, not a click.
+// Browsers still dispatch it on the common ancestor (e.g. a modal overlay), which closed modals
+// when a press inside the dialog was released outside it.
+(function () {
+    let downTarget = null;
+    document.addEventListener('mousedown', e => { downTarget = e.target; }, true);
+    document.addEventListener('click', e => {
+        if (downTarget && e.detail > 0 && downTarget !== e.target && !e.target.matches('button, a, label, summary, select, [role=button]')) {
+            e.stopImmediatePropagation();
+            e.preventDefault();
+        }
+    }, true);
+})();
+
 
 // ── PageState — глобальный хелпер состояния страниц ───────────────
 window.PageState = {

@@ -16,8 +16,10 @@ dashboard and local API are served by the built-in HTTP server.
 - Application logs, HTTP request inspection, and request replay.
 - Interactive ZennoPoster XML graph editing and debugging, plus a general XML
   tree viewer.
-- JSON, text, clipboard-template, code-graph, and SQLite file-viewer tools.
-- System snapshots and a configurable process-memory watchdog.
+- JSON, text, clipboard-template, code-graph, and SQL tools for local SQLite
+  files and read-only PostgreSQL queries.
+- System snapshots with interactive memory and CPU maps, plus a configurable
+  process-memory watchdog.
 - Built-in documentation available from the dashboard.
 - OmniRoute integration for AI-assisted features.
 
@@ -32,9 +34,10 @@ dashboard and local API are served by the built-in HTTP server.
 ZennoPoster, ZennoBrowser, ShardX, and OmniRoute are required only for the dashboard
 features that integrate with those services.
 
-PostgreSQL stores z3nDash application data. The SQLite page in the dashboard is
-a standalone viewer for local SQLite files; it is not the default z3nDash
-datastore.
+PostgreSQL stores z3nDash application data. The SQL page is a separate tool for
+local SQLite files and PostgreSQL connections. Its source selector does not
+change the application's database configuration. PostgreSQL queries are read-only;
+the viewer connection string stays on the current page and is not saved.
 
 ## Build from source
 
@@ -121,7 +124,8 @@ The default dashboard address is `http://localhost:33333`.
 | XML | Open, format, search, and inspect XML as a collapsible tree |
 | JSON / Text | Transform and analyze structured or plain text |
 | Clips | Store and copy reusable templates |
-| System | Capture system state and check the tools installed for running tasks |
+| SQL | Browse SQLite files or run read-only PostgreSQL queries |
+| System | Inspect memory and CPU by process, capture system state, and check runtime tools |
 | dllGraph | Choose a DLL file and explore its C# relationships |
 | Config | Configure PostgreSQL, services, storage, watchdog, and the interface |
 | docsVault | Browse the bundled documentation or choose a Markdown folder |
@@ -129,6 +133,10 @@ The default dashboard address is `http://localhost:33333`.
 The navigation dock also shows the current keyboard shortcuts for these pages.
 Which pages it shows, its screen edge, and the theme are chosen in
 Config → Interface.
+
+Minimizing the desktop window keeps it on the taskbar. Closing the main window
+or pressing `Ctrl+Alt+Z` while it is visible hides it to the tray. Use the tray
+icon or `Ctrl+Alt+Z` to restore it; choose **Exit** in the tray menu to quit.
 
 ## Network safety
 

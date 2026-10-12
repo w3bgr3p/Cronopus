@@ -354,7 +354,27 @@ public sealed class SchedulerHandler : IScriptHandler
 
         if (string.IsNullOrEmpty(id)) { ctx.Response.StatusCode = 400; return; }
 
-        db.Query($"UPDATE \"{Table}\" SET \"payload_schema\" = '{schema.Replace("'", "''")}', \"payload_values\" = '{values.Replace("'", "''")}' WHERE \"id\" = '{id}'");
+        var escapedId = id.Replace("'", "''");
+        var escapedSchema = schema.Replace("'", "''");
+        var escapedValues = values.Replace("'", "''");
+        try
+        {
+            if (string.IsNullOrWhiteSpace(db.Get("id", Table, where: $"\"id\" = '{escapedId}'")))
+            {
+                ctx.Response.StatusCode = 404;
+                await HttpHelpers.WriteJson(ctx.Response, new { ok = false, error = "Task not found. Save the task before editing its payload." });
+                return;
+            }
+            db.Query($"UPDATE \"{Table}\" SET \"payload_schema\" = '{escapedSchema}', \"payload_values\" = '{escapedValues}' WHERE \"id\" = '{escapedId}'", thrw: true);
+            var verified = db.Query($"SELECT COUNT(*) FROM \"{Table}\" WHERE \"id\" = '{escapedId}' AND \"payload_schema\" = '{escapedSchema}' AND \"payload_values\" = '{escapedValues}'", thrw: true);
+            if (verified.Trim() != "1") throw new InvalidOperationException("Payload was not persisted.");
+        }
+        catch (Exception ex)
+        {
+            ctx.Response.StatusCode = 500;
+            await HttpHelpers.WriteJson(ctx.Response, new { ok = false, error = ex.GetBaseException().Message });
+            return;
+        }
         await HttpHelpers.WriteJson(ctx.Response, new { ok = true });
     }
     
@@ -816,8 +836,8 @@ public sealed class SchedulerHandler : IScriptHandler
 
     /// <summary>
     /// Команда, которой Tasker запустит задачу с этим payload: для строки превью
-    /// в модалке. Schema и values — несохранённое состояние окна; экзекутор,
-    /// путь и Args берутся из задачи. Пароли замаскированы.
+    /// в модалке и Execution. Без schema/values используется сохранённый payload;
+    /// экзекутор, путь и Args всегда берутся из задачи. Пароли замаскированы.
     /// </summary>
     private async Task ArgsPreview(HttpListenerContext ctx, Db db)
     {
@@ -848,9 +868,13 @@ public sealed class SchedulerHandler : IScriptHandler
 
         try
         {
-            var result = PayloadArgs.Build(executor, args, Prop("schema"), Prop("values"));
+            var schema = json?.TryGetProperty("schema", out _) == true ? Prop("schema")
+                : db.Get("payload_schema", Table, where: $"\"id\" = '{id.Replace("'", "''")}'") ?? "";
+            var values = json?.TryGetProperty("values", out _) == true ? Prop("values")
+                : db.Get("payload_values", Table, where: $"\"id\" = '{id.Replace("'", "''")}'") ?? "";
+            var result = PayloadArgs.Build(executor, args, schema, values);
             var (fileName, arguments) = SchedulerService.BuildCommand(executor, scriptPath, result.Masked, useVenv);
-            await HttpHelpers.WriteJson(ctx.Response, new { ok = true, command = $"{fileName} {arguments}", skipped = result.Skipped });
+            await HttpHelpers.WriteJson(ctx.Response, new { ok = true, command = $"{PayloadArgs.Quote(fileName)} {arguments}".TrimEnd(), skipped = result.Skipped });
         }
         catch (Exception ex) when (ex is JsonException or ArgumentException)
         {

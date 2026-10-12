@@ -10,7 +10,7 @@ The page data lives in memory only.
 
 ## Memory allocation
 
-Separate charts show physical RAM and Windows commit. Commit includes the current
+The summary shows physical RAM and Windows commit. Commit includes the current
 allocation, limit, remaining headroom and peak since boot; paged and nonpaged
 kernel pools are shown alongside it. Commit usage warns at 90% and becomes
 critical at 97%, even when physical RAM is still available.
@@ -18,6 +18,27 @@ critical at 97%, even when physical RAM is still available.
 Process groups show private allocation and resident RAM separately, summed across
 instances. Unreadable private-memory measurements are counted so incomplete totals
 remain visible. The AI audit receives the same distinction.
+
+An interactive map sizes blocks by each process group's memory use.
+`Block size` switches between private allocation and resident RAM. Shares use
+the displayed process total; filters apply to both the map and the table.
+Resident totals can count shared pages more than once, and process private
+allocation does not cover all system commit.
+
+Select a block to list its PIDs, then choose a process to open its command line
+and actions in the sidebar. `Refresh` collects new measurements.
+
+## CPU
+
+The `CPU usage` section shows current workload by process group as a map
+and a table with `CPU_PCT`. Usage is sampled over a short interval;
+100% means all logical CPUs are busy. `CPU_SEC` is lifetime processor time,
+not current load.
+
+Block area shows the group's share of displayed workload, excluding idle CPU.
+Selecting a block lists its PIDs sorted by current CPU. Unreadable measurements
+are marked unavailable. Process totals can differ from system load because of
+kernel work, different sampling intervals and processes that exited.
 
 ## Environment
 

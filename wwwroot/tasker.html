@@ -73,6 +73,9 @@
                     <span id="liveBadgeBottom" style="display:none;font-size:9px;padding:2px 6px;border-radius:3px;background:var(--green-bg);color:var(--green);animation:blink 1.2s infinite;">LIVE</span>
                     <div id="runChips" class="run-chips" title="Run threads: click one to show only its lines"></div>
                     <div class="log-panel-actions">
+                        <label class="output-autoscroll" title="Automatically follow new output">
+                            <input id="outAutoScroll" type="checkbox" checked onchange="setOutputAutoScroll(this.checked)"> Auto-scroll
+                        </label>
                         <select id="outLevel" class="panel-refresh" style="padding:1px 3px;" onchange="setOutputLevel(this.value)" title="Levels to show">
                             <option value="all">all</option>
                             <option value="warn">warn+</option>

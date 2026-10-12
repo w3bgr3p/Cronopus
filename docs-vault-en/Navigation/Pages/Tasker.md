@@ -113,6 +113,19 @@ flags are still added. See [[Task API]].
 
 Output of the active run is streamed over SSE. Parallel instances each get their own `runId`.
 
+Select a thread chip to show only its lines. The selection survives subscription
+refreshes and incoming buffer clears for the same task, including progress-line
+replacements. Selecting another task resets the filter.
+`Auto-scroll` follows new output and remembers the setting. When disabled,
+incoming lines do not move the scroll position.
+
+## Execution
+
+The tab shows the launch command built from the task's saved settings and payload.
+Passwords are masked. Saving or clearing the payload refreshes the command.
+Late statistics, instance and queue responses cannot replace the current task's
+data after switching cards.
+
 ## Traffic
 
 A task tab with traffic from `trafficLog.jsonl`:
@@ -122,6 +135,12 @@ details are in [[Traffic]]. The file rotates itself.
 ## Payload
 
 A payload consists of a schema and values. It can be edited, imported, exported and passed to the executor on start.
+
+`Save` and `Clear` persist the payload independently of unsaved **Settings**.
+Successful responses update the task card immediately; a failed save keeps the
+modal open. Multiselect fields preserve all selected values. Confirmation dialogs
+appear above the payload modal, and dragging from the modal to the backdrop does
+not close it.
 
 Fields support type, title, argument flag, position, default value and enum;
 drag them to change their order. A command preview shows how values become
@@ -148,6 +167,7 @@ Main routes:
 - `GET /tasker/instances`
 - `POST /tasker/kill-instance`
 - `GET|POST /tasker/payload`
+- `POST /tasker/args-preview`
 - `GET /tasker/output/stream`
 - `GET /tasker/queue`
 - `POST /tasker/clear-queue`

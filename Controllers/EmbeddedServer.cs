@@ -42,6 +42,7 @@ public class EmbeddedServer
     private readonly DocsGraphHandler _docsGraphHandler;
     private readonly TerminalHandler _terminalHandler;
     private readonly SqliteViewerHandler _sqliteViewerHandler;
+    private readonly PostgresViewerHandler _postgresViewerHandler;
     private readonly DiagHandler _diagHandler;
 
     
@@ -132,6 +133,7 @@ public class EmbeddedServer
         _docsGraphHandler = new DocsGraphHandler();
         _terminalHandler = new TerminalHandler(_wwwrootPath);
         _sqliteViewerHandler = new SqliteViewerHandler();
+        _postgresViewerHandler = new PostgresViewerHandler();
         _diagHandler = new DiagHandler(dbService);
 
         // Порт replay жёстко привязан к порту панели: фронт (окно traffic и har.html)
@@ -297,6 +299,11 @@ public class EmbeddedServer
             if (_sqliteViewerHandler.Matches(path))
             {
                 await _sqliteViewerHandler.Handle(context);
+                return;
+            }
+            if (_postgresViewerHandler.Matches(path))
+            {
+                await _postgresViewerHandler.Handle(context);
                 return;
             }
             if (path.StartsWith("/report"))

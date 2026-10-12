@@ -90,7 +90,7 @@ internal sealed class SystemSnapshotHandler
 
         var pidName = new Dictionary<int, string>(allProcs.Length);
         foreach (var p in allProcs)
-            pidName[p.Id] = p.ProcessName;
+            try { pidName[p.Id] = p.ProcessName; } catch { pidName[p.Id] = "?"; }
         string ProcName(int pid) => pidName.TryGetValue(pid, out var pn) ? pn : "?";
         static string Ep(string addr, int port) => addr.Contains(':') ? $"[{addr}]:{port}" : $"{addr}:{port}";
 
@@ -122,10 +122,33 @@ internal sealed class SystemSnapshotHandler
 
         Section("CPU SUMMARY");
         Line($"Logical CPUs : {Environment.ProcessorCount}");
+        var cpuStarts = new Dictionary<int, (double Seconds, long Timestamp)>();
+        foreach (var p in allProcs)
+        {
+            if (p.Id == 0) continue; // Idle time is not process workload.
+            try { cpuStarts[p.Id] = (p.TotalProcessorTime.TotalSeconds, Stopwatch.GetTimestamp()); } catch { }
+        }
+        var cpuClock = Stopwatch.StartNew();
         var cpuLoad = PlatformSnapshot.GetCpuLoad();
+        if (cpuClock.ElapsedMilliseconds < 500)
+            Thread.Sleep((int)(500 - cpuClock.ElapsedMilliseconds));
+        var cpuPercent = new Dictionary<int, double>();
+        foreach (var p in allProcs)
+        {
+            if (!cpuStarts.TryGetValue(p.Id, out var start)) continue;
+            try
+            {
+                p.Refresh();
+                var seconds = p.TotalProcessorTime.TotalSeconds;
+                var elapsed = Stopwatch.GetElapsedTime(start.Timestamp).TotalSeconds;
+                cpuPercent[p.Id] = Math.Clamp((seconds - start.Seconds) / elapsed / Environment.ProcessorCount * 100, 0, 100);
+            }
+            catch { }
+        }
         Line($"Load         : {cpuLoad}");
+        Line(FormattableString.Invariant($"Sample seconds : {cpuClock.Elapsed.TotalSeconds:F2}"));
 
-        var processGroups = allProcs.GroupBy(p => p.ProcessName)
+        var processGroups = allProcs.GroupBy(p => ProcName(p.Id))
             .Select(g => {
                 long mem2 = 0, privateBytes = 0;
                 int unreadable = 0;
@@ -149,6 +172,16 @@ internal sealed class SystemSnapshotHandler
                 (g.TotalMB.ToString("F1", System.Globalization.CultureInfo.InvariantCulture), 12),
                 (g.Count, 10), (g.Unreadable, 0));
 
+        Section("CPU USAGE");
+        Row(("NAME", 35), ("CPU_PCT", 12), ("INSTANCES", 10), ("UNREADABLE", 0));
+        Line(new string('-', 80));
+        foreach (var g in allProcs.Where(p => p.Id != 0).GroupBy(p => ProcName(p.Id))
+            .Select(g => new { Name = g.Key, Cpu = g.Sum(p => cpuPercent.GetValueOrDefault(p.Id)),
+                Count = g.Count(), Unreadable = g.Count(p => !cpuPercent.ContainsKey(p.Id)) })
+            .OrderByDescending(g => g.Cpu))
+            Row((g.Name, 35), (g.Cpu.ToString("F3", System.Globalization.CultureInfo.InvariantCulture), 12),
+                (g.Count, 10), (g.Unreadable, 0));
+
         Section("PROCESS AGGREGATION BY NAME (ALL INSTANCES SUMMED)");
         Row(("NAME", 35), ("TOTAL_MEM_MB", 12), ("INSTANCES", 10), ("TCP_CONNS", 12), ("AVG_MEM_MB", 0));
         Line(new string('-', 80));
@@ -158,17 +191,19 @@ internal sealed class SystemSnapshotHandler
         }
 
         Section("ALL PROCESSES (PID | NAME | MEM_MB | CPU_SEC | THREADS | START_TIME)");
-        Row(("PID", 8), ("NAME", 35), ("MEM_MB", 10), ("CPU_SEC", 12), ("THREADS", 8), ("STARTED", 0));
+        Row(("PID", 8), ("NAME", 35), ("MEM_MB", 10), ("PRIVATE_MB", 12), ("CPU_PCT", 10), ("CPU_SEC", 12), ("THREADS", 8), ("STARTED", 0));
         Line(new string('-', 90));
 
-        foreach (var p in allProcs.OrderBy(p => p.ProcessName))
+        foreach (var p in allProcs.OrderBy(p => ProcName(p.Id)))
         {
-            var mem2 = 0.0; var cpu = 0.0; var thr = 0; var started = "n/a";
+            var mem2 = 0.0; var cpu = 0.0; var thr = 0; var started = "n/a"; var privateMb = "n/a";
+            try { privateMb = (p.PrivateMemorySize64 / 1048576.0).ToString("F1", System.Globalization.CultureInfo.InvariantCulture); } catch { }
             try { mem2    = Math.Round(p.WorkingSet64 / 1048576.0, 1); }             catch { }
             try { cpu     = Math.Round(p.TotalProcessorTime.TotalSeconds, 1); }      catch { }
             try { thr     = p.Threads.Count; }                                        catch { }
             try { started = p.StartTime.ToString("HH:mm:ss"); }                       catch { }
-            Row((p.Id, 8), (p.ProcessName, 35), (mem2, 10), (cpu, 12), (thr, 8), (started, 0));
+            var sampledCpu = cpuPercent.TryGetValue(p.Id, out var pct) ? pct.ToString("F3", System.Globalization.CultureInfo.InvariantCulture) : "n/a";
+            Row((p.Id, 8), (ProcName(p.Id), 35), (mem2.ToString("F1", System.Globalization.CultureInfo.InvariantCulture), 10), (privateMb, 12), (sampledCpu, 10), (cpu, 12), (thr, 8), (started, 0));
         }
 
         Section("ACTIVE NETWORK CONNECTIONS (TCP + UDP)");
@@ -266,7 +301,8 @@ internal sealed class SystemSnapshotHandler
             "private process totals do not account for all system commit, and UNREADABLE marks incomplete measurements. " +
             "2) Network anomalies — unusually high connection counts per process, suspicious listening ports, unexpected established connections. " +
             "3) Disk pressure — drives above 80% utilization. " +
-            "4) CPU load assessment relative to process count. " +
+            "4) CPU load assessment: CPU_PCT is sampled current usage normalized to total logical CPU capacity; " +
+            "CPU_SEC is lifetime time, not current load. Use CPU USAGE groups and note unreadable or short-lived processes. " +
             "5) Top 3 actionable recommendations based solely on the data. " +
             $"Use exact numbers. State 'none found' for empty sections. Max 1200 words. Language: {Lang}.";
 
@@ -538,7 +574,7 @@ internal sealed class SystemSnapshotHandler
         var sb = new StringBuilder();
         sb.AppendLine($"System audit snapshot. Host: {ExtractField(raw, "Hostname")}, Captured: {ExtractField(raw, "Captured")}, Uptime: {ExtractField(raw, "Uptime")}");
         sb.AppendLine();
-        foreach (var s in new[] { "SYSTEM MEMORY SUMMARY", "MEMORY ALLOCATION", "CPU SUMMARY", "PROCESS AGGREGATION BY NAME",
+        foreach (var s in new[] { "SYSTEM MEMORY SUMMARY", "MEMORY ALLOCATION", "CPU SUMMARY", "CPU USAGE", "PROCESS AGGREGATION BY NAME",
                                    "LISTENING PORTS SUMMARY", "ESTABLISHED TCP CONNECTIONS", "DISK USAGE", "ENVIRONMENT MARKERS" })
             AppendSection(sb, raw, s);
         return sb.ToString();
@@ -826,10 +862,13 @@ internal static class PlatformSnapshot
 #if WINDOWS
         try
         {
-            using var c = new System.Diagnostics.PerformanceCounter("Processor", "% Processor Time", "_Total");
-            c.NextValue();
+            if (!NativeMethods.GetSystemTimes(out var idleA, out var kernelA, out var userA)) return "n/a";
             System.Threading.Thread.Sleep(400);
-            return $"{Math.Round(c.NextValue(), 1)}%";
+            if (!NativeMethods.GetSystemTimes(out var idleB, out var kernelB, out var userB)) return "n/a";
+            var total = (kernelB - kernelA) + (userB - userA);
+            if (total == 0) return "n/a";
+            var load = Math.Clamp((1.0 - (double)(idleB - idleA) / total) * 100, 0, 100);
+            return FormattableString.Invariant($"{Math.Round(load, 1)}%");
         }
         catch { return "n/a"; }
 #else
@@ -858,7 +897,7 @@ internal static class PlatformSnapshot
             var idleD  = idleB  - idleA;
 
             if (totalD == 0) return "n/a";
-            return $"{Math.Round((1.0 - (double)idleD / totalD) * 100, 1)}%";
+            return FormattableString.Invariant($"{Math.Round((1.0 - (double)idleD / totalD) * 100, 1)}%");
         }
         catch { return "n/a"; }
 #endif
@@ -918,6 +957,11 @@ internal static class PlatformSnapshot
 #if WINDOWS
 internal static class NativeMethods
 {
+    // FILETIME is an eight-byte value; kernel time includes idle time.
+    [DllImport("kernel32.dll", SetLastError = true)]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    public static extern bool GetSystemTimes(out ulong idle, out ulong kernel, out ulong user);
+
     [StructLayout(LayoutKind.Sequential)]
     public struct PERFORMANCE_INFORMATION
     {

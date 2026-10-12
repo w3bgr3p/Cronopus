@@ -188,7 +188,7 @@ public class DashboardOverlay : Form
         if (InvokeRequired) { BeginInvoke(ToggleVisibility); return; }
 
         if (Visible && WindowState != FormWindowState.Minimized)
-            WindowState = FormWindowState.Minimized;
+            HideToTray();
         else
             ShowFromTray();
     }
@@ -212,16 +212,13 @@ public class DashboardOverlay : Form
         menu.Items.Add("Exit", null, (_, _) => Environment.Exit(0));
         _trayIcon.ContextMenuStrip = menu;
         _trayIcon.DoubleClick += (_, _) => ShowFromTray();
+    }
 
-        Resize += (_, _) =>
-        {
-            if (WindowState == FormWindowState.Minimized)
-            {
-                ShowInTaskbar     = false;
-                _trayIcon.Visible = true;
-                Hide();
-            }
-        };
+    private void HideToTray()
+    {
+        ShowInTaskbar      = false;
+        _trayIcon!.Visible = true;
+        Hide();
     }
 
     private void ShowFromTray()
@@ -625,7 +622,7 @@ public class DashboardOverlay : Form
         if (e.CloseReason != CloseReason.ApplicationExitCall && !_isSecondary)
         {
             e.Cancel    = true;
-            WindowState = FormWindowState.Minimized;
+            HideToTray();
             return;
         }
         UnregisterHotKey(_hotkeyReceiver?.Handle ?? IntPtr.Zero, HOTKEY_ID);

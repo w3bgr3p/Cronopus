@@ -116,6 +116,7 @@
 </div>
 
 <script src="/js/system-memory.js"></script>
+<script src="/js/system-cpu.js"></script>
 <script src="/js/system-env.js"></script>
 <script>
     const API = window.location.origin;
@@ -251,7 +252,7 @@
         currentSections.forEach((s, i) => {
             const el = document.createElement('div');
             el.className   = 'nav-item' + (!envActive && i === activeIdx() ? ' active' : '');
-            el.textContent = s.title === 'MEMORY ALLOCATION' ? 'Memory allocation' : s.title;
+            el.textContent = s.title === 'MEMORY ALLOCATION' ? 'Memory allocation' : s.title === 'CPU USAGE' ? 'CPU usage' : s.title;
             el.dataset.idx = i;
             el.onclick     = () => activateSection(i);
             nav.appendChild(el);
@@ -363,7 +364,8 @@
         }).join('');
 
         return `
-        ${s.title === 'MEMORY ALLOCATION' ? renderMemoryAllocation() : ''}
+        ${s.title === 'MEMORY ALLOCATION' ? renderMemoryAllocation(rows) : ''}
+        ${s.title === 'CPU USAGE' ? renderCpuUsage(rows) : ''}
         <div class="section-search">
             <input type="text" placeholder="Filter rows…" value="${esc(filter)}"
                    oninput="filterSection(${idx}, this.value)">

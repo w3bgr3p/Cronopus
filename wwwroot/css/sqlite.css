@@ -25,7 +25,33 @@ body {
     align-items: center;
     gap: var(--sp-10);
     flex-shrink: 0;
+    flex-wrap: wrap;
 }
+[hidden] { display: none !important; }
+.source-select {
+    background: var(--bg2);
+    color: var(--text);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: var(--sp-4) var(--sp-8);
+    font: inherit;
+}
+.pg-connect {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: var(--sp-8);
+    padding: var(--sp-8) var(--sp-16);
+    border-bottom: 1px solid var(--border);
+    background: var(--bg1);
+    flex-shrink: 0;
+}
+.pg-connect label, .read-only-label {
+    color: var(--text2);
+    font-size: var(--fs-11);
+}
+.pg-connect input { min-width: 200px; }
+.btn:disabled { opacity: 0.5; cursor: default; }
 .header h1 {
     font-size: var(--fs-14);
     color: var(--accent);

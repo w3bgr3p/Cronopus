@@ -781,7 +781,7 @@ function runInstall(s, btn) {
         try {
             var d = JSON.parse(e.data);
             if (!box) return;
-            var atBottom = box.scrollHeight - box.scrollTop - box.clientHeight < 40;
+            var atBottom = _outputAutoScroll && box.scrollHeight - box.scrollTop - box.clientHeight < 40;
             _appendLine(box, d);
             if (atBottom) box.scrollTop = box.scrollHeight;
         } catch(err) {}
@@ -944,8 +944,11 @@ function setActiveTab(tab) {
 
 var _procStatsPoll = null;
 var _queuePoll     = null;
+var _executionPollVersion = 0;
 
 function stopProcStatsPoll() {
+    // Clearing timers does not cancel requests already in flight.
+    _executionPollVersion++;
     if (_procStatsPoll) { clearInterval(_procStatsPoll); _procStatsPoll = null; }
     if (_queuePoll)     { clearInterval(_queuePoll);     _queuePoll     = null; }
 }
@@ -954,6 +957,10 @@ var _instCache = {};
 
 function renderExecution(s) {
     stopProcStatsPoll();
+    var pollVersion = _executionPollVersion;
+    function isCurrentPoll() {
+        return pollVersion === _executionPollVersion && selectedId === s.id && activeTab === 'execution';
+    }
     var status    = getTaskStatus(s);
     var total     = parseInt(s.runs_total)   || 0;
     var done      = parseInt(s.runs_success) || 0;
@@ -969,6 +976,7 @@ function renderExecution(s) {
         '<div class="detail-grid">'
         + '<div class="detail-section">'
         + '<div class="info-card-title">Execution</div>'
+        + infoRow('Command', '<code id="executionCommand" style="white-space:pre-wrap;overflow-wrap:anywhere;user-select:text">Loading…</code>')
         + infoRow('Status',     '<span class="' + (isRunning ? 'green' : status === 'error' ? 'red' : '') + '">' + status + '</span>')
         + infoRow('Is Working', isRunning ? '<span class="green">Yes</span>' : 'No')
         + infoRow('Done',       '<span class="green">' + done + '</span>')
@@ -1014,9 +1022,11 @@ function renderExecution(s) {
         var id = s.id;
 
         function pollStats() {
+            if (!isCurrentPoll()) return;
             fetch('/tasker/process-stats?id=' + encodeURIComponent(id))
                 .then(function(r) { return r.json(); })
                 .then(function(d) {
+                    if (!isCurrentPoll()) return;
                     var elPid    = document.getElementById('procPid');
                     var elUptime = document.getElementById('procUptime');
                     var elMem    = document.getElementById('procMem');
@@ -1029,9 +1039,11 @@ function renderExecution(s) {
         }
 
         function pollInstances() {
+            if (!isCurrentPoll()) return;
             fetch('/tasker/instances?id=' + encodeURIComponent(id))
                 .then(function(r) { return r.json(); })
                 .then(function(list) {
+                    if (!isCurrentPoll()) return;
                     var el = document.getElementById('instancesList');
                     if (!el) return;
                     var count = document.getElementById('instancesCount');
@@ -1059,17 +1071,38 @@ function renderExecution(s) {
         }, 2000);
     }
 
+    refreshExecutionCommand(s.id);
     startQueuePoll(s.id);
+}
+
+async function refreshExecutionCommand(id) {
+    var el = document.getElementById('executionCommand');
+    if (!el || selectedId !== id || activeTab !== 'execution') return;
+    try {
+        var res = await fetch('/tasker/args-preview', { method:'POST', headers:{'Content-Type':'application/json'},
+            body: JSON.stringify({id:id}) });
+        var data = await res.json();
+        if (selectedId !== id || activeTab !== 'execution' || document.getElementById('executionCommand') !== el) return;
+        el.textContent = data.ok ? (data.command || data.note || '—') : (data.error || 'Cannot build command');
+    } catch(e) {
+        if (document.getElementById('executionCommand') === el) el.textContent = e.message;
+    }
 }
 
 /// Очередь опрашивается независимо от того, идёт ли прогон: залп «N раз» на
 /// однопоточной задаче виден только здесь, а в паузе между прогонами статус
 /// задачи успевает стать idle — по нему очередь пряталась бы и появлялась.
 function startQueuePoll(id) {
+    var pollVersion = _executionPollVersion;
+    function isCurrentPoll() {
+        return pollVersion === _executionPollVersion && selectedId === id && activeTab === 'execution';
+    }
     function poll() {
+        if (!isCurrentPoll()) return;
         fetch('/tasker/queue?id=' + encodeURIComponent(id))
             .then(function(r) { return r.json(); })
             .then(function(list) {
+                if (!isCurrentPoll()) return;
                 var card = document.getElementById('queueCard');
                 var el   = document.getElementById('queueList');
                 if (!card || !el) { if (_queuePoll) { clearInterval(_queuePoll); _queuePoll = null; } return; }
@@ -1734,6 +1767,15 @@ function renderOutputLines(text) {
 function _getOutputBox()  { return document.getElementById('outputBox'); }
 function _getLiveBadge()  { return document.getElementById('liveBadgeBottom'); }
 
+var _outputAutoScroll = true;
+
+function setOutputAutoScroll(on) {
+    _outputAutoScroll = !!on;
+    _PS.save({ outputAutoScroll: _outputAutoScroll });
+    var box = _getOutputBox();
+    if (_outputAutoScroll && box) box.scrollTop = box.scrollHeight;
+}
+
 // ── Бейдж LIVE ────────────────────────────────────────────────────────────────
 // Бейдж утверждает «прогон идёт прямо сейчас», поэтому источник для него один —
 // список живых инстансов задачи. Событие в канале вывода таким источником быть
@@ -1787,18 +1829,21 @@ function _checkLiveSoon() {
 
 var _runsSeen  = {};
 var _runFilter = null;
+var _outputTaskId = null;
 
 // «Подряд» на пяти нитях рождает новый runId каждые несколько секунд, поэтому
 // в шапке живут только последние чипы: старые нити всё равно уже завершились.
 var RUN_CHIP_LIMIT = 12;
 
-function _resetRuns() {
+function _resetRuns(keepFilter) {
+    var selectedRun = keepFilter ? _runFilter : null;
     _runsSeen  = {};
-    _runFilter = null;
+    _runFilter = selectedRun;
     var chips = document.getElementById('runChips');
     if (chips) chips.innerHTML = '';
     var box = _getOutputBox();
     if (box) box.classList.remove('multi-run');
+    if (selectedRun) _noteRun(selectedRun);
 }
 
 function _noteRun(run) {
@@ -1809,6 +1854,7 @@ function _noteRun(run) {
     if (chips) {
         var chip = document.createElement('button');
         chip.className   = 'run-chip';
+        chip.classList.toggle('on', run === _runFilter);
         chip.textContent = run.slice(0, 4);
         chip.title       = 'Only thread ' + run;
         chip.setAttribute('data-run', run);
@@ -1824,11 +1870,13 @@ function _noteRun(run) {
     if (box && Object.keys(_runsSeen).length > 1) box.classList.add('multi-run');
 }
 
-/// Выкинуть самые старые чипы, сняв с них фильтр, если он на них стоял.
+/// Выкинуть самые старые чипы, сохранив выбранную нить.
 function _trimRunChips(chips) {
     while (chips.children.length > RUN_CHIP_LIMIT) {
-        var oldest = chips.firstElementChild;
-        if (oldest.getAttribute('data-run') === _runFilter) toggleRunFilter(_runFilter);
+        var oldest = Array.prototype.find.call(chips.children, function(c) {
+            return c.getAttribute('data-run') !== _runFilter;
+        });
+        if (!oldest) break;
         chips.removeChild(oldest);
     }
 }
@@ -1884,6 +1932,7 @@ function loadOutput(id, streamFirst) {
             if (!box || selectedId !== id) return;
             if (streamFirst && box.querySelector('.out-line:not(.empty)')) return;
             // История из БД приходит без разбивки по нитям: только текст строк.
+            if (_runFilter) return;
             _resetRuns();
             var text = data.output || '';
             if (!text.trim()) {
@@ -1891,7 +1940,7 @@ function loadOutput(id, streamFirst) {
             } else {
                 box.innerHTML = renderOutputLines(text);
                 _trimOutput(box);
-                box.scrollTop = box.scrollHeight;
+                if (_outputAutoScroll) box.scrollTop = box.scrollHeight;
             }
         }).catch(function() {});
 }
@@ -1921,7 +1970,7 @@ function _flushOutput() {
 
     var empty = box.querySelector('.out-line.empty');
     if (empty) empty.remove();
-    var atBottom = box.scrollHeight - box.scrollTop - box.clientHeight < 40;
+    var atBottom = _outputAutoScroll && box.scrollHeight - box.scrollTop - box.clientHeight < 40;
 
     batch.forEach(function(d) {
         try { _putOutputLine(box, d); } catch (err) {}
@@ -1933,7 +1982,7 @@ function _flushOutput() {
 function _progressPrefix(s) { return s.replace(/[\d%\[\]]+.*$/, '').trim(); }
 
 function _putOutputLine(box, d) {
-    if (d.clear) { box.innerHTML = ''; _resetRuns(); }
+    if (d.clear) { box.innerHTML = ''; _resetRuns(true); }
     var plain    = LogLine.plain(d.line || '');
     var last     = box.lastElementChild;
     var lastSpan = last ? last.querySelector('.out-line-text') : null;
@@ -1946,6 +1995,9 @@ function _putOutputLine(box, d) {
     if (last && (d.replace_last || sameProgress)) {
         _noteRun(d.run);
         last.outerHTML = LogLine.build(d);
+        var replacement = box.lastElementChild;
+        if (_runFilter && replacement && replacement.getAttribute('data-run') !== _runFilter)
+            replacement.classList.add('ll-muted');
     } else {
         _appendLine(box, d);
     }
@@ -1954,7 +2006,8 @@ function _putOutputLine(box, d) {
 function startSseOutput(id) {
     if (_sseOutput) { _sseOutput.close(); _sseOutput = null; }
     _dropOutputQueue();
-    _resetRuns();
+    _resetRuns(_outputTaskId === id);
+    _outputTaskId = id;
     startLiveWatch(id);
 
     _sseOutput = new EventSource('/tasker/output/stream?id=' + encodeURIComponent(id));
@@ -2508,6 +2561,9 @@ function onOverlapChanged() { onThreadsChanged(); }
 
 function restoreLayout() {
     var st = _PS.load();
+    _outputAutoScroll = st.outputAutoScroll !== false;
+    var autoScroll = document.getElementById('outAutoScroll');
+    if (autoScroll) autoScroll.checked = _outputAutoScroll;
     if (st.listW) document.getElementById('tasksPanel').style.width = st.listW + 'px';
     if (st.detailH && st.bottomH) {
         var tp = document.getElementById('detailPanel');
@@ -2614,7 +2670,10 @@ async function openPayloadModal(id, name) {
 function closePayloadModal() { document.getElementById('payloadOverlay').classList.remove('open'); }
 
 function _collectValues() {
-    document.querySelectorAll('#valuesBody [data-vkey]').forEach(function(el) { pmValues[el.dataset.vkey] = el.type==='checkbox'?(el.checked?'true':'false'):el.value; });
+    document.querySelectorAll('#valuesBody [data-vkey]').forEach(function(el) {
+        pmValues[el.dataset.vkey] = el.type === 'checkbox' ? (el.checked ? 'true' : 'false')
+            : el.multiple ? Array.from(el.selectedOptions).map(function(o) { return o.value; }).join(',') : el.value;
+    });
 }
 
 function pmSwitch(tab) {
@@ -2660,11 +2719,22 @@ async function savePayload() {
         var f = pmSchema[i];
         if (f.type !== 'section' && f.type !== 'html' && f.type !== 'tab' && !(f.key || '').trim()) { Dialog.error('Field #'+(i+1)+' must have a key.'); return; }
     }
+    var id = pmScheduleId;
+    var schema = JSON.stringify(pmSchema), values = JSON.stringify(pmValues);
     try {
-        var res  = await fetch('/tasker/payload', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({id:pmScheduleId, schema:JSON.stringify(pmSchema), values:JSON.stringify(pmValues)}) });
+        var res  = await fetch('/tasker/payload', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({id:id, schema:schema, values:values}) });
         var data = await res.json();
-        if (data.ok) closePayloadModal(); else Dialog.error(data.error || 'Save failed');
+        if (!res.ok || !data.ok) { Dialog.error(data.error || 'Save failed'); return; }
+        payloadSaved(id, schema, values);
+        if (pmScheduleId === id) closePayloadModal();
     } catch(e) { Dialog.error(e.message); }
+}
+
+function payloadSaved(id, schema, values) {
+    var s = schedules.find(function(x) { return x.id === id; });
+    if (s) { s.payload_schema = schema; s.payload_values = values; }
+    if (taskDraft && taskDraft.id === id) { taskDraft.payload_schema = schema; taskDraft.payload_values = values; }
+    refreshExecutionCommand(id);
 }
 
 function togglePayloadImport() {
@@ -2706,10 +2776,9 @@ async function clearPayload() {
     try {
         var res  = await fetch('/tasker/payload', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({id:id, schema:'', values:''}) });
         var data = await res.json();
-        if (!data.ok) { Dialog.error(data.error || 'Clear failed'); return; }
+        if (!res.ok || !data.ok) { Dialog.error(data.error || 'Clear failed'); return; }
+        payloadSaved(id, '', '');
         closePayloadModal();
-        await loadList();
-        if (selectedId === id) selectRow(id);
     } catch(e) { Dialog.error(e.message); }
 }
 
@@ -2902,7 +2971,7 @@ function renderValues() {
     body.innerHTML = tabBar + groups[vmActiveTab].fields.map(renderFieldHtml).join('');
 }
 function vmSwitchTab(idx) {
-    document.querySelectorAll('#valuesBody [data-vkey]').forEach(function(el) { pmValues[el.dataset.vkey] = el.type==='checkbox'?(el.checked?'true':'false'):el.value; });
+    _collectValues();
     vmActiveTab = idx; renderValues();
 }
 function pmValuesSet(key, val) { pmValues[key] = val; refreshPayloadPreview(); }

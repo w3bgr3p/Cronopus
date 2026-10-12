@@ -93,6 +93,62 @@ test('Save sends schema and values in one request and closes the modal', async (
     assert.ok(!elements.payloadOverlay.classList.contains('open'));
 });
 
+test('Save updates the task payload immediately while preserving unsaved Settings', async () => {
+    const { context } = loadTasker({ inputs: [{ dataset: { vkey: 'url' }, type: 'text', value: 'new' }] });
+    context.schedules = [{ id: 't1', payload_values: '{"url":"old"}' }];
+    context.selectedId = 't1';
+    context.taskDraft = { id: 't1', name: 'Unsaved name', payload_values: '{"url":"old"}' };
+    context.formDirty = true;
+    await context.openPayloadModal('t1', 'n');
+    await context.savePayload();
+    assert.equal(JSON.parse(context.schedules[0].payload_values).url, 'new');
+    assert.equal(JSON.parse(context.taskDraft.payload_values).url, 'new');
+    assert.equal(context.taskDraft.name, 'Unsaved name');
+    assert.equal(context.formDirty, true);
+});
+
+test('Save preserves all selected multiselect values', async () => {
+    const { context, requests } = loadTasker({ inputs: [{ dataset: { vkey: 'tags' }, type: 'select-multiple',
+        multiple: true, value: 'a', selectedOptions: [{ value: 'a' }, { value: 'b' }] }] });
+    await context.openPayloadModal('t1', 'n');
+    await context.savePayload();
+    const body = JSON.parse(requests.find(r => r.url === '/tasker/payload' && r.opts).opts.body);
+    assert.equal(JSON.parse(body.values).tags, 'a,b');
+});
+
+test('failed persistence keeps Payload open and leaves the saved task unchanged', async () => {
+    const { context, elements } = loadTasker();
+    const errors = [];
+    context.Dialog = { error(message) { errors.push(message); } };
+    context.schedules = [{ id: 't1', payload_values: '{"url":"old"}' }];
+    await context.openPayloadModal('t1', 'n');
+    context.fetch = async () => ({ ok: false, json: async () => ({ ok: false, error: 'Database is read-only' }) });
+    context.pmValues.url = 'new';
+    await context.savePayload();
+    assert.ok(elements.payloadOverlay.classList.contains('open'));
+    assert.equal(JSON.parse(context.schedules[0].payload_values).url, 'old');
+    assert.deepEqual(errors, ['Database is read-only']);
+});
+
+test('Execution command requests saved payload and ignores stale responses after switching tasks', async () => {
+    const { context, elements, requests } = loadTasker();
+    elements.executionCommand = el();
+    context.selectedId = 't1';
+    context.activeTab = 'execution';
+    await context.refreshExecutionCommand('t1');
+    assert.equal(elements.executionCommand.textContent, 'python a.py --url old');
+    const body = JSON.parse(requests.find(r => r.url === '/tasker/args-preview').opts.body);
+    assert.deepEqual(body, { id: 't1' });
+    let finish;
+    context.fetch = () => new Promise(resolve => { finish = resolve; });
+    const pending = context.refreshExecutionCommand('t1');
+    context.selectedId = 't2';
+    elements.executionCommand = el();
+    finish({ json: async () => ({ ok: true, command: 'stale' }) });
+    await pending;
+    assert.equal(elements.executionCommand.textContent, '');
+});
+
 test('Import fills the form and does not save by itself', async () => {
     const { context, elements, requests } = loadTasker();
 

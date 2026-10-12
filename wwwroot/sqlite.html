@@ -2,7 +2,7 @@
 <html>
     <head>
         <meta charset="UTF-8" />
-        <title>z3nDash | SQLite</title>
+        <title>z3nDash | SQL</title>
         <link rel="stylesheet" href="/css/themes.css" />
         <script src="/js/diag.js"></script>
         <script src="/js/theme.js"></script>
@@ -12,10 +12,15 @@
     </head>
     <body>
         <div class="header">
-            <h1>SQLite</h1>
+            <h1>SQL</h1>
+            <select class="source-select" id="sourcePicker" aria-label="Database type" onchange="switchSource(this.value)">
+                <option value="sqlite">SQLite</option>
+                <option value="postgres">PostgreSQL</option>
+            </select>
             <span class="file-label" id="fileLabel">No file selected</span>
             <input type="file" id="filePicker" accept=".db,.sqlite,.sqlite3" />
             <button
+                id="openFileButton"
                 class="btn primary"
                 onclick="document.getElementById('filePicker').click()"
             >
@@ -23,6 +28,13 @@
             </button>
             <button class="btn" onclick="AiPanel.toggleDefault()">⟡ AI</button>
         </div>
+        <form class="pg-connect" id="pgControls" hidden onsubmit="event.preventDefault(); connectPostgres()" autocomplete="off">
+            <label for="pgConnection">Connection string</label>
+            <input class="query-input" id="pgConnection" type="password" autocomplete="off" spellcheck="false"
+                placeholder="Host=localhost;Port=5432;Database=mydb;Username=myuser;Password=..." />
+            <button class="btn primary" id="connectButton" type="submit">Connect</button>
+            <span class="read-only-label">Read only</span>
+        </form>
 
         <div class="main">
             <div class="sidebar">
@@ -123,6 +135,9 @@
             const PAGE_SIZE = 100;
 
             let currentFile = null;
+            let sourceMode = "sqlite";
+            let postgresConnection = ""; // Current page only; never stored in browser storage.
+            let requestVersion = 0;
             let lastColumns = [];
             let lastRows = [];
             let lastRowids = []; // rowid per row, null if not available
@@ -163,6 +178,7 @@
                     const file = await sqliteFileState("readonly");
                     if (!file || currentFile) return;
                     currentFile = file;
+                    if (sourceMode !== "sqlite") return;
                     document.getElementById("fileLabel").textContent = file.name;
                     await loadTables();
                 } catch (e) {
@@ -176,7 +192,8 @@
                 .getElementById("filePicker")
                 .addEventListener("change", async function () {
                     const f = this.files[0];
-                    if (!f) return;
+                    if (!f || sourceMode !== "sqlite") return;
+                    const version = ++requestVersion;
                     currentFile = f;
                     document.getElementById("fileLabel").textContent = f.name;
                     colOrder = [];
@@ -188,6 +205,7 @@
                     } catch (e) {
                         storageError = e;
                     }
+                    if (version !== requestVersion) return;
                     await loadTables();
                     if (storageError)
                         setStatus("File opened, but could not be saved: " + storageError.message, true);
@@ -201,53 +219,91 @@
 
             // ── server calls ───────────────────────────────────────────────────────────
 
-            async function loadTables() {
+            function switchSource(mode) {
+                sourceMode = mode === "postgres" ? "postgres" : "sqlite";
+                requestVersion++;
+                postgresConnection = "";
+                document.getElementById("pgConnection").value = "";
+                document.getElementById("sourcePicker").value = sourceMode;
+                document.getElementById("pgControls").hidden = sourceMode !== "postgres";
+                document.getElementById("openFileButton").hidden = sourceMode !== "sqlite";
+                document.getElementById("connectButton").disabled = false;
+                document.getElementById("tableList").innerHTML = "";
+                document.getElementById("queryInput").value = "";
+                hideCtxMenu();
+                clearAll();
+                document.getElementById("fileLabel").textContent = sourceMode === "postgres"
+                    ? "Not connected" : currentFile?.name || "No file selected";
+                document.getElementById("tableWrap").innerHTML = '<div class="empty">'
+                    + (sourceMode === "postgres" ? "Connect to PostgreSQL to start" : "Open a .db file to start") + '</div>';
+                setStatus("");
+                if (sourceMode === "sqlite" && currentFile) loadTables();
+            }
+
+            async function connectPostgres() {
+                if (sourceMode !== "postgres") return;
+                const connection = document.getElementById("pgConnection").value.trim();
+                if (!connection) { setStatus("Enter a PostgreSQL connection string", true); return; }
+                postgresConnection = "";
+                document.getElementById("fileLabel").textContent = "Connecting...";
+                await loadTables(connection);
+            }
+
+            async function viewerRequest(action, sql, connection = postgresConnection) {
+                const postgres = sourceMode === "postgres";
+                const res = postgres
+                    ? await fetch("/postgres-viewer/" + action, {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({ connectionString: connection, sql }),
+                    })
+                    : await fetch("/sqlite-viewer/" + action + (sql ? "?" + new URLSearchParams({ sql }) : ""), {
+                        method: "POST",
+                        headers: { "Content-Type": "application/octet-stream" },
+                        body: await currentFile.arrayBuffer(),
+                    });
+                const data = await res.json();
+                if (!res.ok || data.error) throw new Error(data.error || "Database request failed");
+                return data;
+            }
+
+            async function loadTables(connection = postgresConnection) {
+                const version = ++requestVersion;
+                const postgres = sourceMode === "postgres";
+                if (postgres) document.getElementById("connectButton").disabled = true;
                 setStatus("Loading...");
                 document.getElementById("tableList").innerHTML = "";
                 clearAll();
                 try {
-                    const buf = await currentFile.arrayBuffer();
-                    const res = await fetch("/sqlite-viewer/tables", {
-                        method: "POST",
-                        headers: { "Content-Type": "application/octet-stream" },
-                        body: buf,
-                    });
-                    const data = await res.json();
-                    if (data.error) {
-                        setStatus(data.error, true);
-                        return;
+                    const data = await viewerRequest("tables", "", connection);
+                    if (version !== requestVersion) return;
+                    if (postgres) {
+                        postgresConnection = connection;
+                        document.getElementById("fileLabel").textContent =
+                            `${data.database} @ ${data.host}:${data.port}`;
                     }
                     renderTableList(data.tables);
                     setStatus(`${data.tables.length} table(s)`);
                 } catch (e) {
+                    if (version !== requestVersion) return;
+                    if (postgres) document.getElementById("fileLabel").textContent = "Not connected";
                     setStatus(e.message, true);
+                } finally {
+                    if (version === requestVersion) document.getElementById("connectButton").disabled = false;
                 }
             }
 
             async function execQuery(sql) {
-                if (!currentFile) {
-                    setStatus("No file open", true);
+                if (sourceMode === "postgres" ? !postgresConnection : !currentFile) {
+                    setStatus(sourceMode === "postgres" ? "Connect to PostgreSQL first" : "No file open", true);
                     return;
                 }
+                const version = ++requestVersion;
                 setStatus("Running...");
                 clearAll();
                 try {
-                    const buf = await currentFile.arrayBuffer();
-                    const res = await fetch(
-                        "/sqlite-viewer/query?" + new URLSearchParams({ sql }),
-                        {
-                            method: "POST",
-                            headers: {
-                                "Content-Type": "application/octet-stream",
-                            },
-                            body: buf,
-                        },
-                    );
-                    const data = await res.json();
-                    if (data.error) {
-                        setStatus(data.error, true);
-                        return;
-                    }
+                    const data = await viewerRequest("query", sql);
+                    if (version !== requestVersion) return;
 
                     lastColumns = data.columns;
                     lastRows = data.rows;
@@ -266,8 +322,10 @@
 
                     renderColPanel();
                     renderPage();
-                    setStatus(`${lastRows.length} row(s)`);
+                    setStatus(`${lastRows.length} row(s)` + (data.truncated
+                        ? ` — result limited to ${data.limit}; use WHERE or LIMIT to narrow the query` : ""));
                 } catch (e) {
+                    if (version !== requestVersion) return;
                     setStatus(e.message, true);
                 }
             }
@@ -278,10 +336,12 @@
                 const el = document.getElementById("tableList");
                 el.innerHTML = "";
                 tables.forEach((t) => {
+                    const label = typeof t === "string" ? t : `${t.schema}.${t.name}`;
                     const d = document.createElement("div");
                     d.className = "table-item";
-                    d.textContent = t;
-                    d.title = t;
+                    d.textContent = label;
+                    d.title = label;
+                    d.dataset.table = JSON.stringify(t);
                     d.onclick = () => selectTable(t);
                     el.appendChild(d);
                 });
@@ -291,9 +351,11 @@
                 document
                     .querySelectorAll(".table-item")
                     .forEach((el) =>
-                        el.classList.toggle("active", el.textContent === name),
+                        el.classList.toggle("active", el.dataset.table === JSON.stringify(name)),
                     );
-                const sql = `SELECT * FROM "${name}" LIMIT 1000`;
+                const quote = value => '"' + value.replaceAll('"', '""') + '"';
+                const table = typeof name === "string" ? quote(name) : `${quote(name.schema)}.${quote(name.name)}`;
+                const sql = `SELECT * FROM ${table} LIMIT 1000`;
                 document.getElementById("queryInput").value = sql;
                 execQuery(sql);
             }
@@ -522,7 +584,7 @@
                     const origIdx = lastRows.indexOf(row);
                     const rowid = origIdx >= 0 ? lastRowids[origIdx] : null;
                     const canEdit =
-                        !!lastTable && rowid !== null && rowid !== undefined;
+                        sourceMode === "sqlite" && !!lastTable && rowid !== null && rowid !== undefined;
 
                     const tr = document.createElement("tr");
                     tr.dataset.rowid = rowid ?? "";
@@ -701,7 +763,7 @@
             }
 
             async function doUpdate(rowid, col, value) {
-                if (!currentFile || !lastTable) return false;
+                if (sourceMode !== "sqlite" || !currentFile || !lastTable) return false;
                 try {
                     const buf = await currentFile.arrayBuffer();
                     const qs = new URLSearchParams({
@@ -754,7 +816,7 @@
                 .addEventListener("click", async () => {
                     if (ctxRowid === null) return;
                     hideCtxMenu();
-                    if (!currentFile || !lastTable) return;
+                    if (sourceMode !== "sqlite" || !currentFile || !lastTable) return;
                     try {
                         const buf = await currentFile.arrayBuffer();
                         const res = await fetch(
@@ -846,10 +908,10 @@
             restoreFile();
 
             AiPanel.setContext(function () {
-                if (!currentFile) return "";
+                if (sourceMode === "postgres" ? !postgresConnection : !currentFile) return "";
                 return (
-                    "SQLite file: " +
-                    currentFile.name +
+                    (sourceMode === "postgres" ? "PostgreSQL database: " + document.getElementById("fileLabel").textContent
+                        : "SQLite file: " + currentFile.name) +
                     "\nTables visible: " +
                     [...document.querySelectorAll(".table-item")]
                         .map(function (el) {

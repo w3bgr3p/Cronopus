@@ -32,7 +32,7 @@ The windowed build targets Windows. The `net10.0` target builds without WinForms
 | [[System Snapshot]] | Windows state snapshots and machine tools | — |
 | [[dllGraph]] | C# code graph | `Alt+G` |
 | [[docsVault]] | This vault | `Alt+H` |
-| [[SQLite]] | Viewer for a chosen SQLite file | — |
+| [[SQL]] | SQLite files and read-only PostgreSQL queries | — |
 
 ## Storage
 

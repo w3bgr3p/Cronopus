@@ -21,10 +21,7 @@ test('cloning selects the new task and opens its Settings tab', async () => {
         timeout_seconds: '0', use_venv: 'false', schedule_mode: 'off', schedule_json: '',
     };
     const clone = { ...source, id: 'clone-2', name: 'Example (2)', enabled: 'false' };
-    const responses = [
-        { ok: true, json: async () => ({ ok: true, id: clone.id }) },
-        { ok: true, json: async () => ({ schema: '', values: '' }) },
-    ];
+    const calls = [];
     const context = {
         console,
         document: {
@@ -32,7 +29,18 @@ test('cloning selects the new task and opens its Settings tab', async () => {
             querySelectorAll(selector) { return selector === '.dtab' ? tabs : []; },
         },
         window: { addEventListener() {} },
-        fetch: async () => responses.shift(),
+        fetch: async (url, options) => {
+            calls.push({ url, options });
+            // The page also starts a resource request during initialization.
+            // Match endpoints so background requests cannot consume clone responses.
+            if (url === '/tasker/resources')
+                return { ok: true, json: async () => ({ Tasks: {} }) };
+            if (url === '/tasker/save')
+                return { ok: true, json: async () => ({ ok: true, id: clone.id }) };
+            if (url === '/tasker/payload?id=' + source.id)
+                return { ok: true, json: async () => ({ schema: '', values: '' }) };
+            throw new Error('Unexpected request: ' + url);
+        },
         setInterval() { return 1; },
         clearInterval() {},
         setTimeout,
@@ -54,6 +62,11 @@ test('cloning selects the new task and opens its Settings tab', async () => {
 
     await context.duplicateSchedule(source.id);
 
+    const save = calls.find(call => call.url === '/tasker/save');
+    assert.equal(save.options.method, 'POST');
+    assert.equal(JSON.parse(save.options.body).name, clone.name);
+    assert.equal(JSON.parse(save.options.body).enabled, 'false');
+    assert.ok(calls.some(call => call.url === '/tasker/payload?id=' + source.id));
     assert.equal(context.selectedId, clone.id);
     assert.equal(context.activeTab, 'settings');
     assert.equal(tabs.find((tab) => tab.dataset.tab === 'settings').active, true);
