@@ -9,8 +9,10 @@ on the server when the client disconnects.
 2. Set its public IP, bind address and port (default `38473`). Enable HTTPS and Apply.
 3. Allow the actual port through the server and hosting firewall.
 4. Create a named key. Copy the key, Node ID and certificate SHA-256 fingerprint.
-5. Add a Connection in local z3nDash using `https://IP:port`, Node ID, pin and key.
-6. Test the connection, then select it in Tasker's node selector.
+5. In local Tasker's node selector choose **+ New connection…**. Enter a name,
+   `https://IP:port`, Node ID, pin and key, then **Add connection**. It is saved
+   and selected immediately. Config → Remote Tasker → Connections also supports
+   adding and testing connections.
 
 An occupied port falls back to an OS-selected port. Config displays the actual URL;
 save that port for a stable next startup. No domain is required. The client checks

@@ -23,7 +23,7 @@
 <div id="app">
     <div class="main-header">
         <h1>Tasker</h1>
-        <select id="bridgeNode" aria-label="Tasker node"><option value="">Local</option></select>
+        <select id="bridgeNode" aria-label="Tasker node"><option value="">Local</option><option value="__new__">+ New connection…</option></select>
         <span id="bridgeStatus" role="status">Local</span>
         <button class="btn sm br-remote-only" onclick="TaskerUpload.begin('file')">Upload file</button>
         <button class="btn sm br-remote-only" onclick="TaskerUpload.begin('folder')">Upload folder</button>
@@ -152,6 +152,7 @@
 
 <script src="/js/ai-panel.js"></script>
 <script src="/js/logline.js?v=1"></script>
+<script src="/js/tasker-connection.js"></script>
 <script src="/js/tasker-transport.js"></script>
 <script src="/js/tasker-files.js"></script>
 <script src="/js/tasker-upload.js"></script>

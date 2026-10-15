@@ -143,6 +143,19 @@
         document.getElementById('detailBody').textContent='';status(id?'Connecting…':'Local');
         try{await root.loadList();}catch(e){status('Offline · '+e.message);}
     }
+    function addConnectionOption(selector,connection){
+        var option=document.createElement('option');option.value=connection.id;option.textContent=connection.name;
+        var create=selector.querySelector?selector.querySelector('option[value="__new__"]'):null;
+        if(create)selector.insertBefore(option,create);else selector.appendChild(option);
+    }
+    async function selectNode(){
+        var selector=document.getElementById('bridgeNode'),id=selector.value;
+        if(id!=='__new__'){await switchNode(id);return;}
+        selector.value=current()||'';
+        var connection=await root.TaskerConnection.open();if(!connection)return;
+        connections.push(connection);addConnectionOption(selector,connection);
+        selector.value=connection.id;await switchNode(connection.id);
+    }
     async function recoverPending(){
         var commands=pending().filter(function(c){return c.nodeId===current();});
         if(!commands.length){root.Dialog.alert('No commands awaiting confirmation');return;}
@@ -152,9 +165,9 @@
     }
     document.addEventListener('DOMContentLoaded',async function(){
         var selector=document.getElementById('bridgeNode');if(!selector)return;
-        selector.addEventListener('change',function(){switchNode(selector.value);});
+        selector.addEventListener('change',selectNode);
         try{connections=await (await nativeFetch('/bridge-local/connections',{headers:{'X-Bridge-Local':'1'}})).json();
-            connections.forEach(function(c){var option=document.createElement('option');option.value=c.id;option.textContent=c.name;selector.appendChild(option);});
+            connections.forEach(function(c){addConnectionOption(selector,c);});
         }catch(e){status('Connections unavailable');}
     });
     root.TaskerBridge={fetch:remoteFetch,remote:function(){return !!current();},context:transport.context,isCurrent:transport.isCurrent,
