@@ -29,6 +29,8 @@ public sealed partial class BridgeLocalHandler
         var method = ctx.Request.HttpMethod;
         var allowed = api.StartsWith("tasker/") && TaskerService.RemoteRoutes.Contains(method + " /" + api)
             || api == "info" && method == "GET" || api == "tasks" && method == "GET"
+            || api is "files/roots" or "files/list" && method == "GET"
+            || api == "files/directories" && method == "POST"
             || api.StartsWith("operations/") && method == "GET";
         if (!allowed) { ctx.Response.StatusCode = 404; return; }
         await _client.CheckAsync(id, CancellationToken.None);

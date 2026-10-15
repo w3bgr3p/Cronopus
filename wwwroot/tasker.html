@@ -23,6 +23,8 @@
 <div id="app">
     <div class="main-header">
         <h1>Tasker</h1>
+        <select id="bridgeNode" aria-label="Tasker node"><option value="">Local</option></select>
+        <span id="bridgeStatus" role="status">Local</span>
         <div class="header-stats" id="headerStats"></div>
         <div class="header-right">
             <button class="btn sm" onclick="AiPanel.toggleDefault()" style="border-color:var(--accent);color:var(--accent);">⟡ AI</button>
@@ -145,6 +147,8 @@
 
 <script src="/js/ai-panel.js"></script>
 <script src="/js/logline.js?v=1"></script>
+<script src="/js/tasker-transport.js"></script>
+<script src="/js/tasker-files.js"></script>
 <script src="/js/tasker.js?v=1777240004"></script>
 </body>
 </html>

@@ -59,9 +59,11 @@ try
     runRequest.Headers.Add("X-Request-ID", "pause-test");
     runRequest.Content = new StringContent("{}", System.Text.Encoding.UTF8, "application/json");
     Check((await anonymous.SendAsync(runRequest)).IsSuccessStatusCode, "pause API failed");
+    var rootsResponse = await anonymous.GetAsync(new Uri(uri, "/bridge/v1/files/roots"));
+    Check(rootsResponse.IsSuccessStatusCode, "server disk API unavailable");
     await host.StopAsync(CancellationToken.None);
     Console.WriteLine("PASS tls");
 }
-finally { Directory.Delete(root, true); }
+finally { Microsoft.Data.Sqlite.SqliteConnection.ClearAllPools(); Directory.Delete(root, true); }
 
 static void Check(bool ok, string message) { if (!ok) throw new Exception(message); }

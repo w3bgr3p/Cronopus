@@ -8,6 +8,7 @@ public sealed partial class BridgeHost
     private async Task DispatchApi(HttpContext ctx, string key, CancellationToken ct)
     {
         var path = ctx.Request.Path.Value!;
+        if (await FileApi(ctx, ct)) return;
         if (path.StartsWith("/bridge/v1/operations/") && ctx.Request.Method == "GET")
         { var op = _operations.Get(key, path[22..]); ctx.Response.StatusCode = op == null ? 404 : 200; await ctx.Response.WriteAsJsonAsync(op, ct); return; }
         if (path == "/bridge/v1/tasks" && ctx.Request.Method == "GET")

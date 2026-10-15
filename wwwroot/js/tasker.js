@@ -1,4 +1,4 @@
-﻿// tasker.js
+// tasker.js
 
 // Safe wrappers for PageState (may not exist in standalone mode)
 var _PS = {
@@ -150,8 +150,9 @@ function onListKeyDown(e) {
 
 // ── Load list ─────────────────────────────────────────────────────────────────
 
+function taskerFetch(url, options) { return window.TaskerBridge ? window.TaskerBridge.fetch(url, options) : fetch(url, options); }
 async function loadList() {
-    var res = await fetch('/tasker/list');
+    var res = await taskerFetch('/tasker/list');
     if (!res.ok) throw new Error('/tasker/list HTTP ' + res.status);
     var before = selectedId ? JSON.stringify(schedules.find(function(s) { return s.id === selectedId; }) || null) : '';
     // Кнопки шапки зависят от всех выделенных, а не только от основной задачи.
@@ -227,7 +228,7 @@ function taskMemText(id) {
 }
 
 function loadResources() {
-    fetch('/tasker/resources')
+    taskerFetch('/tasker/resources')
         .then(function(r) { return r.json(); })
         .then(function(d) {
             _resources = d;
@@ -563,7 +564,16 @@ function renderGlobalStats() {
 
 // ── Select / detail ───────────────────────────────────────────────────────────
 
-function selectRow(id, keepSelection, initialTab) {
+var _remoteSelectSeq = 0;
+async function selectRow(id, keepSelection, initialTab) {
+    if (window.TaskerBridge && window.TaskerBridge.remote()) {
+        var seq = ++_remoteSelectSeq, context = window.TaskerBridge.context();
+        try {
+            var full = await window.TaskerBridge.detail(id);
+            if (seq !== _remoteSelectSeq || !window.TaskerBridge.isCurrent(context)) return;
+            schedules = schedules.map(function(s) { return s.id === id ? full : s; });
+        } catch(e) { if (e.name !== 'AbortError') window.TaskerBridge.status(e.message); return; }
+    }
     if (selectedId === id) captureTaskDraft();
     else { taskDraft = null; formDirty = false; _formBaseline = {}; }
     if (!keepSelection) selectedIds = new Set([id]);
@@ -655,7 +665,7 @@ var _extActionsSeq = 0;
 async function extendDetailActions(s, seq) {
     var res, info;
     try {
-        res  = await fetch('/tasker/scan-folder?id=' + encodeURIComponent(s.id));
+        res  = await taskerFetch('/tasker/scan-folder?id=' + encodeURIComponent(s.id));
         info = await res.json();
     } catch(e) { return; }
     if (seq !== _extActionsSeq) return;
@@ -667,7 +677,7 @@ async function extendDetailActions(s, seq) {
     // npm scripts dropdown
     if (_isJs(s.executor)) {
         try {
-            var pkgRes   = await fetch('/tasker/package-scripts?id=' + encodeURIComponent(s.id));
+            var pkgRes   = await taskerFetch('/tasker/package-scripts?id=' + encodeURIComponent(s.id));
             var pkgData  = await pkgRes.json();
             var scripts  = pkgData.scripts || {};
             var names    = Object.keys(scripts);
@@ -755,7 +765,7 @@ async function _saveNpmScript(scheduleId, scriptName) {
     if (s.args === newArgs) return;
     s.args = newArgs;
     try {
-        await fetch('/tasker/save', {
+        await taskerFetch('/tasker/save', {
             method:  'POST',
             headers: { 'Content-Type': 'application/json' },
             body:    JSON.stringify(Object.assign({}, s, { args: newArgs })),
@@ -813,7 +823,7 @@ async function openCmModal(s, type) {
 
     var res, data;
     try {
-        res  = await fetch('/tasker/config-file?id=' + encodeURIComponent(s.id) + '&type=' + encodeURIComponent(type));
+        res  = await taskerFetch('/tasker/config-file?id=' + encodeURIComponent(s.id) + '&type=' + encodeURIComponent(type));
         data = await res.json();
     } catch(e) { Dialog.error(e.message); return; }
 
@@ -849,7 +859,7 @@ function closeCmModal() {
 async function saveCmConfig() {
     if (!_cmEditor || !_cmFilePath) return;
     try {
-        var res  = await fetch('/tasker/config-file', {
+        var res  = await taskerFetch('/tasker/config-file', {
             method:  'POST',
             headers: { 'Content-Type': 'application/json' },
             body:    JSON.stringify({ path: _cmFilePath, content: _cmEditor.getValue() }),
@@ -1023,7 +1033,7 @@ function renderExecution(s) {
 
         function pollStats() {
             if (!isCurrentPoll()) return;
-            fetch('/tasker/process-stats?id=' + encodeURIComponent(id))
+            taskerFetch('/tasker/process-stats?id=' + encodeURIComponent(id))
                 .then(function(r) { return r.json(); })
                 .then(function(d) {
                     if (!isCurrentPoll()) return;
@@ -1040,7 +1050,7 @@ function renderExecution(s) {
 
         function pollInstances() {
             if (!isCurrentPoll()) return;
-            fetch('/tasker/instances?id=' + encodeURIComponent(id))
+            taskerFetch('/tasker/instances?id=' + encodeURIComponent(id))
                 .then(function(r) { return r.json(); })
                 .then(function(list) {
                     if (!isCurrentPoll()) return;
@@ -1079,7 +1089,7 @@ async function refreshExecutionCommand(id) {
     var el = document.getElementById('executionCommand');
     if (!el || selectedId !== id || activeTab !== 'execution') return;
     try {
-        var res = await fetch('/tasker/args-preview', { method:'POST', headers:{'Content-Type':'application/json'},
+        var res = await taskerFetch('/tasker/args-preview', { method:'POST', headers:{'Content-Type':'application/json'},
             body: JSON.stringify({id:id}) });
         var data = await res.json();
         if (selectedId !== id || activeTab !== 'execution' || document.getElementById('executionCommand') !== el) return;
@@ -1099,7 +1109,7 @@ function startQueuePoll(id) {
     }
     function poll() {
         if (!isCurrentPoll()) return;
-        fetch('/tasker/queue?id=' + encodeURIComponent(id))
+        taskerFetch('/tasker/queue?id=' + encodeURIComponent(id))
             .then(function(r) { return r.json(); })
             .then(function(list) {
                 if (!isCurrentPoll()) return;
@@ -1276,7 +1286,7 @@ function _formSnapshot() {
 
 async function ensureVenv(id) {
     if (!id) { Dialog.info('Save the task first, then create the venv.'); return; }
-    var res  = await fetch('/tasker/ensure-venv', {
+    var res  = await taskerFetch('/tasker/ensure-venv', {
         method:  'POST',
         headers: { 'Content-Type': 'application/json' },
         body:    JSON.stringify({ id: id }),
@@ -1728,7 +1738,7 @@ async function previewSchedule() {
         : { mode: 'zp',   schedule_json: JSON.stringify(collectZp()) };
 
     try {
-        var res  = await fetch('/tasker/schedule-preview', {
+        var res  = await taskerFetch('/tasker/schedule-preview', {
             method:  'POST',
             headers: { 'Content-Type': 'application/json' },
             body:    JSON.stringify(body),
@@ -1816,7 +1826,7 @@ function startLiveWatch(id) {
 function checkLive() {
     var id = _liveId;
     if (!id) return;
-    fetch('/tasker/instances?id=' + encodeURIComponent(id))
+    taskerFetch('/tasker/instances?id=' + encodeURIComponent(id))
         .then(function(r) { return r.json(); })
         .then(function(list) {
             if (_liveId !== id) return;
@@ -1936,7 +1946,7 @@ function _trimOutput(box) {
 // неё. Без этого пустая история, пришедшая позже, стирала весь буфер прогона.
 function loadOutput(id, streamFirst) {
     // load last saved output from DB into bottom box
-    fetch('/tasker/output?id=' + encodeURIComponent(id))
+    taskerFetch('/tasker/output?id=' + encodeURIComponent(id))
         .then(function(r) { return r.json(); })
         .then(function(data) {
             var box = _getOutputBox();
@@ -2062,7 +2072,7 @@ function startSseOutput(id) {
 
 async function clearOutputBottom() {
     if (!selectedId || selectedId === '__new__') return;
-    await fetch('/tasker/clear-output', {
+    await taskerFetch('/tasker/clear-output', {
         method: 'POST', headers: {'Content-Type': 'application/json'},
         body: JSON.stringify({ id: selectedId })
     });
@@ -2091,7 +2101,7 @@ async function loadHttp() {
     // эндпоинт знает только project и task_id.
     var url = '/traffic?tail=' + limit + '&task_id=' + encodeURIComponent(curTaskId);
     try {
-        var res  = await fetch(url, { cache: 'no-store' });
+        var res  = await taskerFetch(url, { cache: 'no-store' });
         var text = await res.text();
         var el   = document.getElementById('httpScroll');
         var page;
@@ -2133,7 +2143,7 @@ function openAiForTask(id) {
 
 async function openInTerminal(id) {
     try {
-        var res  = await fetch('/tasker/open-terminal?id=' + encodeURIComponent(id));
+        var res  = await taskerFetch('/tasker/open-terminal?id=' + encodeURIComponent(id));
         var data = await res.json();
         if (!data.ok) Dialog.error(data.error || 'Cannot open terminal');
     } catch(e) { Dialog.error(e.message); }
@@ -2218,6 +2228,10 @@ async function saveSchedule(existingId) {
 }
 
 async function _postSave(payload) {
+    if (window.TaskerBridge && window.TaskerBridge.remote() && payload.id) {
+        var source = taskDraft && taskDraft.id === payload.id ? taskDraft : schedules.find(function(s) { return s.id === payload.id; });
+        if (source) payload._revision = source._revision;
+    }
     var prev = schedules.find(function(s) { return s.id === payload.id; }) || {};
     if (payload.script_path !== undefined && payload.payload_schema === undefined) {
         var draft = Object.assign({}, prev, payload);
@@ -2228,7 +2242,7 @@ async function _postSave(payload) {
         }
     }
     try {
-        var res = await fetch('/tasker/save', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(payload) });
+        var res = await taskerFetch('/tasker/save', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(payload) });
         var text = await res.text();
         try { return JSON.parse(text); }
         catch (e) { return { ok: false, error: 'HTTP ' + res.status + ': ' + text.slice(0, 300) }; }
@@ -2274,7 +2288,7 @@ async function duplicateSchedule(id) {
     var s = schedules.find(function(x) { return x.id === id; });
     if (!s) return;
     var newName = _nextDuplicateName(s.name || 'task', schedules.map(function(x) { return x.name || ''; }));
-    var res  = await fetch('/tasker/save', {
+    var res  = await taskerFetch('/tasker/save', {
         method:'POST', headers:{'Content-Type':'application/json'},
         body: JSON.stringify({ name:newName, executor:s.executor, script_path:s.script_path, args:s.args,
             enabled:'false', cron:s.cron, on_overlap:s.on_overlap, max_threads:s.max_threads,
@@ -2284,10 +2298,10 @@ async function duplicateSchedule(id) {
     var data = await res.json();
     if (!data.ok) { Dialog.error(data.error || 'Duplicate: save failed'); return; }
     try {
-        var pRes  = await fetch('/tasker/payload?id=' + encodeURIComponent(id));
+        var pRes  = await taskerFetch('/tasker/payload?id=' + encodeURIComponent(id));
         var pData = await pRes.json();
         if (pData.schema || pData.values)
-            await fetch('/tasker/payload', { method:'POST', headers:{'Content-Type':'application/json'},
+            await taskerFetch('/tasker/payload', { method:'POST', headers:{'Content-Type':'application/json'},
                 body: JSON.stringify({ id:data.id, schema:pData.schema, values:pData.values }) });
     } catch(e) {}
     await loadList();
@@ -2296,7 +2310,7 @@ async function duplicateSchedule(id) {
 
 async function deleteSchedule(id, name) {
     if (!(await Dialog.confirm('Eliminate "' + (name||id) + '"?', '✕ Eliminate', true))) return;
-    await fetch('/tasker/delete', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({id:id}) });
+    await taskerFetch('/tasker/delete', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({id:id}) });
     await _afterDelete();
 }
 
@@ -2311,7 +2325,7 @@ async function deleteSchedules(ids) {
     });
     if (!(await Dialog.confirm('Eliminate ' + ids.length + ' tasks?\n' + names.join('\n'), '✕ Eliminate', true))) return;
     for (var i = 0; i < ids.length; i++) {
-        await fetch('/tasker/delete', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({id:ids[i]}) });
+        await taskerFetch('/tasker/delete', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({id:ids[i]}) });
     }
     await _afterDelete();
 }
@@ -2332,7 +2346,7 @@ async function _afterDelete() {
 
 async function openScriptFile(filePath) {
     try {
-        var res  = await fetch('/tasker/open-file?path=' + encodeURIComponent(filePath));
+        var res  = await taskerFetch('/tasker/open-file?path=' + encodeURIComponent(filePath));
         var data = await res.json();
         if (!data.ok) Dialog.error(data.error || 'Cannot open file');
     } catch(e) { Dialog.error(e.message); }
@@ -2340,7 +2354,7 @@ async function openScriptFile(filePath) {
 
 async function openScriptFolder(filePath) {
     try {
-        var res  = await fetch('/tasker/open-folder?path=' + encodeURIComponent(filePath));
+        var res  = await taskerFetch('/tasker/open-folder?path=' + encodeURIComponent(filePath));
         var data = await res.json();
         if (!data.ok) Dialog.error(data.error || 'Cannot open folder');
     } catch(e) { Dialog.error(e.message); }
@@ -2350,12 +2364,12 @@ async function toggleEnabled(id, current) {
     var newVal = current === 'true' ? 'false' : 'true';
     var s = schedules.find(function(x) { return x.id === id; });
     if (!s) return;
-    await fetch('/tasker/save', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(Object.assign({}, s, {enabled: newVal})) });
+    await taskerFetch('/tasker/save', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(Object.assign({}, s, {enabled: newVal})) });
     await loadList();
 }
 
 async function resumeSchedule(id) {
-    var res = await fetch('/tasker/resume', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({id:id}) });
+    var res = await taskerFetch('/tasker/resume', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({id:id}) });
     if (!res.ok) { alert((await res.json()).error || 'Could not resume schedule'); return; }
     await loadList();
 }
@@ -2370,7 +2384,7 @@ function _runCount() {
 }
 
 async function runNow(id) {
-    var res = await fetch('/tasker/run', {
+    var res = await taskerFetch('/tasker/run', {
         method:  'POST',
         headers: {'Content-Type':'application/json'},
         body:    JSON.stringify({id: id, count: _runCount()})
@@ -2388,7 +2402,7 @@ async function buildCsx(id) {
     var btn = event.target;
     btn.disabled = true; btn.textContent = '⏳...';
     try {
-        var res  = await fetch('/tasker/build', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({id:id}) });
+        var res  = await taskerFetch('/tasker/build', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({id:id}) });
         var data = await res.json();
         if (data.ok) { btn.textContent = '✅ OK'; btn.style.borderColor = 'var(--green)'; btn.style.color = 'var(--green)'; }
         else { btn.textContent = '❌ Err'; btn.style.borderColor = 'var(--red)'; btn.style.color = 'var(--red)'; await Dialog.alert(data.errors.join('\n'), '🔨 Check errors'); }
@@ -2400,7 +2414,7 @@ async function buildCsx(id) {
 /// как остановка задачи, а через две секунды очередь подняла бы следующий.
 async function _pendingCount(id) {
     try {
-        var list = await (await fetch('/tasker/queue?id=' + encodeURIComponent(id))).json();
+        var list = await (await taskerFetch('/tasker/queue?id=' + encodeURIComponent(id))).json();
         return (list || []).filter(function(q) { return q.status === 'pending'; }).length;
     } catch (e) { return 0; }
 }
@@ -2409,24 +2423,24 @@ async function _offerQueueDrop(id) {
     var pending = await _pendingCount(id);
     if (!pending) return;
     if (await Dialog.confirm(pending + ' more run(s) are queued and will start as threads free up.\nDrop them too?', '■ Interrupt', true))
-        await fetch('/tasker/clear-queue', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({id:id}) });
+        await taskerFetch('/tasker/clear-queue', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({id:id}) });
 }
 
 async function stopNow(id) {
-    var res       = await fetch('/tasker/instances?id=' + encodeURIComponent(id));
+    var res       = await taskerFetch('/tasker/instances?id=' + encodeURIComponent(id));
     var instances = await res.json().catch(function() { return []; }) || [];
     if (instances.length === 0) {
-        await fetch('/tasker/stop', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({id:id}) });
+        await taskerFetch('/tasker/stop', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({id:id}) });
         await _offerQueueDrop(id);
     } else if (instances.length === 1) {
         if (!(await Dialog.confirm('Kill running instance?', '■ Interrupt', true))) return;
-        await fetch('/tasker/kill-instance', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({id:id, runId:instances[0].runId}) });
+        await taskerFetch('/tasker/kill-instance', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({id:id, runId:instances[0].runId}) });
     } else {
         var chosen = await _pickInstanceToKill(id, instances);
         if (chosen === null) return;
         var url = chosen === '__all__' ? '/tasker/stop' : '/tasker/kill-instance';
         var body = chosen === '__all__' ? {id:id} : {id:id, runId:chosen};
-        await fetch(url, { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(body) });
+        await taskerFetch(url, { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(body) });
         // Убийство одного инстанса очередь не трогает: человек снял именно его.
         if (chosen === '__all__') await _offerQueueDrop(id);
     }
@@ -2434,9 +2448,9 @@ async function stopNow(id) {
 }
 
 async function restartNow(id) {
-    await fetch('/tasker/stop', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({id: id}) });
+    await taskerFetch('/tasker/stop', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({id: id}) });
     await new Promise(function(r) { setTimeout(r, 800); });
-    await fetch('/tasker/run', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({id: id, count: _runCount()}) });
+    await taskerFetch('/tasker/run', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({id: id, count: _runCount()}) });
     await loadList();
     startSseOutput(id);
 }
@@ -2470,11 +2484,11 @@ function _pickInstanceToKill(id, instances) {
 }
 
 async function killOneInstance(id, runId) {
-    await fetch('/tasker/kill-instance', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({id:id, runId:runId}) });
+    await taskerFetch('/tasker/kill-instance', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({id:id, runId:runId}) });
 }
 
 async function clearQueue(id) {
-    await fetch('/tasker/clear-queue', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({id:id}) });
+    await taskerFetch('/tasker/clear-queue', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({id:id}) });
 }
 
 // ── Действия над несколькими выделенными задачами ────────────────────────────
@@ -2483,7 +2497,7 @@ async function clearQueue(id) {
 
 async function _postTask(url, body) {
     try {
-        var res  = await fetch(url, { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(body) });
+        var res  = await taskerFetch(url, { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(body) });
         var text = await res.text();
         var data = {};
         try { data = text ? JSON.parse(text) : {}; } catch (e) {}
@@ -2693,7 +2707,7 @@ async function _loadPayload(id) {
         return;
     }
     try {
-        var res  = await fetch('/tasker/payload?id=' + encodeURIComponent(id));
+        var res  = await taskerFetch('/tasker/payload?id=' + encodeURIComponent(id));
         var data = await res.json();
         pmSchema = data.schema ? JSON.parse(data.schema) : [];
         pmValues = data.values ? JSON.parse(data.values) : {};
@@ -2747,7 +2761,7 @@ async function _loadPayloadPreview() {
     var el = document.getElementById('payloadPreview');
     if (!el || !pmScheduleId) return;
     try {
-        var res  = await fetch('/tasker/args-preview', { method:'POST', headers:{'Content-Type':'application/json'},
+        var res  = await taskerFetch('/tasker/args-preview', { method:'POST', headers:{'Content-Type':'application/json'},
             body: JSON.stringify({id:pmScheduleId, schema:JSON.stringify(pmSchema), values:JSON.stringify(pmValues)}) });
         var data = await res.json();
         if (!data.ok) { el.textContent = '[' + (data.step || 'error') + '] ' + (data.error || ''); return; }
@@ -2775,7 +2789,7 @@ async function savePayload() {
         return;
     }
     try {
-        var res  = await fetch('/tasker/payload', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({id:id, schema:schema, values:values}) });
+        var res  = await taskerFetch('/tasker/payload', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({id:id, schema:schema, values:values}) });
         var data = await res.json();
         if (!res.ok || !data.ok) { Dialog.error(data.error || 'Save failed'); return; }
         payloadSaved(id, schema, values);
@@ -2827,7 +2841,7 @@ async function clearPayload() {
     if (!id) return;
     if (!(await Dialog.confirm('Delete payload schema and values? The script will stop receiving payload flags.', '🗑 Clear payload', true))) return;
     try {
-        var res  = await fetch('/tasker/payload', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({id:id, schema:'', values:''}) });
+        var res  = await taskerFetch('/tasker/payload', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({id:id, schema:'', values:''}) });
         var data = await res.json();
         if (!res.ok || !data.ok) { Dialog.error(data.error || 'Clear failed'); return; }
         payloadSaved(id, '', '');
@@ -3036,7 +3050,7 @@ function pmValuesSet(key, val) { pmValues[key] = val; refreshPayloadPreview(); }
 
 // ── Polling ───────────────────────────────────────────────────────────────────
 
-setInterval(loadList, 10000);
+setInterval(function() { if (!document.hidden) loadList().catch(function(e) { if (window.TaskerBridge && window.TaskerBridge.remote()) window.TaskerBridge.status('Offline · ' + e.message); }); }, 3000);
 loadResources();
 setInterval(loadResources, 5000);
 
@@ -3086,7 +3100,7 @@ async function prepareScriptPayload(draft, oldPath) {
         request.promise = (async function() {
             if (!path || draft.executor !== 'python') return { schema: '', values: '' };
             try {
-                var res = await fetch('/tasker/script-params?path=' + encodeURIComponent(path)
+                var res = await taskerFetch('/tasker/script-params?path=' + encodeURIComponent(path)
                     + '&venv=' + (draft.use_venv === 'true'));
                 var data = await res.json();
                 if (!res.ok || !data.ok) throw new Error('[' + (data.step || 'error') + '] ' + (data.error || 'Cannot read script parameters'));
@@ -3119,7 +3133,7 @@ function pickPath(mode) {
             + '&ext=' + encodeURIComponent(extByExec[exec] || '')
             + '&start=' + encodeURIComponent(field.value || '');
 
-    fetch(url)
+    taskerFetch(url)
         .then(function(r) { return r.json(); })
         .then(function(d) {
             if (!d.ok)   { alert('Could not open the dialog: ' + (d.error || '')); return; }
