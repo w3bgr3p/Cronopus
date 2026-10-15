@@ -41,7 +41,18 @@
         catch(e){document.getElementById('brFirewallStatus').textContent=e.message;throw e;}
         finally{button.disabled=false;button.textContent=label;}
     }
-    var connections = [], controller = createConfigController({send:send}),ipRequest=0,ipEdits=0,configLoad=0,autoIpTried=false;
+    var connections = [], controller = createConfigController({send:send}),ipRequest=0,ipEdits=0,configLoad=0,autoIpTried=false,exportKey=null;
+    async function copyConnection(){
+        if(!exportKey)throw new Error('Create a new access key first. Existing keys cannot be recovered.');
+        var s=await send('GET','/bridge-local/server');
+        if(!s.actualUrl||!s.settings.enabled)throw new Error('Enable and apply the HTTPS server settings, then copy the connection.');
+        if(!s.keys.some(function(k){return k.id===exportKey.id&&!k.revoked;}))throw new Error('This key is no longer active. Create a new key.');
+        var code=root.BridgeConnectionCode.encode({name:new URL(s.actualUrl).hostname,address:s.actualUrl,nodeId:s.nodeId,fingerprint:s.fingerprint,secret:exportKey.secret});
+        var field=document.getElementById('brConnectionCode');field.value=code;
+        try{await navigator.clipboard.writeText(code);keyMessage('Connection copied. Paste it into New connection on your other z3nDash.');}
+        catch(e){field.hidden=false;field.focus();field.select();var copied=false;try{copied=document.execCommand('copy');}catch(ignored){}
+            keyMessage(copied?'Connection copied. Paste it into New connection on your other z3nDash.':'Select this complete connection code and press Ctrl+C.');}
+    }
     async function detectIp(){
         var request=++ipRequest,edits=ipEdits,version=configLoad,button=document.getElementById('brDetectIp'),field=document.getElementById('br_advertisedAddress'),info=document.getElementById('brIpStatus');
         button.disabled=true;info.textContent='Detecting this server’s public IP…';
@@ -72,7 +83,8 @@
     if (typeof document !== 'undefined') document.addEventListener('click', async function(e) {
         var el = e.target.closest('button'); if (!el) return;
         try {
-            if(el.id==='brOpenFirewall'||el.id==='brCloseFirewall'){await changeFirewall(el.id==='brOpenFirewall'?'open':'close');
+            if(el.id==='brCopyConnection'){el.disabled=true;try{await copyConnection();}catch(ex){keyMessage(ex.message);throw ex;}finally{el.disabled=!exportKey;}
+            }else if(el.id==='brOpenFirewall'||el.id==='brCloseFirewall'){await changeFirewall(el.id==='brOpenFirewall'?'open':'close');
             }else if(el.id==='brCheckFirewall'){await checkFirewall(el);
             }else if (el.id === 'brDetectIp') {await detectIp();
             } else if (el.id === 'brSaveConnection') {
@@ -90,7 +102,8 @@
                 if(el.disabled)return;var label=el.textContent;el.disabled=true;el.textContent='Creating…';message('');keyMessage('Creating access key…');
                 try{var key = await send('POST','/bridge-local/keys',{name:input('brKeyName')});
                     if(!key||typeof key.secret!=='string'||!key.secret)throw new Error('The backend did not return an access key. Check that the updated application is running.');
-                    document.getElementById('brNewKey').value=key.secret;keyMessage('Access key created. Copy it now — it is shown only once.');await load({preserveServerDraft:true});
+                    exportKey={id:key.id,secret:key.secret};var copyButton=document.getElementById('brCopyConnection');if(copyButton)copyButton.disabled=false;
+                    document.getElementById('brNewKey').value=key.secret;keyMessage('Access key created. Click Copy connection to copy all connection details at once.');await load({preserveServerDraft:true});
                 }catch(e){keyMessage(e.message);throw e;}finally{el.disabled=false;el.textContent=label;}
             } else if (el.id === 'brRenewCertificate') {
                 if(!confirm('Renew the server certificate? Update its fingerprint in every client.'))return;

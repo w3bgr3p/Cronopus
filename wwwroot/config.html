@@ -52,8 +52,10 @@
                 </div>
                 <p class="br-ip-hint" id="brIpStatus" role="status">Use the server's public IP (the one used for RDP). HTTPS uses its own port, default 38473. Bind IP 0.0.0.0 listens on all interfaces.</p>
                 <pre id="brIdentity" class="br-identity"></pre>
-                <div class="br-row"><input id="brKeyName" placeholder="Key name" value="Desktop"><button class="btn" id="brCreateKey">Create access key</button></div>
+                <div class="br-row"><input id="brKeyName" placeholder="Key name" value="Desktop"><button class="btn" id="brCreateKey">Create access key</button><button class="btn primary" id="brCopyConnection" disabled>Copy connection</button></div>
+                <p class="br-ip-hint">Create a key, then Copy connection. On your other z3nDash: Tasker → New connection → paste the code.</p>
                 <textarea id="brNewKey" readonly placeholder="A new key appears here once. Copy it to your local z3nDash."></textarea>
+                <textarea id="brConnectionCode" readonly hidden aria-label="Connection code" spellcheck="false"></textarea>
                 <p id="brKeyStatus" class="br-action-status" role="status" aria-live="polite"></p>
                 <div id="brKeys"></div>
             </section>
@@ -486,7 +488,8 @@
     </div>
 </div>
 
-<script src="/js/bridge-config.js?v=20261015-firewall-id"></script>
+<script src="/js/bridge-connection-code.js?v=1"></script>
+<script src="/js/bridge-config.js?v=20261015-code"></script>
 <script src="/js/config.js"></script>
 </body>
 </html>

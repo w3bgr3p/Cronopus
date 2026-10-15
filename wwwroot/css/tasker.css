@@ -338,7 +338,9 @@ body[data-remote="true"] [onclick="clearOutputBottom()"] { display:none; }
 .br-connection-dialog h3,.br-connection-dialog p { margin:0; }
 .br-connection-dialog p { font-size:var(--fs-11);color:var(--text2);line-height:var(--lh-normal); }
 .br-connection-dialog label { display:flex;flex-direction:column;gap:var(--sp-4);font-size:var(--fs-11); }
-.br-connection-dialog input { width:100%;box-sizing:border-box;background:var(--bg2);color:var(--text);border:1px solid var(--border);border-radius:var(--radius-sm);padding:var(--sp-8);font:inherit; }
+.br-connection-dialog input,.br-connection-dialog textarea { width:100%;box-sizing:border-box;background:var(--bg2);color:var(--text);border:1px solid var(--border);border-radius:var(--radius-sm);padding:var(--sp-8);font:inherit; }
+.br-connection-dialog textarea { resize:vertical; }
 .br-connection-actions { display:flex;justify-content:flex-end;gap:var(--sp-8); }
-.br-connection-dialog .btn.primary { color:var(--text); }
+.br-connection-dialog .btn.primary { color:var(--on-accent); }
 .br-connection-dialog .br-connection-error { color:var(--red);min-height:var(--sp-16); }
+.br-connection-dialog .br-connection-error[data-valid-code="true"] { color:var(--green); }
