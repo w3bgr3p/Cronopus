@@ -101,7 +101,9 @@ public sealed class BridgeStore
                 using var cert = request.CreateSelfSigned(DateTimeOffset.UtcNow.AddMinutes(-5), DateTimeOffset.UtcNow.AddYears(2));
                 State.Certificate = Convert.ToBase64String(cert.Export(X509ContentType.Pfx)); Save();
             }
-            return X509CertificateLoader.LoadPkcs12(Convert.FromBase64String(State.Certificate), null, X509KeyStorageFlags.EphemeralKeySet);
+            // Windows Schannel cannot serve TLS with an ephemeral private key.
+            return X509CertificateLoader.LoadPkcs12(Convert.FromBase64String(State.Certificate), null,
+                OperatingSystem.IsWindows() ? X509KeyStorageFlags.UserKeySet : X509KeyStorageFlags.EphemeralKeySet);
         }
     }
     public static string Fingerprint(X509Certificate2 cert) => Convert.ToHexString(SHA256.HashData(cert.RawData));
