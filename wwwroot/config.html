@@ -43,6 +43,12 @@
                 </div>
                 <button class="btn primary" id="brApplyServer">Apply server settings</button>
                 <button class="btn" id="brRenewCertificate">Renew certificate</button>
+                <div class="br-firewall">
+                    <label><input type="checkbox" id="brFirewallOnApply" checked> Open HTTPS port in Windows Firewall when applying</label>
+                    <div class="br-row"><button class="btn" id="brOpenFirewall">Open HTTPS port</button><button class="btn" id="brCloseFirewall">Close ZenDash rule</button><button class="btn" id="brCheckFirewall">Check firewall</button></div>
+                    <p id="brFirewallStatus" role="status">Checking Windows Firewall…</p>
+                    <p class="br-ip-hint">Windows may request administrator approval. This manages the firewall on this machine; hosting-provider rules are configured separately.</p>
+                </div>
                 <p class="br-ip-hint" id="brIpStatus" role="status">Use the server's public IP (the one used for RDP). HTTPS uses its own port, default 38473. Bind IP 0.0.0.0 listens on all interfaces.</p>
                 <pre id="brIdentity" class="br-identity"></pre>
                 <div class="br-row"><input id="brKeyName" placeholder="Key name" value="Desktop"><button class="btn" id="brCreateKey">Create access key</button></div>

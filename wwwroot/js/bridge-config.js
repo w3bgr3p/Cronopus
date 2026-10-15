@@ -15,6 +15,20 @@
     function esc(value) { return String(value == null ? '' : value).replace(/[&<>"']/g, function(c) {return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];}); }
     function input(id) { return document.getElementById(id).value.trim(); }
     function message(text) { document.getElementById('brMessage').textContent = text; }
+    function firewallStatus(value){
+        if(!value)return;
+        document.getElementById('brFirewallStatus').textContent=value.error||('TCP '+value.port+' · '+(value.open?'ZenDash inbound rule is open':value.exists?'ZenDash rule needs updating for the current port/application':'No ZenDash inbound rule'));
+        ['brOpenFirewall','brCloseFirewall','brFirewallOnApply'].forEach(function(id){document.getElementById(id).disabled=!value.supported;});
+        if(!value.supported)document.getElementById('brFirewallOnApply').checked=false;
+        document.getElementById('brCloseFirewall').disabled=!value.supported||!value.exists;
+    }
+    async function changeFirewall(action){
+        var buttons=['brOpenFirewall','brCloseFirewall','brCheckFirewall'];buttons.forEach(function(id){document.getElementById(id).disabled=true;});
+        document.getElementById('brFirewallStatus').textContent='Updating Windows Firewall… Approve the Windows administrator prompt if shown.';
+        try{firewallStatus(await send('POST','/bridge-local/server/firewall',{action:action}));}
+        catch(e){try{firewallStatus(await send('GET','/bridge-local/server/firewall'));}catch(ignored){}message(e.message);}
+        finally{document.getElementById('brCheckFirewall').disabled=false;}
+    }
     var connections = [], controller = createConfigController({send:send}),ipRequest=0,ipEdits=0,configLoad=0,autoIpTried=false;
     async function detectIp(){
         var request=++ipRequest,edits=ipEdits,version=configLoad,button=document.getElementById('brDetectIp'),field=document.getElementById('br_advertisedAddress'),info=document.getElementById('brIpStatus');
@@ -32,6 +46,7 @@
         try {
             var values = await Promise.all([send('GET','/bridge-local/server'),send('GET','/bridge-local/connections')]);
             var s = values[0]; connections = values[1];
+            firewallStatus(s.firewall);
             document.getElementById('brEnabled').checked = s.settings.enabled;
             ['bindAddress','advertisedAddress','port'].forEach(function(k) { document.getElementById('br_' + k).value = s.settings[k]; });
             document.getElementById('br_quota').value=s.settings.uploadQuotaBytes/1073741824;
@@ -45,7 +60,9 @@
     if (typeof document !== 'undefined') document.addEventListener('click', async function(e) {
         var el = e.target.closest('button'); if (!el) return;
         try {
-            if (el.id === 'brDetectIp') {await detectIp();
+            if(el.id==='brOpenFirewall'||el.id==='brCloseFirewall'){await changeFirewall(el.id==='brOpenFirewall'?'open':'close');
+            }else if(el.id==='brCheckFirewall'){firewallStatus(await send('GET','/bridge-local/server/firewall'));
+            }else if (el.id === 'brDetectIp') {await detectIp();
             } else if (el.id === 'brSaveConnection') {
                 await controller.save({id:input('brConnectionId'),name:input('brName'),address:input('brAddress'),nodeId:input('brNodeId'),fingerprint:input('brFingerprint'),key:input('brSecret')});
                 document.getElementById('brSecret').value = ''; message('Connection saved'); await load();
@@ -68,7 +85,9 @@
                 if (ip !== current.settings.advertisedAddress && !confirm('Changing the server IP creates a new certificate. Update its fingerprint in your clients. Continue?')) return;
                 var settings=Object.assign({},current.settings,{enabled:document.getElementById('brEnabled').checked,bindAddress:input('br_bindAddress'),advertisedAddress:ip,port:Number(input('br_port'))});
                 settings.uploadQuotaBytes=Math.floor(Number(input('br_quota'))*1073741824);settings.transferBytesPerSecond=Math.floor(Number(input('br_rate'))*1048576);
-                await send('PUT','/bridge-local/server',settings); await load(); message('Server settings applied');
+                settings.openFirewall=document.getElementById('brFirewallOnApply').checked&&!document.getElementById('brFirewallOnApply').disabled;
+                el.disabled=true;message(settings.enabled&&settings.openFirewall?'Applying settings and opening Windows Firewall. Approve the administrator prompt if shown.':'Applying server settings…');
+                try{await send('PUT','/bridge-local/server',settings);await load();message('Server settings applied');}finally{el.disabled=false;}
             }
         } catch(err) {message(err.message);}
     });

@@ -17,11 +17,14 @@ public sealed partial class BridgeLocalHandler
             await host.StopAsync(CancellationToken.None); store.State.Settings = input;
             using var renewed = store.Certificate(regenerate); store.Save();
             if (input.Enabled) await host.StartAsync(CancellationToken.None);
+            if(input.Enabled&&body.TryGetProperty("openFirewall",out var openFirewall)&&openFirewall.ValueKind==JsonValueKind.True){
+                using var timeout=new CancellationTokenSource(TimeSpan.FromMinutes(2));await _firewall.Change("open",FirewallPort,timeout.Token);
+            }
         }
         using var cert = store.Certificate();
         await Write(ctx, new { settings = store.State.Settings, nodeId = store.NodeId, fingerprint = BridgeStore.Fingerprint(cert),
             expires = cert.NotAfter.ToUniversalTime(), actualUrl = host.Address?.ToString(), error = host.Error,
-            keys = store.State.Keys.Select(k => new { k.Id, k.Name, k.Revoked }), storage = store.Root,
+            keys = store.State.Keys.Select(k => new { k.Id, k.Name, k.Revoked }), storage = store.Root,firewall=_firewall.Status(FirewallPort),
             storageProtection = OperatingSystem.IsWindows() ? "Windows user encryption (DPAPI)" : "Owner-only file permissions" });
     }
     private async Task Proxy(HttpListenerContext ctx, string path)

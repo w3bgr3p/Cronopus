@@ -140,7 +140,7 @@ function onListKeyDown(e) {
     if (e.key !== 'Delete' || e.ctrlKey || e.altKey || e.metaKey || e.shiftKey) return;
     var t = e.target;
     if (t && (t.isContentEditable || /^(INPUT|TEXTAREA|SELECT)$/.test(t.tagName))) return;
-    if (document.querySelector('#dialogOverlay.open, .pm-overlay.open, .cm-modal-overlay.open')) return;
+    if (document.querySelector('#dialogOverlay.open, .pm-overlay.open, .cm-modal-overlay.open, .br-connection-overlay, .br-file-overlay')) return;
     if (!selectedId || selectedId === '__new__') return;
     var ids = _selectedList().map(function(s) { return s.id; });
     if (!ids.length) return;
@@ -151,6 +151,17 @@ function onListKeyDown(e) {
 // ── Load list ─────────────────────────────────────────────────────────────────
 
 function taskerFetch(url, options) { return window.TaskerBridge ? window.TaskerBridge.fetch(url, options) : fetch(url, options); }
+function resetTaskerNode() {
+    _resources=null;_instCache={};_selAnchor=null;curProject='';curTaskId='';curRunId='';_outputTaskId=null;
+    collapsedGroups=new Set();_groupsInitialized=false;_dropOutputQueue();_resetRuns();_setLive(false);
+    if(_liveSoon){clearTimeout(_liveSoon);_liveSoon=null;}
+    _cmFilePath='';_cmScheduleId='';if(typeof AiPanel!=='undefined')AiPanel._schedulerCtx=null;
+    ['bottomPanels','hResizer'].forEach(function(id){var el=document.getElementById(id);if(el)el.style.display='none';});
+    ['cmOverlay','killPickOverlay'].forEach(function(id){var el=document.getElementById(id);if(el)el.classList.remove('open');});
+    var output=_getOutputBox();if(output)output.textContent='';
+    var search=document.getElementById('searchInput');if(search)search.value='';
+    renderList();updateHeaderStats();
+}
 async function loadList() {
     var res = await taskerFetch('/tasker/list');
     if (!res.ok) throw new Error('/tasker/list HTTP ' + res.status);
@@ -2051,9 +2062,11 @@ function startSseOutput(id) {
     _outputTaskId = id;
     startLiveWatch(id);
 
-    _sseOutput = new EventSource('/tasker/output/stream?id=' + encodeURIComponent(id));
+    var context=_taskerContext();
+    var source = _sseOutput = new EventSource('/tasker/output/stream?id=' + encodeURIComponent(id));
 
     _sseOutput.addEventListener('output', function(e) {
+        if(!_taskerCurrent(context)||_sseOutput!==source||selectedId!==id)return;
         var d;
         try { d = JSON.parse(e.data); } catch (err) { return; }
         if (d.done) { _setLive(false); return; }
@@ -2066,6 +2079,7 @@ function startSseOutput(id) {
     });
 
     _sseOutput.addEventListener('done', function() {
+        if(!_taskerCurrent(context)||_sseOutput!==source)return;
         _setLive(false);
         _sseOutput.close(); _sseOutput = null;
     });
@@ -2073,7 +2087,7 @@ function startSseOutput(id) {
     // Оборвалась подписка, а не прогон: гасить бейдж здесь нельзя, опрос сам
     // увидит, работает задача или нет.
     _sseOutput.onerror = function() {
-        _sseOutput.close(); _sseOutput = null;
+        source.close();if(_sseOutput===source)_sseOutput = null;
     };
 }
 

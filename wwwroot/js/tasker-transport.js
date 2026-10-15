@@ -50,7 +50,8 @@
             var parsed=name==='json'?data:(function(){try{return JSON.parse(data);}catch(e){return null;}})();
             if(command&&parsed&&parsed._revision&&options.body){var changed=JSON.parse(options.body);if(root.taskDraft&&root.taskDraft.id===changed.id)root.taskDraft._revision=parsed._revision;var row=(root.schedules||[]).find(function(r){return r.id===changed.id;});if(row)row._revision=parsed._revision;}
             return data;};});
-        status(response.status===202?'Command outcome pending':response.ok?'Connected · '+new Date().toLocaleTimeString():'Server error · '+response.status);
+        var reason='';if(!response.ok){try{reason=(await response.clone().json()).error||'';}catch(e){}}
+        status(response.status===202?'Command outcome pending':response.ok?'Connected · '+new Date().toLocaleTimeString():'Offline · '+(reason||'HTTP '+response.status));
         return response;
     }
     async function detail(id){
@@ -128,7 +129,7 @@
             else if(choice!=='discard'){selector.value=current()||'';return;}
         }
         if(typeof root.closeSseOutput==='function')root.closeSseOutput();
-        if(root.RemoteOutput)root.RemoteOutput.stop();
+        if(root.RemoteOutput){root.RemoteOutput.stop();root.RemoteOutput.setTask(null);}
         if(typeof root.closeSse==='function')root.closeSse();
         if(typeof root.stopProcStatsPoll==='function')root.stopProcStatsPoll();
         if(typeof root.clearOutputPoll==='function')root.clearOutputPoll();
@@ -138,10 +139,12 @@
         root.dispatchEvent(new CustomEvent('bridge-node-changed'));
         root.selectedId=null;root.selectedIds=new Set();root.taskDraft=null;root.formDirty=false;root.schedules=[];
         root._formBaseline={};root._detailSeq=(root._detailSeq||0)+1;
+        if(root.resetTaskerNode)root.resetTaskerNode();
         document.body.dataset.remote=id?'true':'false';
         var header=document.getElementById('detailHeader');if(header)header.style.display='none';
-        document.getElementById('detailBody').textContent='';status(id?'Connecting…':'Local');
-        try{await root.loadList();}catch(e){status('Offline · '+e.message);}
+        document.getElementById('detailBody').textContent=id?'Connecting to '+(root.TaskerBridge.connection()||{}).name+'…':'';status(id?'Connecting…':'Local');
+        var context=transport.context();
+        try{await root.loadList();}catch(e){if(transport.isCurrent(context)){status('Offline · '+e.message);var body=document.getElementById('detailBody');body.textContent='Cannot load tasks from the selected server. '+e.message;}}
     }
     function addConnectionOption(selector,connection){
         var option=document.createElement('option');option.value=connection.id;option.textContent=connection.name;

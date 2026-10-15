@@ -9,7 +9,11 @@ on the server when the client disconnects.
 2. First setup detects the server's public IP automatically; **Detect IP** repeats
    discovery from the server. Enter your RDP IP manually if it differs. **HTTPS port**
    is separate from RDP (default `38473`). Enable HTTPS and Apply.
-3. Allow the actual port through the server and hosting firewall.
+3. Keep **Open HTTPS port in Windows Firewall when applying** checked, then Apply.
+   Approve Windows UAC if prompted. The same block provides **Open HTTPS port**,
+   **Close ZenDash rule** and **Check firewall**, using the actual bound port.
+   Closing removes only this instance's rule. Hosting firewall/NAT configuration
+   is separate and is managed through the hosting provider.
 4. Create a named key. Copy the key, Node ID and certificate SHA-256 fingerprint.
 5. In local Tasker's node selector choose **+ New connection…**. Enter a name,
    `https://IP:port`, Node ID, pin and key, then **Add connection**. It is saved
@@ -59,3 +63,7 @@ another Windows account. Redirects and mismatching certificates are rejected.
 Run `z3nDash.exe --headless` to start without opening the panel; this does not
 install a Windows service. Check the actual URL, firewall, IP, expiry and key
 when a connection fails.
+
+Switching nodes immediately clears previous tasks, statistics and output. A failed
+remote connection shows an error and an empty remote view. Choose Local to restore
+the local task list.

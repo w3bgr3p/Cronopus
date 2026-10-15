@@ -420,3 +420,7 @@
 .br-ip-input input { min-width:0;flex:1; }
 .br-ip-input button { flex-shrink:0;white-space:nowrap; }
 .br-ip-hint { color:var(--text2);font-size:var(--fs-11);margin-block:var(--sp-8); }
+.br-firewall { margin-block:var(--sp-12);padding:var(--sp-12);border:1px solid var(--border);background:var(--bg2); }
+.br-firewall>label { display:flex;gap:var(--sp-8);align-items:center; }
+.br-firewall .br-row { margin-block:var(--sp-8);flex-wrap:wrap; }
+.br-firewall p { margin-block:var(--sp-6);font-size:var(--fs-11);color:var(--text2); }

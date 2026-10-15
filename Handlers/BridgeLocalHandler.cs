@@ -23,8 +23,9 @@ public sealed partial class BridgeLocalHandler(BridgeStore store, BridgeHost hos
         try { await Dispatch(ctx); }
         catch (Exception ex)
         {
-            ctx.Response.StatusCode = ex is ArgumentException or JsonException ? 400 : ex is KeyNotFoundException ? 404 : ex is HttpRequestException ? 502 : 500;
-            await Write(ctx, new { error = ex is HttpRequestException ? "Cannot connect: check server address, certificate and key" : ex.Message });
+            ctx.Response.StatusCode = ex is ArgumentException or JsonException ? 400 : ex is KeyNotFoundException ? 404 : ex is OperationCanceledException ? 504 : ex is HttpRequestException ? 502 : 500;
+            var reason=ex is OperationCanceledException?"Server did not respond in time. Check its HTTPS address, port and firewall.":ex is HttpRequestException request&&request.StatusCode==HttpStatusCode.Unauthorized?"Server rejected the access key. Check that it is correct and has not been revoked.":ex is HttpRequestException?"Cannot connect: check server address, HTTPS port, certificate and key":ex.Message;
+            await Write(ctx, new { error = reason });
         }
         finally{if(administrative)_admin.Release();}
         return true;

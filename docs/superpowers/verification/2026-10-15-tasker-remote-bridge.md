@@ -63,3 +63,22 @@ Post-merge JavaScript suite: 58 passed. Windows build succeeded at
 `bin/remote-tasker/z3nDash.exe` (0 errors, 9 existing warnings). The normal Debug
 output is locked by the user's running z3nDash; that process was left running.
 No push, PR, installer release or production deployment occurred.
+
+## Follow-up: integrated firewall and failed-node isolation
+
+- Server Config can open/update, close and inspect its own Windows Firewall rule;
+  Apply can enable the rule for the actual bound HTTPS port. Elevation uses Windows
+  UAC and a hidden PowerShell process with fixed cmdlets and validated arguments.
+- Firewall rule is scoped to one node, TCP port and executable. Close targets only
+  that exact rule. Hosting-provider firewall/NAT remains external.
+- Windows COM status read and PowerShell `WhatIf` validation passed without changing
+  system rules. Real elevated open/close was not executed during verification.
+- Browser fixture checked Open/Close/status and Apply's firewall request. Graphite
+  and Aluminium screenshots were inspected.
+- Browser regression first reproduced local tasks/logs remaining visible on a
+  failed remote switch. It now passes immediate clearing, late-SSE rejection and
+  return to Local. Resource, instance and output caches are cleared on node change.
+- Saved connection `ns3110395` returned a timeout from the running older backend;
+  new backend maps that to 504 with a useful connection/firewall message.
+- 61 JavaScript tests pass. C# integration suite and Windows target build pass.
+  No live hosting-server firewall change or WAN connection success is claimed.
