@@ -4,7 +4,7 @@ namespace z3nDash;
 public sealed partial class TaskerService
 {
     public static readonly HashSet<string> RemoteRoutes = new(StringComparer.Ordinal) {
-        "GET /tasker/list", "POST /tasker/save", "POST /tasker/delete", "POST /tasker/run",
+        "GET /tasker/list", "GET /tasker/detail", "POST /tasker/save", "POST /tasker/delete", "POST /tasker/run",
         "POST /tasker/stop", "POST /tasker/pause", "POST /tasker/resume", "POST /tasker/defer",
         "GET /tasker/payload", "POST /tasker/payload", "GET /tasker/instances", "GET /tasker/queue",
         "GET /tasker/process-stats", "GET /tasker/resources", "POST /tasker/kill-instance",
@@ -19,6 +19,9 @@ public sealed partial class TaskerService
         var clean = path.Split('?')[0];
         if (!RemoteRoutes.Contains(method + " " + clean)) return new(404, "{\"error\":\"Unsupported operation\"}", "application/json");
         var context = new TaskerExchange(method, path, body);
+        var id = context.Request.QueryString["id"];
+        if (!string.IsNullOrEmpty(id)) ValidateId(id);
+        if (body is { ValueKind: JsonValueKind.Object } b && b.TryGetProperty("id", out var bid) && !string.IsNullOrEmpty(bid.GetString())) ValidateId(bid.GetString()!);
         await HandleRequest(context);
         return context.Response.Reply();
     }

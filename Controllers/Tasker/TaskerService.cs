@@ -44,11 +44,12 @@ public sealed partial class TaskerService
         _dbService   = dbService;
         _scheduler   = scheduler;
         _wwwrootPath = wwwrootPath;
+        _dbService.Connected += _ => _databaseEpoch = Guid.NewGuid().ToString("N");
     }
 
     public void Init() { /* таблица создаётся в SchedulerService.Init() */ }
 
-    public async Task<bool> HandleRequest(TaskerExchange context)
+    private async Task<bool> HandleCore(TaskerExchange context)
     {
         var path   = context.Request.Url?.AbsolutePath.ToLower() ?? "";
         var method = context.Request.HttpMethod;
@@ -65,6 +66,7 @@ public sealed partial class TaskerService
         {
             if (path == "/tasker" || path == "/tasker/" || path == "/tasker.html")           { await ServePage(context.Response);          return true; }
             if (path == "/tasker/list"    && method == "GET")         { await List(context, db);                    return true; }
+            if (path == "/tasker/detail" && method == "GET") { await Detail(context, db); return true; }
             if (path == "/tasker/save"    && method == "POST")        { await Save(context, db);                    return true; }
             if (path == "/tasker/delete"  && method == "POST")        { await Delete(context, db);                  return true; }
             if (path == "/tasker/run"     && method == "POST")        { await RunNow(context, db);                  return true; }
@@ -150,6 +152,11 @@ public sealed partial class TaskerService
 
         var id = json.Value.TryGetProperty("id", out var eid) ? eid.GetString() ?? "" : "";
         if (string.IsNullOrEmpty(id)) id = Guid.NewGuid().ToString();
+        ValidateId(id);
+        var expected = json.Value.TryGetProperty("_revision", out var rev) ? rev.GetString() : null;
+        var current = db.Get("edit_version", Table, where: $"\"id\" = '{id}'");
+        if (expected != null && expected != _databaseEpoch + ":" + current)
+        { ctx.Response.StatusCode = 409; await WriteJson(ctx.Response, new { error = "Task changed. Reload before saving.", code = "revision_conflict" }); return; }
 
         var record = new Dictionary<string, string> { { "id", id } };
         foreach (var col in Columns.Where(c => c != "id" && c != "status" && c != "last_run" && c != "last_exit" && c != "last_output"))
@@ -162,6 +169,7 @@ public sealed partial class TaskerService
         // Запись с thrw: Query по умолчанию глотает ошибку базы, и Save отвечал ok,
         // хотя строка не легла (так было при отсутствующей таблице).
         var existing = db.Get("id", Table, where: $"\"id\" = '{id}'");
+        record["edit_version"] = Guid.NewGuid().ToString("N");
         var stage = "update";
         try
         {
@@ -169,7 +177,9 @@ public sealed partial class TaskerService
             {
                 var setParts = record.Where(kv => kv.Key != "id")
                                      .Select(kv => $"\"{kv.Key}\" = '{kv.Value.Replace("'", "''")}'");
-                db.Query($"UPDATE \"{Table}\" SET {string.Join(", ", setParts)} WHERE \"id\" = '{id}'", thrw: true);
+                var match = expected == null ? "" : $" AND \"edit_version\" = '{current.Replace("'", "''")}'";
+                var changed = db.Query($"UPDATE \"{Table}\" SET {string.Join(", ", setParts)} WHERE \"id\" = '{id}'{match} RETURNING \"id\"", thrw: true);
+                if (string.IsNullOrWhiteSpace(changed)) { ctx.Response.StatusCode = 409; await WriteJson(ctx.Response, new { error = "Task changed", code = "revision_conflict" }); return; }
             }
             else
             {
@@ -200,7 +210,7 @@ public sealed partial class TaskerService
         // «Начать сразу» должно значить сразу, а не «на ближайшем минутном тике».
         _scheduler.EvaluateNow(id, db);
 
-        await WriteJson(ctx.Response, new { ok = true, id });
+        await WriteJson(ctx.Response, new { ok = true, id, _revision = _databaseEpoch + ":" + record["edit_version"] });
     }
 
     private async Task Delete(TaskerExchange ctx, Db db)
@@ -210,6 +220,8 @@ public sealed partial class TaskerService
 
         var id = json.Value.TryGetProperty("id", out var eid) ? eid.GetString() ?? "" : "";
         if (string.IsNullOrEmpty(id)) { ctx.Response.StatusCode = 400; return; }
+
+        if (!await CheckRevision(ctx, json.Value, db, id)) return;
 
         using (DiagTrace.Span("kill")) _scheduler.Kill(id);
         db.Del(Table, where: $"\"id\" = '{id}'");
@@ -354,6 +366,8 @@ public sealed partial class TaskerService
 
         if (string.IsNullOrEmpty(id)) { ctx.Response.StatusCode = 400; return; }
 
+        if (!await CheckRevision(ctx, json.Value, db, id)) return;
+
         var escapedId = id.Replace("'", "''");
         var escapedSchema = schema.Replace("'", "''");
         var escapedValues = values.Replace("'", "''");
@@ -365,7 +379,7 @@ public sealed partial class TaskerService
                 await WriteJson(ctx.Response, new { ok = false, error = "Task not found. Save the task before editing its payload." });
                 return;
             }
-            db.Query($"UPDATE \"{Table}\" SET \"payload_schema\" = '{escapedSchema}', \"payload_values\" = '{escapedValues}' WHERE \"id\" = '{escapedId}'", thrw: true);
+            db.Query($"UPDATE \"{Table}\" SET \"payload_schema\" = '{escapedSchema}', \"payload_values\" = '{escapedValues}', \"edit_version\" = '{Guid.NewGuid():N}' WHERE \"id\" = '{escapedId}'", thrw: true);
             var verified = db.Query($"SELECT COUNT(*) FROM \"{Table}\" WHERE \"id\" = '{escapedId}' AND \"payload_schema\" = '{escapedSchema}' AND \"payload_values\" = '{escapedValues}'", thrw: true);
             if (verified.Trim() != "1") throw new InvalidOperationException("Payload was not persisted.");
         }

@@ -31,6 +31,7 @@
             Columns = new()
             {
                 { "id",               "TEXT PRIMARY KEY" },
+                { "edit_version",     "TEXT DEFAULT '1'" },
                 { "name",             "TEXT DEFAULT ''" },
                 { "executor",         "TEXT DEFAULT 'internal'" },
                 { "script_path",      "TEXT DEFAULT ''" },
