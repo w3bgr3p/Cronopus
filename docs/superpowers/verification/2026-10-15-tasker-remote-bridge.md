@@ -98,3 +98,15 @@ No push, PR, installer release or production deployment occurred.
   was disabled with an update explanation; Create remained available.
 - Added 404 compatibility, duplicate Create suppression and draft-preservation tests.
   Complete Node suite: 64 passed. New and running workspace UI assets synchronized.
+# Firewall identity mismatch: actual Windows reproduction
+
+- Reproduced on 2026-10-15 with real elevated rule creation: PowerShell exited 0,
+  but COM status reported no rule. NetSecurity `Name` and COM `INetFwRule.Name`
+  refer to different fields: the latter is NetSecurity `DisplayName`.
+- Both create and update now set DisplayName equal to the stable node rule name.
+- Real Windows open/read/update/close runner is opt-in: `--firewall-live`.
+- Real Edge + C# backend: `bridge.actions-live.py --firewall-live` passed Apply,
+  Check, Close, Open and final rule cleanup. No bridge API mocks in this run.
+- The earlier WhatIf-only validation did not prove rule visibility or creation.
+- UI keeps failed Open reasons beside the buttons; bridge labels use z3nDash.
+- Prepared Windows build: bin/remote-tasker. Installed running app is not replaced.

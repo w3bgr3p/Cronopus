@@ -2,6 +2,7 @@ using System.Reflection;
 using System.Text.Json;
 using z3nDash;
 
+if(args.Contains("--firewall-live")){await FirewallCases.Live();return;}
 if(args.Contains("--load")){await LoadCases.Run(args.Contains("--quick")?1:15);return;}
 if(args.Contains("--public-ip")){await PublicAddressCases.Run(true);return;}
 await PublicAddressCases.Run();

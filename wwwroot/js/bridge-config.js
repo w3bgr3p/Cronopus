@@ -22,16 +22,17 @@
         if(!value){document.getElementById('brFirewallStatus').textContent='The running backend does not support Firewall controls. Restart the updated z3nDash application.';
             ['brOpenFirewall','brCloseFirewall','brCheckFirewall','brFirewallOnApply'].forEach(function(id){document.getElementById(id).disabled=true;});document.getElementById('brFirewallOnApply').checked=false;return;}
         document.getElementById('brCheckFirewall').disabled=false;
-        document.getElementById('brFirewallStatus').textContent=value.error||('TCP '+value.port+' · '+(value.open?'ZenDash inbound rule is open':value.exists?'ZenDash rule needs updating for the current port/application':'No ZenDash inbound rule'));
+        document.getElementById('brFirewallStatus').textContent=value.error||('TCP '+value.port+' · '+(value.open?'z3nDash inbound rule is open':value.exists?'z3nDash rule needs updating for the current port/application':'No z3nDash inbound rule'));
         ['brOpenFirewall','brCloseFirewall','brFirewallOnApply'].forEach(function(id){document.getElementById(id).disabled=!value.supported;});
         if(!value.supported)document.getElementById('brFirewallOnApply').checked=false;
         document.getElementById('brCloseFirewall').disabled=!value.supported||!value.exists;
     }
     async function changeFirewall(action){
-        var buttons=['brOpenFirewall','brCloseFirewall','brCheckFirewall'];buttons.forEach(function(id){document.getElementById(id).disabled=true;});
+        var buttons=['brOpenFirewall','brCloseFirewall','brCheckFirewall'];buttons.forEach(function(id){document.getElementById(id).disabled=true;});message('');
         document.getElementById('brFirewallStatus').textContent='Updating Windows Firewall… Approve the Windows administrator prompt if shown.';
         try{firewallStatus(await send('POST','/bridge-local/server/firewall',{action:action}));}
-        catch(e){try{firewallStatus(await send('GET','/bridge-local/server/firewall'));}catch(ignored){}message(e.message);}
+        catch(e){try{firewallStatus(await send('GET','/bridge-local/server/firewall'));}catch(ignored){}
+            document.getElementById('brFirewallStatus').textContent='Firewall '+action+' failed: '+e.message;message(e.message);}
         finally{document.getElementById('brCheckFirewall').disabled=false;}
     }
     async function checkFirewall(button){

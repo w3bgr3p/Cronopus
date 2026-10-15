@@ -25,3 +25,12 @@ test('Create sends once, displays its key, and preserves unsaved server fields',
     assert.equal(f.elements.brNewKey.value,'test-secret');assert.equal(f.elements.brEnabled.checked,true);assert.equal(f.elements.br_port.value,'41237');
     assert.match(f.elements.brKeyStatus.textContent,/Access key created/);assert.equal(button.disabled,false);
 });
+
+test('Open keeps the failure visible beside the firewall buttons',async()=>{
+    const f=fixture(server);await f.c.BridgeConfig.load();
+    f.c.fetch=async(path,options)=>new Response(JSON.stringify(options.method==='POST'?{error:'Administrator approval was cancelled'}:server.firewall),{status:options.method==='POST'?500:200});
+    const button=f.elements.brOpenFirewall;button.id='brOpenFirewall';button.dataset={};
+    await f.events.click({target:{closest:()=>button}});
+    assert.match(f.elements.brFirewallStatus.textContent,/Administrator approval was cancelled/);
+    assert.doesNotMatch(f.elements.brFirewallStatus.textContent,/ZenDash/);
+});

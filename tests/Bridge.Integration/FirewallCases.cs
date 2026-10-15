@@ -4,6 +4,24 @@ using z3nDash;
 
 static class FirewallCases
 {
+    public static async Task Live()
+    {
+        var firewall=new BridgeFirewall(Guid.NewGuid().ToString("N"));
+        using var timeout=new CancellationTokenSource(TimeSpan.FromSeconds(90));
+        try{
+            var opened=await firewall.Change("open",39291,timeout.Token);
+            if(!opened.Exists||!opened.Open)throw new Exception("Rule was not created");
+            Console.WriteLine("PASS real-firewall-open "+opened.RuleName);
+            var updated=await firewall.Change("open",39292,timeout.Token);
+            if(!updated.Open||firewall.Status(39291).Open)throw new Exception("Rule port update failed");
+            Console.WriteLine("PASS real-firewall-update");
+        }finally{
+            using var cleanup=new CancellationTokenSource(TimeSpan.FromSeconds(90));
+            var closed=await firewall.Change("close",39291,cleanup.Token);
+            if(closed.Exists)throw new Exception("Test rule cleanup failed");
+            Console.WriteLine("PASS real-firewall-close");
+        }
+    }
     public static async Task Run()
     {
         var firewall=new BridgeFirewall(Guid.NewGuid().ToString("N"));

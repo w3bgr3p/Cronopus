@@ -1,4 +1,4 @@
-import json,subprocess,time,urllib.request
+import json,subprocess,time,urllib.request,sys
 from pathlib import Path
 from playwright.sync_api import sync_playwright
 proof=Path('.superpowers/actions-live');proof.mkdir(parents=True,exist_ok=True)
@@ -31,6 +31,26 @@ try:
         page.wait_for_function("document.querySelector('#brFirewallStatus').textContent.includes('Checked')")
         assert ('GET','/bridge-local/server/firewall',200) in calls
         assert ('POST','/bridge-local/keys',200) in calls
+        if '--firewall-live' in sys.argv:
+            page.on('dialog',lambda dialog:dialog.accept())
+            page.locator('#br_bindAddress').fill('127.0.0.1')
+            page.locator('#br_advertisedAddress').fill('127.0.0.1')
+            try:
+                page.locator('#brApplyServer').click()
+                page.wait_for_function("document.querySelector('#brServerMessage').textContent==='Server settings applied'",timeout=90000)
+                assert state(base)['firewall']['open'],'Apply did not create the actual rule'
+                page.locator('#brCheckFirewall').click()
+                page.wait_for_function("document.querySelector('#brFirewallStatus').textContent.includes('Checked') && document.querySelector('#brFirewallStatus').textContent.includes('is open')")
+                page.locator('#brCloseFirewall').click()
+                page.wait_for_function("document.querySelector('#brFirewallStatus').textContent.includes('No z3nDash')",timeout=90000)
+                page.locator('#brOpenFirewall').click()
+                page.wait_for_function("document.querySelector('#brFirewallStatus').textContent.includes('is open')",timeout=90000)
+                assert state(base)['firewall']['open']
+                print('PASS real-ui-apply-check-close-open-firewall')
+            finally:
+                req=urllib.request.Request(base+'/bridge-local/server/firewall',data=b'{"action":"close"}',headers={'X-Bridge-Local':'1','Content-Type':'application/json'})
+                with urllib.request.urlopen(req,timeout=100) as response:assert not json.load(response)['exists']
+                print('PASS real-ui-firewall-cleanup')
         for theme in ['graphite','graphite-light']:
             page.evaluate('theme=>document.documentElement.dataset.theme=theme',theme)
             page.locator('#brNewKey').evaluate("el=>el.value='[test key hidden]' ")

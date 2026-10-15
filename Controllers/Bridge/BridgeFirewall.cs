@@ -33,7 +33,9 @@ public sealed class BridgeFirewall(string nodeId)
         if(action=="close")script+=find+" | Remove-NetFirewallRule -ErrorAction Stop; ";
         else{
             var options=" -Direction Inbound -Action Allow -Protocol TCP -LocalPort "+port+" -Profile Any -Enabled True -Program "+Quote(Environment.ProcessPath??throw new InvalidOperationException("Application path unavailable"));
-            script+="if ("+find+") { Set-NetFirewallRule -Name "+name+options+" -ErrorAction Stop | Out-Null } else { New-NetFirewallRule -Name "+name+" -DisplayName 'z3nDash Remote Tasker HTTPS' -Group 'z3nDash'"+options+" -ErrorAction Stop | Out-Null }; ";
+            // INetFwRules.Item uses DisplayName, whereas NetSecurity uses Name.
+            // Keep both identities equal, including when updating older rules.
+            script+="if ("+find+") { Set-NetFirewallRule -Name "+name+" -NewDisplayName "+name+options+" -ErrorAction Stop | Out-Null } else { New-NetFirewallRule -Name "+name+" -DisplayName "+name+" -Group 'z3nDash'"+options+" -ErrorAction Stop | Out-Null }; ";
         }
         return script+"exit 0 } catch { exit 1 }";
     }
