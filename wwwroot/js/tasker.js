@@ -782,7 +782,7 @@ function runInstall(s, btn) {
             var d = JSON.parse(e.data);
             if (!box) return;
             var atBottom = _outputAutoScroll && box.scrollHeight - box.scrollTop - box.clientHeight < 40;
-            _appendLine(box, d);
+            _putOutputLine(box, d);
             if (atBottom) box.scrollTop = box.scrollHeight;
         } catch(err) {}
     });
@@ -1229,7 +1229,7 @@ function renderSettings(s) {
 /// Поле пути: файл с пикером, папка с пикером каталога либо команда без пикера.
 function scriptFieldHtml(s, spec) {
     var input = '<input class="form-input" id="f_script_path" style="flex:1;" value="' + escHtml(s.script_path) + '" placeholder="'
-              + (spec.pick === 'none' ? 'command to run' : '/path/to/script or folder') + '">';
+              + (spec.pick === 'none' ? 'command to run' : '/path/to/script or folder') + '" onchange="onScriptPathChange()">';
     if (spec.pick === 'none') return '<div style="display:flex;gap:4px;">' + input + '</div>';
 
     var btn = spec.pick === 'folder'
@@ -1768,12 +1768,23 @@ function _getOutputBox()  { return document.getElementById('outputBox'); }
 function _getLiveBadge()  { return document.getElementById('liveBadgeBottom'); }
 
 var _outputAutoScroll = true;
+var _pausedOutput = [];
 
 function setOutputAutoScroll(on) {
     _outputAutoScroll = !!on;
     _PS.save({ outputAutoScroll: _outputAutoScroll });
     var box = _getOutputBox();
-    if (_outputAutoScroll && box) box.scrollTop = box.scrollHeight;
+    if (_outputAutoScroll && box) {
+        var pending = _pausedOutput;
+        _pausedOutput = [];
+        if (pending.length) {
+            var empty = box.querySelector('.out-line.empty');
+            if (empty) empty.remove();
+            pending.forEach(function(d) { _putOutputLine(box, d); });
+        }
+        _flushOutput();
+        box.scrollTop = box.scrollHeight;
+    }
 }
 
 // ── Бейдж LIVE ────────────────────────────────────────────────────────────────
@@ -1931,6 +1942,7 @@ function loadOutput(id, streamFirst) {
             var box = _getOutputBox();
             if (!box || selectedId !== id) return;
             if (streamFirst && box.querySelector('.out-line:not(.empty)')) return;
+            if (!_outputAutoScroll && box.querySelector('.out-line:not(.empty)')) return;
             // История из БД приходит без разбивки по нитям: только текст строк.
             if (_runFilter) return;
             _resetRuns();
@@ -1958,6 +1970,7 @@ var _outFrame = 0;
 
 function _dropOutputQueue() {
     _outQueue = [];
+    _pausedOutput = [];
     if (_outFrame) { clearTimeout(_outFrame); _outFrame = 0; }
 }
 
@@ -1969,7 +1982,7 @@ function _flushOutput() {
     if (!box || !batch.length) return;
 
     var empty = box.querySelector('.out-line.empty');
-    if (empty) empty.remove();
+    if (empty && _outputAutoScroll) empty.remove();
     var atBottom = _outputAutoScroll && box.scrollHeight - box.scrollTop - box.clientHeight < 40;
 
     batch.forEach(function(d) {
@@ -1982,6 +1995,17 @@ function _flushOutput() {
 function _progressPrefix(s) { return s.replace(/[\d%\[\]]+.*$/, '').trim(); }
 
 function _putOutputLine(box, d) {
+    // Freeze the displayed snapshot, including clears and progress replacements.
+    // Keep a bounded live tail to display when following is enabled again.
+    if (!_outputAutoScroll) {
+        if (d.clear) _pausedOutput = [];
+        _pausedOutput.push(d);
+        if (_pausedOutput.length > OUTPUT_LINE_LIMIT) {
+            _pausedOutput.splice(0, _pausedOutput.length - OUTPUT_LINE_LIMIT);
+            _pausedOutput[0] = Object.assign({}, _pausedOutput[0], { clear: true });
+        }
+        return;
+    }
     if (d.clear) { box.innerHTML = ''; _resetRuns(true); }
     var plain    = LogLine.plain(d.line || '');
     var last     = box.lastElementChild;
@@ -2155,9 +2179,13 @@ function collectScheduleFields(prev) {
 async function saveSchedule(existingId) {
     captureTaskDraft();
     var prev = schedules.find(function(x) { return x.id === selectedId; }) || {};
+    var draft = taskDraft;
+    if (!(await prepareScriptPayload(taskDraft, prev.script_path || ''))) return;
+    if (!taskDraft || taskDraft.id !== draft.id || taskDraft.script_path !== draft.script_path) return;
     var payload = { id: existingId || undefined };
     ['name', 'executor', 'script_path', 'args', 'on_overlap', 'max_threads', 'timeout_seconds',
-     'use_venv', 'browser_json', 'schedule_mode', 'cron', 'schedule_json', 'enabled'].forEach(function(key) {
+     'use_venv', 'browser_json', 'schedule_mode', 'cron', 'schedule_json', 'enabled',
+     'payload_schema', 'payload_values'].forEach(function(key) {
         if (taskDraft && taskDraft[key] !== undefined) payload[key] = taskDraft[key];
     });
     var mode = payload.schedule_mode || 'off';
@@ -2190,6 +2218,15 @@ async function saveSchedule(existingId) {
 }
 
 async function _postSave(payload) {
+    var prev = schedules.find(function(s) { return s.id === payload.id; }) || {};
+    if (payload.script_path !== undefined && payload.payload_schema === undefined) {
+        var draft = Object.assign({}, prev, payload);
+        if (!(await prepareScriptPayload(draft, prev.script_path || ''))) return { ok: false, error: 'Cannot load payload from script' };
+        if (draft._scriptPayload) {
+            payload.payload_schema = draft.payload_schema;
+            payload.payload_values = draft.payload_values;
+        }
+    }
     try {
         var res = await fetch('/tasker/save', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(payload) });
         var text = await res.text();
@@ -2647,6 +2684,14 @@ var pmValues     = {};
 var FIELD_TYPES  = ['text','password','boolean','select','multiselect','file','section','html','tab'];
 
 async function _loadPayload(id) {
+    if (taskDraft && taskDraft.id === id && taskDraft._scriptPayload) {
+        var draft = taskDraft;
+        pmSchema = []; pmValues = {};
+        if (!(await prepareScriptPayload(draft, ''))) return;
+        pmSchema = draft.payload_schema ? JSON.parse(draft.payload_schema) : [];
+        pmValues = draft.payload_values ? JSON.parse(draft.payload_values) : {};
+        return;
+    }
     try {
         var res  = await fetch('/tasker/payload?id=' + encodeURIComponent(id));
         var data = await res.json();
@@ -2721,6 +2766,14 @@ async function savePayload() {
     }
     var id = pmScheduleId;
     var schema = JSON.stringify(pmSchema), values = JSON.stringify(pmValues);
+    var saved = schedules.find(function(s) { return s.id === id; });
+    if (taskDraft && taskDraft.id === id && saved && taskDraft.script_path !== saved.script_path) {
+        taskDraft.payload_schema = schema;
+        taskDraft.payload_values = values;
+        formDirty = true;
+        closePayloadModal();
+        return;
+    }
     try {
         var res  = await fetch('/tasker/payload', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({id:id, schema:schema, values:values}) });
         var data = await res.json();
@@ -2829,18 +2882,23 @@ function schemaFromScriptParams(schema, values, params) {
 // Заполняет только окно; в БД схема попадает по Save.
 async function importSchemaFromScript() {
     if (!pmScheduleId) return;
+    var id = pmScheduleId;
+    var draft = taskDraft && taskDraft.id === id ? taskDraft : null;
     var data;
     try {
-        var res = await fetch('/tasker/script-params?id=' + encodeURIComponent(pmScheduleId));
+        var url = draft && draft.executor === 'python'
+            ? '/tasker/script-params?path=' + encodeURIComponent(draft.script_path) + '&venv=' + (draft.use_venv === 'true')
+            : '/tasker/script-params?id=' + encodeURIComponent(id);
+        var res = await fetch(url);
         data = await res.json();
     } catch(e) { Dialog.error(e.message); return; }
-    if (!data.ok) { Dialog.error('[' + (data.step || 'error') + '] ' + (data.error || '')); return; }
+    if (pmScheduleId !== id || (draft && taskDraft && taskDraft.script_path !== draft.script_path)) return;
+    if (!res.ok || !data.ok) { Dialog.error('[' + (data.step || 'error') + '] ' + (data.error || '')); return; }
 
-    var r = schemaFromScriptParams(pmSchema, pmValues, data.params);
+    var r = schemaFromScriptParams([], {}, data.params);
     pmSchema = r.schema;
     pmValues = r.values;
-    renderConstructor();
-    refreshPayloadPreview();
+    _showPayloadTab(pmTab);
 
     var lines = ['Added: ' + (r.added.length ? r.added.join(' ') : 'nothing')];
     if (r.skipped.length) lines.push('Skipped:\n' + r.skipped.join('\n'));
@@ -2887,7 +2945,7 @@ function renderConstructor() {
         + '<button class="btn sm" onclick="pmSchemaAdd(\'text\')">+ Field</button>'
         + '<button class="btn sm accent" onclick="pmSchemaAdd(\'section\')">+ Section</button>'
         + '<button class="btn sm" onclick="pmSchemaAdd(\'html\')">+ HTML</button>'
-        + '<button class="btn sm" title="Add fields from the script\'s argparse / click parameters" onclick="importSchemaFromScript()">↻ From script</button>'
+        + '<button class="btn sm" title="Replace payload with the script\'s argparse / click parameters" onclick="importSchemaFromScript()">↻ From script</button>'
         + (pmSchema.length === 0 ? '<span style="color:var(--text2);font-size:10px;margin-left:6px">No fields</span>' : '')
         + '</div>';
     _bindSchemaDrag(body);
@@ -2997,6 +3055,55 @@ window.addEventListener('resize', function() {
 // браузер отдаёт только имя файла, — поэтому диалог открывает само приложение,
 // а сюда возвращается уже абсолютный путь. Отмена приходит пустой строкой и
 // поле не трогает.
+async function onScriptPathChange() {
+    captureTaskDraft();
+    markTaskDirty();
+    if (!taskDraft) return;
+    var draft = taskDraft;
+    var prev = schedules.find(function(s) { return s.id === draft.id; }) || {};
+    await prepareScriptPayload(draft, prev.script_path || '');
+    if (taskDraft && taskDraft.id === draft.id && taskDraft.script_path === draft.script_path
+        && taskDraft._scriptPayload === draft._scriptPayload) {
+        taskDraft.payload_schema = draft.payload_schema;
+        taskDraft.payload_values = draft.payload_values;
+        taskDraft._scriptPayloadLoaded = draft._scriptPayloadLoaded;
+    }
+}
+
+// Keep path and payload in the same Settings save; never persist a new payload
+// against the old script while its path is still an unsaved edit.
+async function prepareScriptPayload(draft, oldPath) {
+    if (!draft) return true;
+    var path = (draft.script_path || '').trim();
+    var request = draft._scriptPayload;
+    if (request && request.path === path && draft._scriptPayloadLoaded === request) return true;
+    if (!request && path === oldPath.trim()) return true;
+    if (!request || request.path !== path) {
+        draft.payload_schema = '';
+        draft.payload_values = '';
+        request = { path: path };
+        draft._scriptPayload = request;
+        request.promise = (async function() {
+            if (!path || draft.executor !== 'python') return { schema: '', values: '' };
+            try {
+                var res = await fetch('/tasker/script-params?path=' + encodeURIComponent(path)
+                    + '&venv=' + (draft.use_venv === 'true'));
+                var data = await res.json();
+                if (!res.ok || !data.ok) throw new Error('[' + (data.step || 'error') + '] ' + (data.error || 'Cannot read script parameters'));
+                var r = schemaFromScriptParams([], {}, data.params);
+                return { schema: JSON.stringify(r.schema), values: JSON.stringify(r.values) };
+            } catch(e) { Dialog.error(e.message); return null; }
+        })();
+    }
+    var result = await request.promise;
+    if (draft._scriptPayload !== request || (draft.script_path || '').trim() !== path) return false;
+    if (!result) { draft._scriptPayload = null; return false; }
+    draft.payload_schema = result.schema;
+    draft.payload_values = result.values;
+    draft._scriptPayloadLoaded = request;
+    return true;
+}
+
 function pickPath(mode) {
     var field = document.getElementById('f_script_path');
     var exec  = (document.getElementById('f_executor') || {}).value || '';
@@ -3018,7 +3125,7 @@ function pickPath(mode) {
             if (!d.ok)   { alert('Could not open the dialog: ' + (d.error || '')); return; }
             if (d.path && selectedId === taskId) {
                 var currentField = document.getElementById('f_script_path');
-                if (currentField) { currentField.value = d.path; markTaskDirty(); }
+                if (currentField) { currentField.value = d.path; onScriptPathChange(); }
             }
         })
         .catch(function(e) { alert('Could not open the dialog: ' + e); });

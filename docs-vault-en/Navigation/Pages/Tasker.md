@@ -117,7 +117,8 @@ Select a thread chip to show only its lines. The selection survives subscription
 refreshes and incoming buffer clears for the same task, including progress-line
 replacements. Selecting another task resets the filter.
 `Auto-scroll` follows new output and remembers the setting. When disabled,
-incoming lines do not move the scroll position.
+the displayed log is frozen, including progress replacements and clear events.
+Enabling it again applies the bounded buffer of incoming output and scrolls to the end.
 
 ## Execution
 
@@ -136,6 +137,11 @@ details are in [[Traffic]]. The file rotates itself.
 
 A payload consists of a schema and values. It can be edited, imported, exported and passed to the executor on start.
 
+Changing the script path regenerates payload fields and defaults from the new
+Python script. **From script** replaces the payload using the current script path,
+including an unsaved edit. Outdated parameter responses are ignored.
+When the path is changed, payload **Save** keeps edits in the draft until
+**Settings** saves the new path and payload together. Otherwise,
 `Save` and `Clear` persist the payload independently of unsaved **Settings**.
 Successful responses update the task card immediately; a failed save keeps the
 modal open. Multiselect fields preserve all selected values. Confirmation dialogs

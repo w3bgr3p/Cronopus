@@ -1,4 +1,9 @@
 # Repository-local source and tooling
+tests/
+*.test.js
+*.spec.js
+/z3nStub/z3nStub/StubSmokeTest.cs
+/z3nStub/z3nStub/test.csx
 Tasks/
 PrivateTasks/
 # Только корневой — он локальный. Без ведущей косой черты правило ловило
