@@ -424,3 +424,5 @@
 .br-firewall>label { display:flex;gap:var(--sp-8);align-items:center; }
 .br-firewall .br-row { margin-block:var(--sp-8);flex-wrap:wrap; }
 .br-firewall p { margin-block:var(--sp-6);font-size:var(--fs-11);color:var(--text2); }
+.br-action-status { margin-block:var(--sp-8);font-size:var(--fs-11);color:var(--text);overflow-wrap:anywhere; }
+.br-action-status:empty { display:none; }

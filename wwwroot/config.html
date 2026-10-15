@@ -8,7 +8,7 @@
     <script src="/js/diag.js"></script>
     <script src="/js/theme.js"></script>
     <script src="/js/nav.js"></script>
-    <link rel="stylesheet" href="/css/config.css">
+    <link rel="stylesheet" href="/css/config.css?v=20261015-actions">
 </head>
 <body>
 
@@ -32,6 +32,7 @@
         <section class="cfg-sec" data-sec="remote-tasker" hidden>
             <section class="card config-card">
                 <h2>Remote Tasker · Server</h2>
+                <p id="brServerMessage" class="br-action-status" role="status" aria-live="polite"></p>
                 <p class="page-sub">Connect another z3nDash by IP. Open the actual TCP port in the server firewall.</p>
                 <div class="br-grid">
                     <label><input id="brEnabled" type="checkbox"> Enable HTTPS server</label>
@@ -53,6 +54,7 @@
                 <pre id="brIdentity" class="br-identity"></pre>
                 <div class="br-row"><input id="brKeyName" placeholder="Key name" value="Desktop"><button class="btn" id="brCreateKey">Create access key</button></div>
                 <textarea id="brNewKey" readonly placeholder="A new key appears here once. Copy it to your local z3nDash."></textarea>
+                <p id="brKeyStatus" class="br-action-status" role="status" aria-live="polite"></p>
                 <div id="brKeys"></div>
             </section>
             <section class="card config-card">
@@ -484,7 +486,7 @@
     </div>
 </div>
 
-<script src="/js/bridge-config.js"></script>
+<script src="/js/bridge-config.js?v=20261015-actions"></script>
 <script src="/js/config.js"></script>
 </body>
 </html>

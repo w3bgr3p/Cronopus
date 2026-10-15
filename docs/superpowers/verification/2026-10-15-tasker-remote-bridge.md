@@ -82,3 +82,19 @@ No push, PR, installer release or production deployment occurred.
   new backend maps that to 504 with a useful connection/firewall message.
 - 61 JavaScript tests pass. C# integration suite and Windows target build pass.
   No live hosting-server firewall change or WAN connection success is claimed.
+
+## Follow-up: Check/Create requests and mixed backend versions
+
+- The running workspace backend answered server settings with 200 but the firewall
+  route with an empty 404. UI now detects unavailable firewall support and explains
+  that the updated application must be started; refreshing static assets is insufficient.
+- Real backend browser test first reproduced Create resetting unsaved Enable HTTPS
+  and port. After the fix it observed POST /bridge-local/keys 200, displayed the
+  returned key, and preserved the unsaved enabled state and port. Test secrets are
+  hidden in screenshots and never printed.
+- Real Check observed GET /bridge-local/server/firewall 200 and a timestamped
+  result. Actions have busy states; server/key feedback appears beside controls.
+- The old running backend was also checked read-only in Edge: unsupported Check
+  was disabled with an update explanation; Create remained available.
+- Added 404 compatibility, duplicate Create suppression and draft-preservation tests.
+  Complete Node suite: 64 passed. New and running workspace UI assets synchronized.

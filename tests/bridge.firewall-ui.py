@@ -33,7 +33,7 @@ try:
         assert calls[-1]=={'action':'open'}
         page.locator('#brCloseFirewall').click();page.wait_for_function("document.querySelector('#brFirewallStatus').textContent.includes('No ZenDash')")
         assert calls[-1]=={'action':'close'}
-        page.locator('#brApplyServer').click();page.wait_for_function("document.querySelector('#brMessage').textContent==='Server settings applied'")
+        page.locator('#brApplyServer').click();page.wait_for_function("document.querySelector('#brServerMessage').textContent==='Server settings applied'")
         assert calls[-1]['openFirewall'] is True
         proof=Path('.superpowers/firewall-ui');proof.mkdir(parents=True,exist_ok=True)
         for theme in ['graphite','graphite-light']:
