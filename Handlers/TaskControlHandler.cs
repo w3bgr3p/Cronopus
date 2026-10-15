@@ -11,8 +11,11 @@ public sealed class TaskControlHandler(SchedulerService scheduler) : IScriptHand
     public void Init() { }
 
     internal static async Task<(DateTimeOffset Until, string Reason)> ReadDefer(HttpListenerRequest request)
+        => await ReadDefer(request.InputStream);
+
+    internal static async Task<(DateTimeOffset Until, string Reason)> ReadDefer(Stream input)
     {
-        using var reader = new StreamReader(request.InputStream);
+        using var reader = new StreamReader(input);
         var buffer = new char[16_385];
         var count = await reader.ReadBlockAsync(buffer, 0, buffer.Length);
         if (count == buffer.Length) throw new ArgumentException("Request body is too large");
