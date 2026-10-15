@@ -7,7 +7,7 @@ public sealed partial class BridgeTransfers(BridgeStore store,BridgeClient clien
 {
     private readonly ConcurrentDictionary<string,BridgeTransfer> _jobs=new();
     private readonly ConcurrentDictionary<string,CancellationTokenSource> _running=new();
-    public object Public(BridgeTransfer t)=>new {t.Id,t.Name,t.NodeName,t.ConnectionId,t.Destination,state=t.State is "hashing" or "uploading" or "committing"&&!_running.ContainsKey(t.Id)?"interrupted":t.State,t.Error,t.Transferred,total=t.Files.Sum(f=>f.Size),files=t.Files.Count,t.Skipped,t.Conflicts};
+    public object Public(BridgeTransfer t)=>new {t.Id,t.Name,t.NodeName,t.ConnectionId,t.Destination,state=t.State is "hashing" or "uploading" or "committing"&&!_running.ContainsKey(t.Id)?"interrupted":t.State,t.Error,t.Transferred,total=t.Files.Sum(f=>f.Size),files=t.Files.Count,t.Skipped,t.Conflicts,results=t.Results?.Select(r=>new{path=r.Path,state=r.State,error=r.Error})};
     private void Save(BridgeTransfer t)=>store.SavePrivate("transfer-"+t.Id+".bin",t);
     public BridgeTransfer Get(string id)
     {

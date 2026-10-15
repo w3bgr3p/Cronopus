@@ -29,7 +29,22 @@ static partial class BridgeCases
         var deadline=DateTime.UtcNow.AddSeconds(20);
         while(job.State is not "completed" and not "failed"&&DateTime.UtcNow<deadline)await Task.Delay(100);
         Check(job.State=="completed","native transfer failed: "+job.State+" "+job.Error);
+        Check(job.Results?.Single().State=="published","published result missing");
         Check(File.ReadAllText(Path.Combine(destination,"hello.py"))=="print('fixture')"&&Directory.Exists(Path.Combine(destination,"empty")),"folder or empty directory lost");
         Console.WriteLine("PASS native-folder-transfer");
+        await File.WriteAllTextAsync(Path.Combine(source,"hello.py"),"print('updated')");
+        foreach(var overwrite in new[]{false,true}){
+            var update=transfers.Select(Path.Combine(source,"hello.py"));transfers.Start(update.Id,connection.Id,destination);
+            deadline=DateTime.UtcNow.AddSeconds(20);
+            while(update.State is not "awaiting_conflicts" and not "failed"&&DateTime.UtcNow<deadline)await Task.Delay(100);
+            Check(update.State=="awaiting_conflicts","overwrite confirmation not requested");
+            transfers.Confirm(update.Id,overwrite?new(){"hello.py"}:new());
+            while(update.State is not "completed" and not "failed"&&DateTime.UtcNow<deadline)await Task.Delay(100);
+            Check(update.State=="completed","overwrite transfer failed: "+update.Error);
+            var restored=new BridgeTransfers(store,new BridgeClient(store)).Get(update.Id);
+            Check(restored.Results?.Single().State==(overwrite?"published":"skipped"),"persisted result is incorrect");
+            Check(File.ReadAllText(Path.Combine(destination,"hello.py"))==(overwrite?"print('updated')":"print('fixture')"),"file content does not match result");
+        }
+        Console.WriteLine("PASS transfer-saved-skipped-results-persistence");
     }
 }

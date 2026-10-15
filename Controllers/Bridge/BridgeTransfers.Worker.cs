@@ -65,6 +65,7 @@ public sealed partial class BridgeTransfers
         }
         job.State="committing";Save(job);
         var committed=await JsonRequest(job,HttpMethod.Post,"/bridge/v1/uploads/"+job.UploadId+"/commit",new{replace=job.Replace??new()},ct);
+        job.Results=committed.GetProperty("files").EnumerateArray().Select(f=>new BridgeTransferResult(f.GetProperty("relativePath").GetString()!,f.GetProperty("state").GetString()!,f.GetProperty("error").GetString())).ToList();
         var errors=committed.GetProperty("files").EnumerateArray().Where(f=>f.GetProperty("error").GetString()?.Length>0).Select(f=>f.GetProperty("relativePath").GetString()+": "+f.GetProperty("error").GetString()).ToArray();
         job.State=errors.Length>0?"failed":"completed";job.Error=string.Join("\n",errors);Save(job);
     }
