@@ -1,5 +1,7 @@
 # Tasker
 
+Control another instance by IP: [[Remote Tasker]].
+
 Tasker is the `/tasker.html` page that stores schedules and runs local tasks.
 
 ## List

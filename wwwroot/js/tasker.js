@@ -174,7 +174,7 @@ async function loadList() {
             renderDetailActions(still);
         }
     } else if (!selectedId) {
-        var saved = _PS.load().selectedId;
+        var saved = window.TaskerBridge && window.TaskerBridge.remote() ? window.TaskerBridge.lastSelected() : _PS.load().selectedId;
         if (saved) {
             var s = schedules.find(function(x) { return x.id === saved; });
             if (s) { selectRow(s.id); return; }
@@ -580,7 +580,8 @@ async function selectRow(id, keepSelection, initialTab) {
     selectedIds.add(id);
     selectedId = id;
     stopProcStatsPoll();
-    _PS.save({ selectedId: id });
+    if (window.TaskerBridge && window.TaskerBridge.remote()) window.TaskerBridge.lastSelected(id);
+    else _PS.save({ selectedId: id });
     var s = schedules.find(function(x) { return x.id === id; });
     if (!s) return;
     renderList();
@@ -776,6 +777,7 @@ async function _saveNpmScript(scheduleId, scriptName) {
 // ── Install stream ────────────────────────────────────────────────────────────
 
 function runInstall(s, btn) {
+    if (window.TaskerBridge && window.TaskerBridge.remote()) { window.RemoteOutput.install(s.id,btn); return; }
     btn.disabled    = true;
     btn.textContent = '⏳ installing...';
     switchTab('output');
@@ -1945,6 +1947,10 @@ function _trimOutput(box) {
 // streamFirst: история не затирает строки, которые поток успел прислать раньше
 // неё. Без этого пустая история, пришедшая позже, стирала весь буфер прогона.
 function loadOutput(id, streamFirst) {
+    if (window.TaskerBridge && window.TaskerBridge.remote()) {
+        if (!streamFirst && window.RemoteOutput) window.RemoteOutput.load(id);
+        return;
+    }
     // load last saved output from DB into bottom box
     taskerFetch('/tasker/output?id=' + encodeURIComponent(id))
         .then(function(r) { return r.json(); })
@@ -2038,6 +2044,7 @@ function _putOutputLine(box, d) {
 }
 
 function startSseOutput(id) {
+    if (window.TaskerBridge && window.TaskerBridge.remote()) { if (window.RemoteOutput) window.RemoteOutput.setTask(id); return; }
     if (_sseOutput) { _sseOutput.close(); _sseOutput = null; }
     _dropOutputQueue();
     _resetRuns(_outputTaskId === id);
@@ -2187,11 +2194,12 @@ function collectScheduleFields(prev) {
 }
 
 async function saveSchedule(existingId) {
+    var operationContext = _taskerContext();
     captureTaskDraft();
     var prev = schedules.find(function(x) { return x.id === selectedId; }) || {};
     var draft = taskDraft;
     if (!(await prepareScriptPayload(taskDraft, prev.script_path || ''))) return;
-    if (!taskDraft || taskDraft.id !== draft.id || taskDraft.script_path !== draft.script_path) return;
+    if (!_taskerCurrent(operationContext) || !taskDraft || taskDraft.id !== draft.id || taskDraft.script_path !== draft.script_path) return;
     var payload = { id: existingId || undefined };
     ['name', 'executor', 'script_path', 'args', 'on_overlap', 'max_threads', 'timeout_seconds',
      'use_venv', 'browser_json', 'schedule_mode', 'cron', 'schedule_json', 'enabled',
@@ -2212,11 +2220,13 @@ async function saveSchedule(existingId) {
     var changed = others.length ? _changedFields(payload) : {};
 
     var data = await _postSave(payload);
+    if (!_taskerCurrent(operationContext)) return;
     if (!data.ok) { Dialog.error(data.error || 'Save failed'); return; }
 
     var failed = [];
     if (Object.keys(changed).length) {
         for (var i = 0; i < others.length; i++) {
+            if (!_taskerCurrent(operationContext)) return;
             var r = await _postSave(_bulkPayload(others[i], changed));
             if (!r.ok) failed.push((others[i].name || others[i].id) + ': ' + (r.error || 'Save failed'));
         }
@@ -2228,9 +2238,10 @@ async function saveSchedule(existingId) {
 }
 
 async function _postSave(payload) {
+    var operationContext = _taskerContext();
     if (window.TaskerBridge && window.TaskerBridge.remote() && payload.id) {
         var source = taskDraft && taskDraft.id === payload.id ? taskDraft : schedules.find(function(s) { return s.id === payload.id; });
-        if (source) payload._revision = source._revision;
+        if (source && !payload._revision) payload._revision = source._revision;
     }
     var prev = schedules.find(function(s) { return s.id === payload.id; }) || {};
     if (payload.script_path !== undefined && payload.payload_schema === undefined) {
@@ -2242,6 +2253,7 @@ async function _postSave(payload) {
         }
     }
     try {
+        if (!_taskerCurrent(operationContext)) return {ok:false,error:'Node changed'};
         var res = await taskerFetch('/tasker/save', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(payload) });
         var text = await res.text();
         try { return JSON.parse(text); }
@@ -2265,6 +2277,7 @@ function _changedFields(payload) {
 
 function _bulkPayload(target, changed) {
     var p = Object.assign({ id: target.id }, changed);
+    if (target._revision) p._revision=target._revision;
     var mode = p.schedule_mode !== undefined ? p.schedule_mode : (target.schedule_mode || 'off');
     var json = p.schedule_json !== undefined ? p.schedule_json : (target.schedule_json || '');
     // Тот же сброс счётчика, что у основной задачи, но по её собственному прошлому.
@@ -2285,8 +2298,11 @@ function _nextDuplicateName(name, existingNames) {
 }
 
 async function duplicateSchedule(id) {
+    var operationContext=_taskerContext();
     var s = schedules.find(function(x) { return x.id === id; });
     if (!s) return;
+    if(window.TaskerBridge&&window.TaskerBridge.remote())s=await window.TaskerBridge.detail(id);
+    if(!_taskerCurrent(operationContext))return;
     var newName = _nextDuplicateName(s.name || 'task', schedules.map(function(x) { return x.name || ''; }));
     var res  = await taskerFetch('/tasker/save', {
         method:'POST', headers:{'Content-Type':'application/json'},
@@ -2302,19 +2318,24 @@ async function duplicateSchedule(id) {
         var pData = await pRes.json();
         if (pData.schema || pData.values)
             await taskerFetch('/tasker/payload', { method:'POST', headers:{'Content-Type':'application/json'},
-                body: JSON.stringify({ id:data.id, schema:pData.schema, values:pData.values }) });
+                body: JSON.stringify({ id:data.id, schema:pData.schema, values:pData.values, _revision:data._revision }) });
     } catch(e) {}
     await loadList();
     selectRow(data.id, false, 'settings');
 }
 
 async function deleteSchedule(id, name) {
+    var operationContext=_taskerContext();
+    var row=schedules.find(function(s){return s.id===id;});var revision=row&&row._revision;
     if (!(await Dialog.confirm('Eliminate "' + (name||id) + '"?', '✕ Eliminate', true))) return;
-    await taskerFetch('/tasker/delete', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({id:id}) });
+    if(!_taskerCurrent(operationContext))return;
+    var response=await taskerFetch('/tasker/delete', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({id:id,_revision:revision}) });
+    if(!response.ok){Dialog.error((await response.json()).error||'Delete failed');return;}
     await _afterDelete();
 }
 
 async function deleteSchedules(ids) {
+    var operationContext = _taskerContext();
     if (ids.length === 1) {
         var one = schedules.find(function(x) { return x.id === ids[0]; }) || {};
         return deleteSchedule(ids[0], one.name || '');
@@ -2325,7 +2346,9 @@ async function deleteSchedules(ids) {
     });
     if (!(await Dialog.confirm('Eliminate ' + ids.length + ' tasks?\n' + names.join('\n'), '✕ Eliminate', true))) return;
     for (var i = 0; i < ids.length; i++) {
-        await taskerFetch('/tasker/delete', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({id:ids[i]}) });
+        if (!_taskerCurrent(operationContext)) return;
+        var response=await taskerFetch('/tasker/delete', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({id:ids[i]}) });
+        if(!response.ok){Dialog.error((await response.json()).error||'Delete failed');return;}
     }
     await _afterDelete();
 }
@@ -2414,30 +2437,35 @@ async function buildCsx(id) {
 /// как остановка задачи, а через две секунды очередь подняла бы следующий.
 async function _pendingCount(id) {
     try {
+        if(window.TaskerBridge&&window.TaskerBridge.remote()){var page=await (await window.TaskerBridge.api('tasks/'+encodeURIComponent(id)+'/queue?limit=1')).json();return page.total_pending||0;}
         var list = await (await taskerFetch('/tasker/queue?id=' + encodeURIComponent(id))).json();
         return (list || []).filter(function(q) { return q.status === 'pending'; }).length;
     } catch (e) { return 0; }
 }
 
 async function _offerQueueDrop(id) {
+    var operationContext=_taskerContext();
     var pending = await _pendingCount(id);
-    if (!pending) return;
-    if (await Dialog.confirm(pending + ' more run(s) are queued and will start as threads free up.\nDrop them too?', '■ Interrupt', true))
+    if (!pending||!_taskerCurrent(operationContext)) return;
+    if (await Dialog.confirm(pending + ' more run(s) are queued and will start as threads free up.\nDrop them too?', '■ Interrupt', true) && _taskerCurrent(operationContext))
         await taskerFetch('/tasker/clear-queue', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({id:id}) });
 }
 
 async function stopNow(id) {
+    var operationContext=_taskerContext();
     var res       = await taskerFetch('/tasker/instances?id=' + encodeURIComponent(id));
     var instances = await res.json().catch(function() { return []; }) || [];
+    if(!_taskerCurrent(operationContext))return;
     if (instances.length === 0) {
         await taskerFetch('/tasker/stop', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({id:id}) });
         await _offerQueueDrop(id);
     } else if (instances.length === 1) {
         if (!(await Dialog.confirm('Kill running instance?', '■ Interrupt', true))) return;
+        if(!_taskerCurrent(operationContext))return;
         await taskerFetch('/tasker/kill-instance', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({id:id, runId:instances[0].runId}) });
     } else {
         var chosen = await _pickInstanceToKill(id, instances);
-        if (chosen === null) return;
+        if (chosen === null||!_taskerCurrent(operationContext)) return;
         var url = chosen === '__all__' ? '/tasker/stop' : '/tasker/kill-instance';
         var body = chosen === '__all__' ? {id:id} : {id:id, runId:chosen};
         await taskerFetch(url, { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(body) });
@@ -2448,8 +2476,10 @@ async function stopNow(id) {
 }
 
 async function restartNow(id) {
+    var operationContext = _taskerContext();
     await taskerFetch('/tasker/stop', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({id: id}) });
     await new Promise(function(r) { setTimeout(r, 800); });
+    if (!_taskerCurrent(operationContext)) return;
     await taskerFetch('/tasker/run', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({id: id, count: _runCount()}) });
     await loadList();
     startSseOutput(id);
@@ -2508,10 +2538,15 @@ async function _postTask(url, body) {
     }
 }
 
-async function _forSelected(list, url, bodyFn) {
+function _taskerContext() { return window.TaskerBridge ? window.TaskerBridge.context() : null; }
+function _taskerCurrent(context) { return !context || window.TaskerBridge.isCurrent(context); }
+async function _forSelected(list, url, bodyFn, context) {
+    context = context || _taskerContext();
     var failed = [];
     for (var i = 0; i < list.length; i++) {
-        var err = await _postTask(url, bodyFn(list[i]));
+        if (!_taskerCurrent(context)) break;
+        var body=bodyFn(list[i]);if(list[i]._revision)body._revision=list[i]._revision;
+        var err = await _postTask(url, body);
         if (err) failed.push((list[i].name || list[i].id) + ': ' + err);
     }
     return failed;
@@ -2553,30 +2588,35 @@ async function resumeSelected() {
 }
 
 async function stopSelected() {
+    var operationContext=_taskerContext();
     var list = _selectedList();
     if (!(await Dialog.confirm('Interrupt ' + list.length + ' tasks?\n' + _namesList(list), '■ Interrupt', true))) return;
-    var failed = await _forSelected(list, '/tasker/stop', function(s) { return { id: s.id }; });
+    if(!_taskerCurrent(operationContext))return;
+    var failed = await _forSelected(list, '/tasker/stop', function(s) { return { id: s.id }; },operationContext);
     // Как и у одной задачи: без сброса очереди следующий прогон поднимется сам.
     var queued = [];
     for (var i = 0; i < list.length; i++) {
+        if(!_taskerCurrent(operationContext))return;
         var pending = await _pendingCount(list[i].id);
         if (pending) queued.push({ s: list[i], pending: pending });
     }
     if (queued.length) {
         var lines = queued.map(function(q) { return '  ' + (q.s.name || q.s.id) + ': ' + q.pending; }).join('\n');
         if (await Dialog.confirm('Queued runs will start as threads free up:\n' + lines + '\nDrop them too?', '■ Interrupt', true))
-            failed = failed.concat(await _forSelected(queued.map(function(q) { return q.s; }), '/tasker/clear-queue', function(s) { return { id: s.id }; }));
+            failed = failed.concat(await _forSelected(queued.map(function(q) { return q.s; }), '/tasker/clear-queue', function(s) { return { id: s.id }; },operationContext));
     }
     await loadList();
     _reportFailed('Not interrupted', failed);
 }
 
 async function restartSelected() {
+    var operationContext = _taskerContext();
     var list  = _selectedList();
     var count = _runCount();
     var failed = await _forSelected(list, '/tasker/stop', function(s) { return { id: s.id }; });
     await new Promise(function(r) { setTimeout(r, 800); });
-    failed = failed.concat(await _forSelected(list, '/tasker/run', function(s) { return { id: s.id, count: count }; }));
+    if (!_taskerCurrent(operationContext)) return;
+    failed = failed.concat(await _forSelected(list, '/tasker/run', function(s) { return { id: s.id, count: count }; }, operationContext));
     await loadList();
     if (selectedId) startSseOutput(selectedId);
     _reportFailed('Not restarted', failed);
@@ -2688,6 +2728,12 @@ var Dialog = {
     alert:   function(msg, title)       { this._buttons([{label:'OK',cls:'primary',val:true}]); return this._open('i', title||'Info', msg, 'alert'); },
     confirm: function(msg, title, danger) { this._buttons([{label:'Cancel',cls:'',val:false},{label:'Confirm',cls:danger?'danger':'primary',val:true}]); return this._open('?', title||'Confirm', msg, 'confirm'); },
     error:   function(msg, title)       { return this.alert(msg, title||'Error'); },
+    prompt: async function(msg, title) {
+        var input=document.getElementById('dialogInput');input.value='';
+        this._buttons([{label:'Cancel',cls:'',val:false},{label:'Create',cls:'primary',val:true}]);
+        var result=await this._open('+',title||'Folder',msg,'prompt');
+        return result ? input.value.trim() : null;
+    },
 };
 
 // ── Payload modals ────────────────────────────────────────────────────────────
@@ -2695,13 +2741,16 @@ var Dialog = {
 var pmScheduleId = null;
 var pmSchema     = [];
 var pmValues     = {};
+var pmContext = null, pmSequence = 0;
 var FIELD_TYPES  = ['text','password','boolean','select','multiselect','file','section','html','tab'];
 
 async function _loadPayload(id) {
+    var context=_taskerContext(),sequence=pmSequence;
     if (taskDraft && taskDraft.id === id && taskDraft._scriptPayload) {
         var draft = taskDraft;
         pmSchema = []; pmValues = {};
         if (!(await prepareScriptPayload(draft, ''))) return;
+        if(!_taskerCurrent(context)||sequence!==pmSequence)return false;
         pmSchema = draft.payload_schema ? JSON.parse(draft.payload_schema) : [];
         pmValues = draft.payload_values ? JSON.parse(draft.payload_values) : {};
         return;
@@ -2709,24 +2758,26 @@ async function _loadPayload(id) {
     try {
         var res  = await taskerFetch('/tasker/payload?id=' + encodeURIComponent(id));
         var data = await res.json();
+        if(!_taskerCurrent(context)||sequence!==pmSequence)return false;
         pmSchema = data.schema ? JSON.parse(data.schema) : [];
         pmValues = data.values ? JSON.parse(data.values) : {};
-    } catch(e) { pmSchema = []; pmValues = {}; }
+    } catch(e) { if(e.name==='AbortError')return false;pmSchema = []; pmValues = {}; }
 }
 
 var pmTab = 'values';
 var pmPreviewTimer = null;
 
 async function openPayloadModal(id, name) {
+    var context=_taskerContext(),sequence=++pmSequence;pmContext=context;
     pmScheduleId = id;
-    await _loadPayload(id);
+    if(await _loadPayload(id)===false||!_taskerCurrent(context)||sequence!==pmSequence)return;
     document.getElementById('payloadTitle').textContent = 'Payload: ' + (name || id);
     document.getElementById('payloadImport').style.display = 'none';
     document.getElementById('payloadOverlay').classList.add('open');
     vmActiveTab = 0;
     _showPayloadTab('values');
 }
-function closePayloadModal() { document.getElementById('payloadOverlay').classList.remove('open'); }
+function closePayloadModal() { pmSequence++;pmScheduleId=null;pmContext=null;if(pmPreviewTimer)clearTimeout(pmPreviewTimer);document.getElementById('payloadOverlay').classList.remove('open'); }
 
 function _collectValues() {
     document.querySelectorAll('#valuesBody [data-vkey]').forEach(function(el) {
@@ -2759,7 +2810,7 @@ function refreshPayloadPreview() {
 async function _loadPayloadPreview() {
     pmPreviewTimer = null;
     var el = document.getElementById('payloadPreview');
-    if (!el || !pmScheduleId) return;
+    if (!el || !pmScheduleId || !_taskerCurrent(pmContext)) return;
     try {
         var res  = await taskerFetch('/tasker/args-preview', { method:'POST', headers:{'Content-Type':'application/json'},
             body: JSON.stringify({id:pmScheduleId, schema:JSON.stringify(pmSchema), values:JSON.stringify(pmValues)}) });
@@ -2772,7 +2823,7 @@ async function _loadPayloadPreview() {
 }
 
 async function savePayload() {
-    if (!pmScheduleId) return;
+    if (!pmScheduleId||!_taskerCurrent(pmContext)) return;
     if (pmTab === 'values') _collectValues();
     for (var i = 0; i < pmSchema.length; i++) {
         var f = pmSchema[i];
@@ -2837,9 +2888,12 @@ async function exportPayload() {
 }
 
 async function clearPayload() {
+    if(!_taskerCurrent(pmContext))return;
+    var operationContext=_taskerContext();
     var id = pmScheduleId;
     if (!id) return;
     if (!(await Dialog.confirm('Delete payload schema and values? The script will stop receiving payload flags.', '🗑 Clear payload', true))) return;
+    if(!_taskerCurrent(operationContext))return;
     try {
         var res  = await taskerFetch('/tasker/payload', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({id:id, schema:'', values:''}) });
         var data = await res.json();
@@ -2903,7 +2957,7 @@ async function importSchemaFromScript() {
         var url = draft && draft.executor === 'python'
             ? '/tasker/script-params?path=' + encodeURIComponent(draft.script_path) + '&venv=' + (draft.use_venv === 'true')
             : '/tasker/script-params?id=' + encodeURIComponent(id);
-        var res = await fetch(url);
+        var res = await taskerFetch(url);
         data = await res.json();
     } catch(e) { Dialog.error(e.message); return; }
     if (pmScheduleId !== id || (draft && taskDraft && taskDraft.script_path !== draft.script_path)) return;

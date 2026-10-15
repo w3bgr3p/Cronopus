@@ -11,7 +11,9 @@
             document.body.appendChild(overlay);overlay.querySelector('h3').textContent=(connection?connection.name:'Server')+' · '+(options.mode==='folder'?'Choose folder':'Choose script');
             var list=overlay.querySelector('.br-file-list'),input=overlay.querySelector('input'),message=overlay.querySelector('p'),current='',parent=null,cursor=null,seq=0;
             var select=overlay.querySelector('[data-select]');select.hidden=options.mode!=='folder';
-            function close(path){overlay.remove();resolve(path);}
+            function changed(){close(null);}
+            function close(path){root.removeEventListener('bridge-node-changed',changed);overlay.remove();resolve(path);}
+            root.addEventListener('bridge-node-changed',changed);
             async function load(path,more){
                 var request=++seq;message.textContent='Loading…';
                 try{
@@ -29,7 +31,7 @@
             overlay.querySelector('[data-more]').onclick=function(){load(current,true);};
             overlay.querySelector('[data-cancel]').onclick=function(){close(null);};
             select.onclick=function(){if(current){localStorage.setItem('bridge-folder:'+context.nodeId,current);close(current);}};
-            overlay.querySelector('[data-new]').onclick=async function(){if(!current)return;var name=await root.Dialog.prompt('Folder name','Create on '+connection.name);if(!name)return;try{var res=await bridge.api('files/directories',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({parent:current,name:name})});var data=await res.json();if(!res.ok)throw new Error(data.error);load(data.path,false);}catch(e){message.textContent=e.message;}};
+            overlay.querySelector('[data-new]').onclick=async function(){if(!current)return;var name=await root.Dialog.prompt('Folder name','Create on '+connection.name);if(!name||!bridge.isCurrent(context))return;try{var res=await bridge.api('files/directories',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({parent:current,name:name})});var data=await res.json();if(!res.ok)throw new Error(data.error);load(data.path,false);}catch(e){message.textContent=e.message;}};
             load(options.start?initialFolder(options.start,''):localStorage.getItem('bridge-folder:'+context.nodeId)||'',false);
         });
     }

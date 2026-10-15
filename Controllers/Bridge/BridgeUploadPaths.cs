@@ -20,6 +20,17 @@ public static class BridgeUploadPaths
         return result;
     }
     public static IDisposable LockParents(string file) => new DirectoryLease(Path.GetDirectoryName(file)!);
+    public static void EnsureDirectory(string root,string relative)
+    {
+        var current="";
+        foreach(var part in relative.Replace('\\','/').Split('/')){
+            current=current.Length==0?part:current+"/"+part;
+            var path=Resolve(root,current);
+            using var lease=LockParents(path);
+            if(!Directory.Exists(path))Directory.CreateDirectory(path);
+            Resolve(root,current+"/.check");
+        }
+    }
     private sealed class DirectoryLease : IDisposable
     {
         private readonly List<SafeFileHandle> _handles = new();

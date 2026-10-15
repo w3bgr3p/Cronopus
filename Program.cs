@@ -111,15 +111,21 @@ try
         ? $"http://localhost:{port}/?page=tasker"
         : $"http://localhost:{port}/?page=config";
 
+    var headless=args.Contains("--headless",StringComparer.OrdinalIgnoreCase);
+    if(!headless)
+    {
 #if WINDOWS
-    DashboardOverlay.Open(startUrl);
+        DashboardOverlay.Open(startUrl);
 #else
-    OpenBrowser(startUrl);
+        OpenBrowser(startUrl);
 #endif
+    }
+    Console.WriteLine("Dashboard: "+startUrl);
 
     var exitTcs = new TaskCompletionSource();
+    Console.CancelKeyPress+=(_,e)=>{e.Cancel=true;exitTcs.TrySetResult();};
 
-    _ = Task.Run(() =>
+    if(!headless)_ = Task.Run(() =>
     {
         Console.ReadKey(true);
         exitTcs.SetResult();

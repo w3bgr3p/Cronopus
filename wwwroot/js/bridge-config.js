@@ -22,6 +22,8 @@
             var s = values[0]; connections = values[1];
             document.getElementById('brEnabled').checked = s.settings.enabled;
             ['bindAddress','advertisedAddress','port'].forEach(function(k) { document.getElementById('br_' + k).value = s.settings[k]; });
+            document.getElementById('br_quota').value=s.settings.uploadQuotaBytes/1073741824;
+            document.getElementById('br_rate').value=s.settings.transferBytesPerSecond/1048576;
             document.getElementById('brIdentity').textContent = 'Node ID: ' + s.nodeId + '\nSHA-256: ' + s.fingerprint + '\nExpires: ' + s.expires + '\nURL: ' + (s.actualUrl || 'disabled') + '\n' + s.storageProtection + (s.error ? '\n' + s.error : '');
             document.getElementById('brConnections').innerHTML = connections.map(function(c) {return '<div class="br-row"><span>' + esc(c.name) + ' · ' + esc(c.address) + '</span><button class="btn" data-br-test="' + esc(c.id) + '">Test</button><button class="btn" data-br-edit="' + esc(c.id) + '">Edit</button><button class="btn danger" data-br-delete="' + esc(c.id) + '">Remove</button></div>';}).join('') || 'No connections';
             document.getElementById('brKeys').innerHTML = s.keys.map(function(k) {return '<div class="br-row"><span>' + esc(k.name) + (k.revoked ? ' · revoked' : '') + '</span>' + (k.revoked ? '' : '<button class="btn danger" data-br-revoke="' + esc(k.id) + '">Revoke</button>') + '</div>';}).join('');
@@ -43,11 +45,15 @@
             } else if (el.dataset.brRevoke && confirm('Revoke this key and interrupt its transfers?')) {await send('DELETE','/bridge-local/keys/'+el.dataset.brRevoke);await load();
             } else if (el.id === 'brCreateKey') {
                 var key = await send('POST','/bridge-local/keys',{name:input('brKeyName')}); await load(); document.getElementById('brNewKey').value=key.secret;
+            } else if (el.id === 'brRenewCertificate') {
+                if(!confirm('Renew the server certificate? Update its fingerprint in every client.'))return;
+                var existing=await send('GET','/bridge-local/server');await send('PUT','/bridge-local/server',Object.assign({},existing.settings,{renewCertificate:true}));await load();message('Certificate renewed');
             } else if (el.id === 'brApplyServer') {
                 var current=await send('GET','/bridge-local/server');
                 var ip=input('br_advertisedAddress');
                 if (ip !== current.settings.advertisedAddress && !confirm('Changing the server IP creates a new certificate. Update its fingerprint in your clients. Continue?')) return;
                 var settings=Object.assign({},current.settings,{enabled:document.getElementById('brEnabled').checked,bindAddress:input('br_bindAddress'),advertisedAddress:ip,port:Number(input('br_port'))});
+                settings.uploadQuotaBytes=Math.floor(Number(input('br_quota'))*1073741824);settings.transferBytesPerSecond=Math.floor(Number(input('br_rate'))*1048576);
                 await send('PUT','/bridge-local/server',settings); await load(); message('Server settings applied');
             }
         } catch(err) {message(err.message);}

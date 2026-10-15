@@ -58,6 +58,7 @@ public sealed partial class TaskerService
 
         if (!_dbService.TryGetDb(out var db) || db == null)
         {
+            context.Response.StatusCode = 503;
             await WriteJson(context.Response, new { error = "DB not connected" });
             return true;
         }
@@ -368,6 +369,7 @@ public sealed partial class TaskerService
 
         if (!await CheckRevision(ctx, json.Value, db, id)) return;
 
+        var nextVersion = Guid.NewGuid().ToString("N");
         var escapedId = id.Replace("'", "''");
         var escapedSchema = schema.Replace("'", "''");
         var escapedValues = values.Replace("'", "''");
@@ -379,7 +381,7 @@ public sealed partial class TaskerService
                 await WriteJson(ctx.Response, new { ok = false, error = "Task not found. Save the task before editing its payload." });
                 return;
             }
-            db.Query($"UPDATE \"{Table}\" SET \"payload_schema\" = '{escapedSchema}', \"payload_values\" = '{escapedValues}', \"edit_version\" = '{Guid.NewGuid():N}' WHERE \"id\" = '{escapedId}'", thrw: true);
+            db.Query($"UPDATE \"{Table}\" SET \"payload_schema\" = '{escapedSchema}', \"payload_values\" = '{escapedValues}', \"edit_version\" = '{nextVersion}' WHERE \"id\" = '{escapedId}'", thrw: true);
             var verified = db.Query($"SELECT COUNT(*) FROM \"{Table}\" WHERE \"id\" = '{escapedId}' AND \"payload_schema\" = '{escapedSchema}' AND \"payload_values\" = '{escapedValues}'", thrw: true);
             if (verified.Trim() != "1") throw new InvalidOperationException("Payload was not persisted.");
         }
@@ -389,7 +391,7 @@ public sealed partial class TaskerService
             await WriteJson(ctx.Response, new { ok = false, error = ex.GetBaseException().Message });
             return;
         }
-        await WriteJson(ctx.Response, new { ok = true });
+        await WriteJson(ctx.Response, new { ok = true, _revision = _databaseEpoch + ":" + nextVersion });
     }
     
     private static CancellationToken GetDisconnectToken(TaskerExchange ctx)
@@ -954,11 +956,11 @@ public sealed partial class TaskerService
             arguments = "-m pip install -r requirements.txt";
         }
 
-        await RunInstallProcess(output, fileName, arguments, folder);
+        await RunInstallProcess(output, fileName, arguments, folder,ctx.Cancellation);
         await FinishInstall(ctx, output);
     }
 
-    private static async Task RunInstallProcess(Stream output, string fileName, string arguments, string cwd)
+    private static async Task RunInstallProcess(Stream output, string fileName, string arguments, string cwd,CancellationToken cancellation)
     {
         var psi = new System.Diagnostics.ProcessStartInfo
         {
@@ -980,14 +982,17 @@ public sealed partial class TaskerService
                 return;
             }
 
-            while (await proc.StandardOutput.ReadLineAsync() is { } line)
-                await SendInstallLine(output, line, "INFO");
-
-            var stderr = await proc.StandardError.ReadToEndAsync();
-            foreach (var line in stderr.Split('\n', StringSplitOptions.RemoveEmptyEntries))
-                await SendInstallLine(output, line.TrimEnd(), "ERROR");
-
-            await proc.WaitForExitAsync();
+            using var cancel=cancellation.Register(()=>{try{proc.Kill(true);}catch{}});
+            using var writeGate=new SemaphoreSlim(1,1);
+            async Task Drain(StreamReader reader,string level){
+                var buffer=new char[2048];int count;
+                while((count=await reader.ReadAsync(buffer.AsMemory(),cancellation))>0){
+                    await writeGate.WaitAsync(cancellation);
+                    try{await SendInstallLine(output,new string(buffer,0,count),level);}finally{writeGate.Release();}
+                }
+            }
+            await Task.WhenAll(Drain(proc.StandardOutput,"INFO"),Drain(proc.StandardError,"ERROR"));
+            await proc.WaitForExitAsync(cancellation);
             await SendInstallLine(output, $"exit code {proc.ExitCode}", proc.ExitCode == 0 ? "INFO" : "ERROR");
         }
         catch (Exception ex)

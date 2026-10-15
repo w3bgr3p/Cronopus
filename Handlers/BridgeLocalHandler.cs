@@ -6,6 +6,7 @@ namespace z3nDash;
 public sealed partial class BridgeLocalHandler(BridgeStore store, BridgeHost host) : IScriptHandler
 {
     private readonly BridgeClient _client = new(store);
+    private readonly SemaphoreSlim _admin=new(1,1);
     private static readonly JsonSerializerOptions Json = new() { PropertyNamingPolicy = JsonNamingPolicy.CamelCase, PropertyNameCaseInsensitive = true };
     public string PathPrefix => "/bridge-local";
     public void Init() { }
@@ -17,12 +18,15 @@ public sealed partial class BridgeLocalHandler(BridgeStore store, BridgeHost hos
         if (ctx.Request.Headers["X-Bridge-Local"] != "1" || (origin != null && origin != ctx.Request.Url!.GetLeftPart(UriPartial.Authority)))
         { ctx.Response.StatusCode = 403; return true; }
         ctx.Response.Headers["Cache-Control"] = "no-store";
+        var administrative=ctx.Request.Url!.AbsolutePath.StartsWith("/bridge-local/server")||ctx.Request.Url.AbsolutePath.StartsWith("/bridge-local/connections")||ctx.Request.Url.AbsolutePath.StartsWith("/bridge-local/keys");
+        if(administrative)await _admin.WaitAsync();
         try { await Dispatch(ctx); }
         catch (Exception ex)
         {
             ctx.Response.StatusCode = ex is ArgumentException or JsonException ? 400 : ex is KeyNotFoundException ? 404 : ex is HttpRequestException ? 502 : 500;
             await Write(ctx, new { error = ex is HttpRequestException ? "Cannot connect: check server address, certificate and key" : ex.Message });
         }
+        finally{if(administrative)_admin.Release();}
         return true;
     }
     private static async Task Write(HttpListenerContext ctx, object? data)

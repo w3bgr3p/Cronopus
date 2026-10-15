@@ -14,6 +14,11 @@ public sealed class BridgeStore
     public string Root { get; }
     public BridgeState State { get; }
     public string NodeId => State.NodeId;
+    public void SavePrivate<T>(string name,T value)
+    {
+        lock(_gate){var file=Path.Combine(Root,name);File.WriteAllBytes(file+".tmp",Protect(JsonSerializer.SerializeToUtf8Bytes(value)));File.Move(file+".tmp",file,true);}
+    }
+    public T ReadPrivate<T>(string name)=>JsonSerializer.Deserialize<T>(Unprotect(File.ReadAllBytes(Path.Combine(Root,name))))!;
     public BridgeStore(string? root = null)
     {
         Root = root ?? Environment.GetEnvironmentVariable("Z3NDASH_BRIDGE_STATE_DIR")

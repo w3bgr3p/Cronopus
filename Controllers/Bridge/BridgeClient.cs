@@ -9,7 +9,7 @@ public sealed class BridgeClient(BridgeStore store)
 {
     private readonly Dictionary<string, HttpClient> _clients = new();
     private readonly object _gate = new();
-    public async Task<HttpResponseMessage> SendAsync(string connectionId, HttpMethod method, string path, HttpContent? content, CancellationToken ct)
+    public async Task<HttpResponseMessage> SendAsync(string connectionId, HttpMethod method, string path, HttpContent? content, CancellationToken ct,string? requestId=null)
     {
         var connection = store.Connection(connectionId);
         if (!path.StartsWith("/bridge/v1/", StringComparison.Ordinal) || path.Contains("..") || path.Contains('\\')) throw new ArgumentException("Invalid API path");
@@ -33,8 +33,8 @@ public sealed class BridgeClient(BridgeStore store)
         }
         using var request = new HttpRequestMessage(method, uri) { Content = content };
         request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", connection.Secret);
-        if (method != HttpMethod.Get) request.Headers.Add("X-Request-ID", Guid.NewGuid().ToString("N"));
-        using var timeout = CancellationTokenSource.CreateLinkedTokenSource(ct); timeout.CancelAfter(TimeSpan.FromSeconds(15));
+        if (method != HttpMethod.Get) request.Headers.Add("X-Request-ID", requestId??Guid.NewGuid().ToString("N"));
+        using var timeout = CancellationTokenSource.CreateLinkedTokenSource(ct); timeout.CancelAfter(path.StartsWith("/bridge/v1/uploads")?TimeSpan.FromMinutes(5):TimeSpan.FromSeconds(15));
         return await client.SendAsync(request, HttpCompletionOption.ResponseHeadersRead, timeout.Token);
     }
     public async Task<JsonElement> CheckAsync(string id, CancellationToken ct)

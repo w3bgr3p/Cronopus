@@ -6,7 +6,8 @@ public sealed partial class TaskerService
     private readonly SemaphoreSlim _mutations = new(1, 1);
     public async Task<bool> HandleRequest(TaskerExchange context)
     {
-        var mutation = context.Request.HttpMethod != "GET";
+        var path=context.Request.Url.AbsolutePath;
+        var mutation = context.Request.HttpMethod != "GET" && path is "/tasker/save" or "/tasker/payload" or "/tasker/delete";
         if (mutation) await _mutations.WaitAsync();
         try { return await HandleCore(context); }
         finally { if (mutation) _mutations.Release(); }

@@ -8,6 +8,7 @@ public sealed partial class BridgeLocalHandler
     {
         var path = ctx.Request.Url!.AbsolutePath["/bridge-local".Length..].Trim('/');
         var method = ctx.Request.HttpMethod;
+        if(await TransferRoute(ctx,path))return;
         if (path == "connections" && method == "GET") { await Write(ctx, store.State.Connections.Select(c => c.Public())); return; }
         if (path == "connections" && method == "POST" || path.StartsWith("connections/") && method == "PUT")
         {
@@ -31,7 +32,7 @@ public sealed partial class BridgeLocalHandler
         if (path == "keys" && method == "POST")
         { var body = await Body(ctx); await Write(ctx, store.CreateKey(body.GetProperty("name").GetString() ?? "desktop")); return; }
         if (path.StartsWith("keys/") && method == "DELETE")
-        { store.RevokeKey(path[5..]); await Write(ctx, new { ok = true }); return; }
+        { store.RevokeKey(path[5..]); await host.CleanupUploads(path[5..]); await Write(ctx, new { ok = true }); return; }
         if (path == "server") { await Server(ctx); return; }
         if (path.Contains("/api/", StringComparison.Ordinal)) { await Proxy(ctx, path); return; }
         ctx.Response.StatusCode = 404;

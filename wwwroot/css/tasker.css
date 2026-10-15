@@ -1,4 +1,4 @@
-/* tasker.css — вынесено из tasker.html */
+/* tasker.css вЂ” РІС‹РЅРµСЃРµРЅРѕ РёР· tasker.html */
 
 * { margin: 0; padding: 0; box-sizing: border-box; }
 body {
@@ -34,7 +34,7 @@ body {
 .schedule-row.group-child { padding-left: var(--sp-24); border-left: 2px solid var(--border); }
 .schedule-row:hover    { background: var(--bg2); }
 .schedule-row.active   { background: var(--bg3); }
-/* Выделена вместе с основной: правки формы уйдут и в неё. */
+/* Р’С‹РґРµР»РµРЅР° РІРјРµСЃС‚Рµ СЃ РѕСЃРЅРѕРІРЅРѕР№: РїСЂР°РІРєРё С„РѕСЂРјС‹ СѓР№РґСѓС‚ Рё РІ РЅРµС‘. */
 .schedule-row.multi    { background: var(--bg2); box-shadow: inset 2px 0 0 var(--accent); }
 .schedule-row.row-disabled { opacity: 0.45; }
 .ungrouped-separator   { border-top: 2px solid var(--border); }
@@ -42,7 +42,7 @@ body {
 .row-dot         { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; cursor: pointer; }
 .row-dot.enabled  { background: var(--green); }
 .row-dot.disabled { background: var(--border); }
-/* Задача без расписания: включать нечего, точка только держит отступ. */
+/* Р—Р°РґР°С‡Р° Р±РµР· СЂР°СЃРїРёСЃР°РЅРёСЏ: РІРєР»СЋС‡Р°С‚СЊ РЅРµС‡РµРіРѕ, С‚РѕС‡РєР° С‚РѕР»СЊРєРѕ РґРµСЂР¶РёС‚ РѕС‚СЃС‚СѓРї. */
 .row-dot.ondemand { background: none; border: 1px solid var(--border); cursor: default; }
 .row-info  { flex: 1; min-width: 0; }
 .row-name  { font-size: var(--fs-11); font-weight: var(--fw-medium); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
@@ -122,10 +122,10 @@ select.form-input { cursor: pointer; }
 .detail-section { background: var(--bg); border: 1px solid var(--border); border-radius: var(--radius); padding: var(--sp-10) var(--sp-12); }
 .info-card-title { font-size: var(--fs-10); font-weight: var(--fw-bold); text-transform: uppercase; letter-spacing: 0.5px; color: var(--accent); margin-bottom: var(--sp-8); }
 
-/* Живые инстансы: на всю ширину, в несколько колонок и с прокруткой —
-   на двадцати нитях столбик уходил за экран, а правая половина пустовала. */
+/* Р–РёРІС‹Рµ РёРЅСЃС‚Р°РЅСЃС‹: РЅР° РІСЃСЋ С€РёСЂРёРЅСѓ, РІ РЅРµСЃРєРѕР»СЊРєРѕ РєРѕР»РѕРЅРѕРє Рё СЃ РїСЂРѕРєСЂСѓС‚РєРѕР№ вЂ”
+   РЅР° РґРІР°РґС†Р°С‚Рё РЅРёС‚СЏС… СЃС‚РѕР»Р±РёРє СѓС…РѕРґРёР» Р·Р° СЌРєСЂР°РЅ, Р° РїСЂР°РІР°СЏ РїРѕР»РѕРІРёРЅР° РїСѓСЃС‚РѕРІР°Р»Р°. */
 #instancesCard { grid-column: 1 / -1; }
-/* Карточка инстансов забирает всё место до панели логов, а не держит фиксированную высоту. */
+/* РљР°СЂС‚РѕС‡РєР° РёРЅСЃС‚Р°РЅСЃРѕРІ Р·Р°Р±РёСЂР°РµС‚ РІСЃС‘ РјРµСЃС‚Рѕ РґРѕ РїР°РЅРµР»Рё Р»РѕРіРѕРІ, Р° РЅРµ РґРµСЂР¶РёС‚ С„РёРєСЃРёСЂРѕРІР°РЅРЅСѓСЋ РІС‹СЃРѕС‚Сѓ. */
 .detail-grid:has(#instancesCard) { height: 100%; grid-template-rows: auto minmax(120px, 1fr); }
 #instancesCard { display: flex; flex-direction: column; min-height: 0; }
 #instancesCard .inst-list { flex: 1; min-height: 0; max-height: none; align-content: start; }
@@ -159,7 +159,7 @@ select.form-input { cursor: pointer; }
 .out-line.DEBUG   { color: var(--text2); }
 .out-line.empty   { color: var(--text2); padding: var(--sp-12); text-align: center; display: block; }
 
-/* Нить: полоса слева всегда, бейдж — только когда нитей больше одной */
+/* РќРёС‚СЊ: РїРѕР»РѕСЃР° СЃР»РµРІР° РІСЃРµРіРґР°, Р±РµР№РґР¶ вЂ” С‚РѕР»СЊРєРѕ РєРѕРіРґР° РЅРёС‚РµР№ Р±РѕР»СЊС€Рµ РѕРґРЅРѕР№ */
 .out-line[data-run] { border-left-color: hsl(var(--ll-h) var(--ll-s) var(--ll-l) / 0.5); }
 .out-line-run { display: none; }
 #outputBox.multi-run .out-line-run {
@@ -170,15 +170,15 @@ select.form-input { cursor: pointer; }
 }
 
 
-/* Фильтры по уровню и по нити */
+/* Р¤РёР»СЊС‚СЂС‹ РїРѕ СѓСЂРѕРІРЅСЋ Рё РїРѕ РЅРёС‚Рё */
 #outputBox.lvl-warn .out-line.INFO,
 #outputBox.lvl-warn .out-line.OK,
 #outputBox.lvl-warn .out-line.DEBUG,
 #outputBox.lvl-err  .out-line:not(.ERROR),
 .out-line.ll-muted { display: none; }
 
-/* Чипы нитей занимают остаток шапки и скроллятся внутри себя, чтобы не
-   выталкивать кнопки панели; сами кнопки не сжимаются никогда. */
+/* Р§РёРїС‹ РЅРёС‚РµР№ Р·Р°РЅРёРјР°СЋС‚ РѕСЃС‚Р°С‚РѕРє С€Р°РїРєРё Рё СЃРєСЂРѕР»Р»СЏС‚СЃСЏ РІРЅСѓС‚СЂРё СЃРµР±СЏ, С‡С‚РѕР±С‹ РЅРµ
+   РІС‹С‚Р°Р»РєРёРІР°С‚СЊ РєРЅРѕРїРєРё РїР°РЅРµР»Рё; СЃР°РјРё РєРЅРѕРїРєРё РЅРµ СЃР¶РёРјР°СЋС‚СЃСЏ РЅРёРєРѕРіРґР°. */
 .run-chips { display: flex; gap: var(--sp-2); align-items: center; margin-left: var(--sp-6);
              flex: 1 1 0; min-width: 0; overflow-x: auto; scrollbar-width: none; }
 .run-chips::-webkit-scrollbar { height: 0; }
@@ -198,8 +198,8 @@ select.form-input { cursor: pointer; }
 .bottom-panels { display: flex; flex-shrink: 0; height: 220px; gap: 0; overflow: hidden; }
 .log-panel { flex: 1; display: flex; flex-direction: column; overflow: hidden; border: 1px solid var(--border); border-radius: var(--radius-sm); background: var(--bg1); min-width: 80px; }
 .log-panel-header { padding: var(--sp-4) var(--sp-8); border-bottom: 1px solid var(--border); display: flex; gap: var(--sp-6); align-items: center; flex-shrink: 0; }
-/* На узкой панели сжимается заголовок, а не кнопки: до них должно быть
-   можно дотянуться при любой ширине. */
+/* РќР° СѓР·РєРѕР№ РїР°РЅРµР»Рё СЃР¶РёРјР°РµС‚СЃСЏ Р·Р°РіРѕР»РѕРІРѕРє, Р° РЅРµ РєРЅРѕРїРєРё: РґРѕ РЅРёС… РґРѕР»Р¶РЅРѕ Р±С‹С‚СЊ
+   РјРѕР¶РЅРѕ РґРѕС‚СЏРЅСѓС‚СЊСЃСЏ РїСЂРё Р»СЋР±РѕР№ С€РёСЂРёРЅРµ. */
 .log-panel-header > .log-panel-title { flex: 0 1 auto; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .log-panel-header > #liveBadgeBottom { flex-shrink: 0; }
 .log-panel-title  { font-size: var(--fs-10); font-weight: var(--fw-bold); color: var(--accent); flex: 1; display: flex; align-items: center; gap: var(--sp-4); }
@@ -316,12 +316,20 @@ select.form-input { cursor: pointer; }
 ::-webkit-scrollbar-track { background: transparent; }
 ::-webkit-scrollbar-thumb { background: var(--border); border-radius: var(--radius-sm); }
 #bridgeNode { background:var(--bg2);color:var(--text);border:1px solid var(--border);font:inherit;padding:var(--sp-1) var(--sp-2);max-width:220px; }
-#bridgeStatus { color:var(--text3);font-size:var(--fs-xs);max-width:280px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap; }
+#bridgeStatus { color:var(--text3);font-size:var(--fs-11);max-width:280px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap; }
 body[data-remote="true"] [onclick*="openInTerminal"],body[data-remote="true"] [onclick*="openFile"],body[data-remote="true"] [onclick*="openFolder"],body[data-remote="true"] [onclick*="AiPanel"] { display:none; }
+body[data-remote="true"] [onclick*="openScriptFile"],body[data-remote="true"] [onclick*="openScriptFolder"],body[data-remote="true"] [onclick*="openAiForTask"],body[data-remote="true"] .dtab[data-tab="traffic"],body[data-remote="true"] #logPanelHttp { display:none; }
 .br-file-overlay { position:fixed;inset:0;z-index:2000;background:var(--bg);display:flex;align-items:center;justify-content:center;padding:var(--sp-4); }
-.br-file-dialog { width:min(800px,95vw);max-height:90vh;display:flex;flex-direction:column;gap:var(--sp-3);background:var(--bg1);border:1px solid var(--border);border-radius:var(--radius);padding:var(--sp-4); }
+.br-file-dialog { width:min(800px,95vw);max-height:90vh;display:flex;flex-direction:column;gap:var(--sp-12);background:var(--bg1);border:1px solid var(--border);border-radius:var(--radius);padding:var(--sp-4); }
 .br-file-toolbar { display:flex;gap:var(--sp-2);align-items:center;flex-wrap:wrap; }
 .br-file-toolbar input { flex:1;min-width:160px;background:var(--bg2);color:var(--text);border:1px solid var(--border);padding:var(--sp-2);font:inherit; }
 .br-file-list { min-height:200px;max-height:55vh;overflow:auto;border:1px solid var(--border); }
 .br-file-entry { display:block;width:100%;text-align:left;background:var(--bg1);color:var(--text);border:0;border-bottom:1px solid var(--border);padding:var(--sp-2);font:inherit;overflow-wrap:anywhere;cursor:pointer; }
 .br-file-entry:hover { background:var(--bg3); }
+.br-remote-only { display:none; }
+body[data-remote="true"] .br-remote-only { display:inline-flex; }
+#brTransfers { position:fixed;right:var(--sp-12);bottom:var(--sp-12);z-index:1500;width:min(420px,90vw);max-height:45vh;overflow:auto; }
+.br-transfer { padding:var(--sp-12);background:var(--bg1);border:1px solid var(--border);border-radius:var(--radius);margin-top:var(--sp-2);overflow-wrap:anywhere; }
+.br-transfer div { color:var(--text2);white-space:pre-wrap;margin-block:var(--sp-2); }
+.br-transfer button { margin-right:var(--sp-2); }
+body[data-remote="true"] [onclick="clearOutputBottom()"] { display:none; }

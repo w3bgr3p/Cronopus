@@ -16,11 +16,24 @@ public sealed class BridgeOperations
         cmd.ExecuteNonQuery();
     }
     private SqliteConnection Open() { var c = new SqliteConnection(_source); c.Open(); return c; }
+    public TaskerReply Start(string key,string id,string input,Func<Task<TaskerReply>> action)
+    {
+        var running=ExecuteAsync(key,id,input,()=>Task.Run(action));
+        if(running.IsCompletedSuccessfully)return running.Result;
+        _=running.ContinueWith(t=>Console.WriteLine("Bridge operation journal failed"),TaskContinuationOptions.OnlyOnFaulted);
+        return new(202,JsonSerializer.Serialize(new{operation_id=id,state="pending"}),"application/json");
+    }
     public object? Get(string key, string id)
     {
         using var c = Open(); using var cmd = c.CreateCommand(); cmd.CommandText = "SELECT state,status,text FROM operations WHERE key=$key AND id=$id";
         cmd.Parameters.AddWithValue("$key", key); cmd.Parameters.AddWithValue("$id", id);
         using var r = cmd.ExecuteReader(); return r.Read() ? new { request_id = id, state = r.GetString(0), status = r.GetInt32(1), result = r.GetString(2) } : null;
+    }
+    public void SetProgress(string key,string id,string text)
+    {
+        if(text.Length>65536)text=text[^65536..];
+        using var c=Open();using var cmd=c.CreateCommand();cmd.CommandText="UPDATE operations SET text=$text WHERE key=$key AND id=$id AND state='pending'";
+        cmd.Parameters.AddWithValue("$text",text);cmd.Parameters.AddWithValue("$key",key);cmd.Parameters.AddWithValue("$id",id);cmd.ExecuteNonQuery();
     }
     public async Task<TaskerReply> ExecuteAsync(string key, string id, string input, Func<Task<TaskerReply>> action)
     {
@@ -35,7 +48,8 @@ public sealed class BridgeOperations
             if (r.Read()) return r.GetString(0) != hash ? new(409, "{\"error\":\"Request ID reused with different input\"}", "application/json")
                 : r.GetString(1) is "pending" or "outcome_unknown" ? new(202, JsonSerializer.Serialize(Get(key, id)), "application/json")
                 : new(r.GetInt32(2), r.GetString(3), r.GetString(4));
-            r.Close(); cmd.CommandText = "SELECT COUNT(*) FROM operations";
+            r.Close(); cmd.CommandText = "DELETE FROM operations WHERE state!='pending' AND created < datetime('now','-7 days')";cmd.ExecuteNonQuery();
+            cmd.CommandText = "SELECT COUNT(*) FROM operations";
             if ((long)cmd.ExecuteScalar()! >= 100000) return new(503, "{\"error\":\"Operation journal full\"}", "application/json");
             cmd.CommandText = "INSERT INTO operations VALUES($key,$id,$hash,'pending',202,'','application/json',datetime('now'))";
             cmd.Parameters.AddWithValue("$hash", hash); cmd.ExecuteNonQuery();

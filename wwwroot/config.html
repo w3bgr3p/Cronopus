@@ -38,8 +38,11 @@
                     <label>Bind IP<input id="br_bindAddress" value="0.0.0.0"></label>
                     <label>Public/server IP<input id="br_advertisedAddress" value="127.0.0.1"></label>
                     <label>Port<input id="br_port" type="number" value="38473"></label>
+                    <label>Staging quota, GiB<input id="br_quota" type="number" min="1" value="40"></label>
+                    <label>Upload speed, MiB/s<input id="br_rate" type="number" min="1" value="8"></label>
                 </div>
                 <button class="btn primary" id="brApplyServer">Apply server settings</button>
+                <button class="btn" id="brRenewCertificate">Renew certificate</button>
                 <pre id="brIdentity" class="br-identity"></pre>
                 <div class="br-row"><input id="brKeyName" placeholder="Key name" value="Desktop"><button class="btn" id="brCreateKey">Create access key</button></div>
                 <textarea id="brNewKey" readonly placeholder="A new key appears here once. Copy it to your local z3nDash."></textarea>

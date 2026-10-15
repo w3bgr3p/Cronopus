@@ -25,6 +25,9 @@
         <h1>Tasker</h1>
         <select id="bridgeNode" aria-label="Tasker node"><option value="">Local</option></select>
         <span id="bridgeStatus" role="status">Local</span>
+        <button class="btn sm br-remote-only" onclick="TaskerUpload.begin('file')">Upload file</button>
+        <button class="btn sm br-remote-only" onclick="TaskerUpload.begin('folder')">Upload folder</button>
+        <button class="btn sm br-remote-only" onclick="TaskerBridge.recoverPending()">Check commands</button>
         <div class="header-stats" id="headerStats"></div>
         <div class="header-right">
             <button class="btn sm" onclick="AiPanel.toggleDefault()" style="border-color:var(--accent);color:var(--accent);">⟡ AI</button>
@@ -84,6 +87,8 @@
                             <option value="err">errors</option>
                         </select>
                         <button class="panel-refresh" onclick="reloadOutput()" title="Refresh">↺</button>
+                        <button class="panel-refresh br-remote-only" id="brObserve" onclick="RemoteOutput.toggle()">Observe</button>
+                        <button class="panel-refresh br-remote-only" onclick="if(selectedId)RemoteOutput.load(selectedId,true)">Older</button>
                         <button class="panel-refresh" onclick="clearOutputBottom()" style="color:var(--red);border-color:var(--red);" title="Clear output">🗑</button>
                     </div>
                 </div>
@@ -149,6 +154,8 @@
 <script src="/js/logline.js?v=1"></script>
 <script src="/js/tasker-transport.js"></script>
 <script src="/js/tasker-files.js"></script>
+<script src="/js/tasker-upload.js"></script>
+<script src="/js/tasker-remote-output.js"></script>
 <script src="/js/tasker.js?v=1777240004"></script>
 </body>
 </html>

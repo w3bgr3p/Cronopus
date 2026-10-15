@@ -13,12 +13,13 @@ public sealed partial class TaskerService
         "POST /tasker/args-preview", "POST /tasker/schedule-preview", "POST /tasker/build",
         "POST /tasker/ensure-venv", "GET /tasker/install/stream"
     };
-    public async Task<TaskerReply> InvokeAsync(string method, string path, JsonElement? body, CancellationToken ct)
+    public async Task<TaskerReply> InvokeAsync(string method, string path, JsonElement? body, CancellationToken ct,Action<string>? progress=null)
     {
         ct.ThrowIfCancellationRequested();
         var clean = path.Split('?')[0];
         if (!RemoteRoutes.Contains(method + " " + clean)) return new(404, "{\"error\":\"Unsupported operation\"}", "application/json");
         var context = new TaskerExchange(method, path, body);
+        context.Cancellation=ct;context.Response.Progress=progress;
         var id = context.Request.QueryString["id"];
         if (!string.IsNullOrEmpty(id)) ValidateId(id);
         if (body is { ValueKind: JsonValueKind.Object } b && b.TryGetProperty("id", out var bid) && !string.IsNullOrEmpty(bid.GetString())) ValidateId(bid.GetString()!);

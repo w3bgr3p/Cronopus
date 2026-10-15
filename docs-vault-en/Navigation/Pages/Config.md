@@ -1,5 +1,7 @@
 # Config
 
+HTTPS bridge between instances: **Remote Tasker** section, see [[Remote Tasker]].
+
 The `/config.html` page manages the local z3nDash configuration.
 
 The side rail switches between Overview, Database, Logs & Server, Browsers API,

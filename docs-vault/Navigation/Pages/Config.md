@@ -1,5 +1,7 @@
 # Config
 
+HTTPS-мост между экземплярами: раздел **Remote Tasker**, инструкция [[Remote Tasker]].
+
 Страница `/config.html` управляет локальной конфигурацией z3nDash.
 
 Разделы Overview, Database, Logs & Server, Browsers API, OmniRoute, Services,

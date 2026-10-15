@@ -2,6 +2,9 @@ using System.Reflection;
 using System.Text.Json;
 using z3nDash;
 
+if(args.Contains("--load")){await LoadCases.Run(args.Contains("--quick")?1:15);return;}
+if(args.Length>=2&&args[0]=="--setup-e2e"){PublishedFixture.Setup(args[1]);return;}
+
 var root = Path.Combine(Path.GetTempPath(), "z3ndash-bridge-tests", Guid.NewGuid().ToString("N"));
 Directory.CreateDirectory(root);
 try
@@ -61,6 +64,27 @@ try
     Check((await anonymous.SendAsync(runRequest)).IsSuccessStatusCode, "pause API failed");
     var rootsResponse = await anonymous.GetAsync(new Uri(uri, "/bridge/v1/files/roots"));
     Check(rootsResponse.IsSuccessStatusCode, "server disk API unavailable");
+    var uploadDir = Path.Combine(root, "destination"); Directory.CreateDirectory(uploadDir);
+    var bytes = new byte[] { 1, 2, 3, 4 };
+    var manifest = JsonSerializer.Serialize(new { destination = uploadDir, directories = new[] { "empty" },
+        files = new[] { new { id = "file1", relativePath = "nested/тест.bin", size = 4, sha256 = Convert.ToHexString(System.Security.Cryptography.SHA256.HashData(bytes)) } } });
+    var createUpload = await anonymous.PostAsync(new Uri(uri, "/bridge/v1/uploads"), new StringContent(manifest, System.Text.Encoding.UTF8, "application/json"));
+    Check(createUpload.IsSuccessStatusCode, "uploads API unavailable");
+    var uploadId = JsonDocument.Parse(await createUpload.Content.ReadAsStringAsync()).RootElement.GetProperty("upload_id").GetString();
+    Check((await anonymous.PutAsync(new Uri(uri, $"/bridge/v1/uploads/{uploadId}/files/file1?offset=0"), new ByteArrayContent(bytes[..2]))).IsSuccessStatusCode, "block1 failed");
+    Check((await anonymous.PutAsync(new Uri(uri, $"/bridge/v1/uploads/{uploadId}/files/file1?offset=2"), new ByteArrayContent(bytes[2..]))).IsSuccessStatusCode, "block2 failed");
+    Check((await anonymous.PostAsync(new Uri(uri, $"/bridge/v1/uploads/{uploadId}/commit"), new StringContent("{}", System.Text.Encoding.UTF8, "application/json"))).IsSuccessStatusCode, "commit failed");
+    Check(File.ReadAllBytes(Path.Combine(uploadDir,"nested","тест.bin")).SequenceEqual(bytes), "published bytes differ");
+    Console.WriteLine("PASS uploads");
+    var outputType=typeof(SchedulerService).Assembly.GetType("z3nDash.BridgeOutput");
+    Check(outputType!=null,"BridgeOutput is missing");
+    dynamic output=Activator.CreateInstance(outputType!,262144,2000)!;
+    output.Append("task","run",new ReadOnlyMemory<byte>(new byte[1000000]));
+    JsonElement outputPage=output.Read("task","run",null,200);
+    Check(System.Text.Encoding.UTF8.GetByteCount(outputPage.GetRawText())<=262144,"unbounded output page");
+    Console.WriteLine("PASS bounded-output");
+    await BridgeCases.Run(root,(TaskerService)service,(BridgeStore)reopened,uri,(string)good.Secret,anonymous);
+    if(args.Contains("--serve"))await BrowserFixture.Serve(root,(BridgeStore)reopened,uri,(string)good.Secret);
     await host.StopAsync(CancellationToken.None);
     Console.WriteLine("PASS tls");
 }
