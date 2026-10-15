@@ -5,6 +5,7 @@ namespace z3nDash;
 
 public sealed partial class BridgeLocalHandler
 {
+    private static readonly HttpClient PublicIpClient=new(new SocketsHttpHandler{UseProxy=false,AllowAutoRedirect=false,ConnectTimeout=TimeSpan.FromSeconds(3)}){Timeout=Timeout.InfiniteTimeSpan};
     private async Task Server(HttpListenerContext ctx)
     {
         if (ctx.Request.HttpMethod == "PUT")

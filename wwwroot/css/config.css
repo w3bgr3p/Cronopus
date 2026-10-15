@@ -416,3 +416,7 @@
 .br-row span { flex:1;overflow-wrap:anywhere; }
 .br-identity { white-space:pre-wrap;overflow-wrap:anywhere;color:var(--text2);font-size:var(--fs-11); }
 #brNewKey { width:100%;box-sizing:border-box;resize:vertical; }
+.br-ip-input { display:flex;align-items:center;gap:var(--sp-6); }
+.br-ip-input input { min-width:0;flex:1; }
+.br-ip-input button { flex-shrink:0;white-space:nowrap; }
+.br-ip-hint { color:var(--text2);font-size:var(--fs-11);margin-block:var(--sp-8); }

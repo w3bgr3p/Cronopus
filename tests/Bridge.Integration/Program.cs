@@ -3,6 +3,8 @@ using System.Text.Json;
 using z3nDash;
 
 if(args.Contains("--load")){await LoadCases.Run(args.Contains("--quick")?1:15);return;}
+if(args.Contains("--public-ip")){await PublicAddressCases.Run(true);return;}
+await PublicAddressCases.Run();
 if(args.Length>=2&&args[0]=="--setup-e2e"){PublishedFixture.Setup(args[1]);return;}
 
 var root = Path.Combine(Path.GetTempPath(), "z3ndash-bridge-tests", Guid.NewGuid().ToString("N"));

@@ -15,8 +15,20 @@
     function esc(value) { return String(value == null ? '' : value).replace(/[&<>"']/g, function(c) {return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];}); }
     function input(id) { return document.getElementById(id).value.trim(); }
     function message(text) { document.getElementById('brMessage').textContent = text; }
-    var connections = [], controller = createConfigController({send:send});
+    var connections = [], controller = createConfigController({send:send}),ipRequest=0,ipEdits=0,configLoad=0,autoIpTried=false;
+    async function detectIp(){
+        var request=++ipRequest,edits=ipEdits,version=configLoad,button=document.getElementById('brDetectIp'),field=document.getElementById('br_advertisedAddress'),info=document.getElementById('brIpStatus');
+        button.disabled=true;info.textContent='Detecting this server’s public IP…';
+        try{
+            var result=await send('GET','/bridge-local/server/public-ip');
+            if(request!==ipRequest||edits!==ipEdits||version!==configLoad)return;
+            field.value=result.address;info.textContent='Public IP detected. Apply server settings to use it. If your RDP address differs, enter that address instead.';
+        }catch(e){if(request===ipRequest&&edits===ipEdits&&version===configLoad)info.textContent=e.message;}
+        finally{if(request===ipRequest)button.disabled=false;}
+    }
+    if(typeof document!=='undefined')document.addEventListener('input',function(e){if(e.target.id==='br_advertisedAddress'){ipEdits++;document.getElementById('brIpStatus').textContent='Manual IP address. Apply server settings to use it.';}});
     async function load() {
+        configLoad++;
         try {
             var values = await Promise.all([send('GET','/bridge-local/server'),send('GET','/bridge-local/connections')]);
             var s = values[0]; connections = values[1];
@@ -27,12 +39,14 @@
             document.getElementById('brIdentity').textContent = 'Node ID: ' + s.nodeId + '\nSHA-256: ' + s.fingerprint + '\nExpires: ' + s.expires + '\nURL: ' + (s.actualUrl || 'disabled') + '\n' + s.storageProtection + (s.error ? '\n' + s.error : '');
             document.getElementById('brConnections').innerHTML = connections.map(function(c) {return '<div class="br-row"><span>' + esc(c.name) + ' · ' + esc(c.address) + '</span><button class="btn" data-br-test="' + esc(c.id) + '">Test</button><button class="btn" data-br-edit="' + esc(c.id) + '">Edit</button><button class="btn danger" data-br-delete="' + esc(c.id) + '">Remove</button></div>';}).join('') || 'No connections';
             document.getElementById('brKeys').innerHTML = s.keys.map(function(k) {return '<div class="br-row"><span>' + esc(k.name) + (k.revoked ? ' · revoked' : '') + '</span>' + (k.revoked ? '' : '<button class="btn danger" data-br-revoke="' + esc(k.id) + '">Revoke</button>') + '</div>';}).join('');
+            if(!autoIpTried&&!s.settings.enabled&&['','127.0.0.1','0.0.0.0','::1'].includes(s.settings.advertisedAddress)){autoIpTried=true;detectIp();}
         } catch(e) {message(e.message);}
     }
     if (typeof document !== 'undefined') document.addEventListener('click', async function(e) {
         var el = e.target.closest('button'); if (!el) return;
         try {
-            if (el.id === 'brSaveConnection') {
+            if (el.id === 'brDetectIp') {await detectIp();
+            } else if (el.id === 'brSaveConnection') {
                 await controller.save({id:input('brConnectionId'),name:input('brName'),address:input('brAddress'),nodeId:input('brNodeId'),fingerprint:input('brFingerprint'),key:input('brSecret')});
                 document.getElementById('brSecret').value = ''; message('Connection saved'); await load();
             } else if (el.id === 'brNewConnection') {

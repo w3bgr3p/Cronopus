@@ -8,6 +8,10 @@ public sealed partial class BridgeLocalHandler
     {
         var path = ctx.Request.Url!.AbsolutePath["/bridge-local".Length..].Trim('/');
         var method = ctx.Request.HttpMethod;
+        if(path=="server/public-ip"&&method=="GET"){
+            try{await Write(ctx,new{address=await BridgePublicAddress.DetectAsync(PublicIpClient,CancellationToken.None)});}
+            catch(HttpRequestException ex){ctx.Response.StatusCode=502;await Write(ctx,new{error=ex.Message});}return;
+        }
         if(await TransferRoute(ctx,path))return;
         if (path == "connections" && method == "GET") { await Write(ctx, store.State.Connections.Select(c => c.Public())); return; }
         if (path == "connections" && method == "POST" || path.StartsWith("connections/") && method == "PUT")

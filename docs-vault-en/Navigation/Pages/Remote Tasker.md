@@ -6,7 +6,9 @@ on the server when the client disconnects.
 ## Connect
 
 1. Open server **Config → Remote Tasker** once through RDP.
-2. Set its public IP, bind address and port (default `38473`). Enable HTTPS and Apply.
+2. First setup detects the server's public IP automatically; **Detect IP** repeats
+   discovery from the server. Enter your RDP IP manually if it differs. **HTTPS port**
+   is separate from RDP (default `38473`). Enable HTTPS and Apply.
 3. Allow the actual port through the server and hosting firewall.
 4. Create a named key. Copy the key, Node ID and certificate SHA-256 fingerprint.
 5. In local Tasker's node selector choose **+ New connection…**. Enter a name,
