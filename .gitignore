@@ -103,6 +103,7 @@ logs/
 http-logs/
 media/
 docs/
+.superpowers/
 dev_state/
 *.log
 *.jsonl
