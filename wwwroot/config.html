@@ -29,6 +29,36 @@
     <nav class="cfg-rail" id="cfgRail"></nav>
 
     <div class="cfg-pane" id="cfgPane">
+        <section class="cfg-sec" data-sec="remote-tasker" hidden>
+            <section class="card config-card">
+                <h2>Remote Tasker · Server</h2>
+                <p class="page-sub">Connect another z3nDash by IP. Open the actual TCP port in the server firewall.</p>
+                <div class="br-grid">
+                    <label><input id="brEnabled" type="checkbox"> Enable HTTPS server</label>
+                    <label>Bind IP<input id="br_bindAddress" value="0.0.0.0"></label>
+                    <label>Public/server IP<input id="br_advertisedAddress" value="127.0.0.1"></label>
+                    <label>Port<input id="br_port" type="number" value="38473"></label>
+                </div>
+                <button class="btn primary" id="brApplyServer">Apply server settings</button>
+                <pre id="brIdentity" class="br-identity"></pre>
+                <div class="br-row"><input id="brKeyName" placeholder="Key name" value="Desktop"><button class="btn" id="brCreateKey">Create access key</button></div>
+                <textarea id="brNewKey" readonly placeholder="A new key appears here once. Copy it to your local z3nDash."></textarea>
+                <div id="brKeys"></div>
+            </section>
+            <section class="card config-card">
+                <h2>Connections</h2><div id="brConnections"></div>
+                <input id="brConnectionId" type="hidden">
+                <div class="br-grid">
+                    <label>Name<input id="brName" placeholder="Server"></label>
+                    <label>HTTPS address<input id="brAddress" placeholder="https://IP:38473"></label>
+                    <label>Node ID<input id="brNodeId" autocomplete="off"></label>
+                    <label>Certificate SHA-256<input id="brFingerprint" autocomplete="off"></label>
+                    <label>Access key<input id="brSecret" type="password" autocomplete="new-password" placeholder="Leave empty to keep the saved key"></label>
+                </div>
+                <button class="btn primary" id="brSaveConnection">Save connection</button><button class="btn" id="brNewConnection">New connection</button>
+            </section>
+            <p id="brMessage" role="status"></p>
+        </section>
 
         <section class="cfg-sec" data-sec="overview">
     <div class="card">
@@ -444,6 +474,7 @@
     </div>
 </div>
 
+<script src="/js/bridge-config.js"></script>
 <script src="/js/config.js"></script>
 </body>
 </html>

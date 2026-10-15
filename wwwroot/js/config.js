@@ -700,6 +700,7 @@
         { id: 'services', icon: '🛡', title: 'Services',            enter: enterServices, leave: leaveServices },
         { id: 'security', icon: '🔐', title: 'Security · jVars' },
         { id: 'maint',    icon: '🧰', title: 'Maintenance' },
+        { id: 'remote-tasker', icon: '⇄', title: 'Remote Tasker', enter: () => BridgeConfig.load() },
         { id: 'ui',       icon: '🎨', title: 'Interface',           enter: enterInterface },
     ];
 

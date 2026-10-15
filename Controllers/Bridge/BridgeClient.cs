@@ -33,6 +33,7 @@ public sealed class BridgeClient(BridgeStore store)
         }
         using var request = new HttpRequestMessage(method, uri) { Content = content };
         request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", connection.Secret);
+        if (method != HttpMethod.Get) request.Headers.Add("X-Request-ID", Guid.NewGuid().ToString("N"));
         using var timeout = CancellationTokenSource.CreateLinkedTokenSource(ct); timeout.CancelAfter(TimeSpan.FromSeconds(15));
         return await client.SendAsync(request, HttpCompletionOption.ResponseHeadersRead, timeout.Token);
     }

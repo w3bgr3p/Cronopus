@@ -1,0 +1,40 @@
+using System.Net;
+using System.Text;
+using System.Text.Json;
+namespace z3nDash;
+
+public sealed partial class BridgeLocalHandler(BridgeStore store, BridgeHost host) : IScriptHandler
+{
+    private readonly BridgeClient _client = new(store);
+    private static readonly JsonSerializerOptions Json = new() { PropertyNamingPolicy = JsonNamingPolicy.CamelCase, PropertyNameCaseInsensitive = true };
+    public string PathPrefix => "/bridge-local";
+    public void Init() { }
+    public async Task<bool> HandleRequest(HttpListenerContext ctx)
+    {
+        ctx.Response.Headers.Remove("Access-Control-Allow-Origin");
+        ctx.Response.Headers.Remove("Access-Control-Allow-Headers");
+        var origin = ctx.Request.Headers["Origin"];
+        if (ctx.Request.Headers["X-Bridge-Local"] != "1" || (origin != null && origin != ctx.Request.Url!.GetLeftPart(UriPartial.Authority)))
+        { ctx.Response.StatusCode = 403; return true; }
+        ctx.Response.Headers["Cache-Control"] = "no-store";
+        try { await Dispatch(ctx); }
+        catch (Exception ex)
+        {
+            ctx.Response.StatusCode = ex is ArgumentException or JsonException ? 400 : ex is KeyNotFoundException ? 404 : ex is HttpRequestException ? 502 : 500;
+            await Write(ctx, new { error = ex is HttpRequestException ? "Cannot connect: check server address, certificate and key" : ex.Message });
+        }
+        return true;
+    }
+    private static async Task Write(HttpListenerContext ctx, object? data)
+    {
+        var bytes = JsonSerializer.SerializeToUtf8Bytes(data, Json); ctx.Response.ContentType = "application/json";
+        ctx.Response.ContentLength64 = bytes.Length; await ctx.Response.OutputStream.WriteAsync(bytes);
+    }
+    private static async Task<JsonElement> Body(HttpListenerContext ctx)
+    {
+        using var buffer = new MemoryStream(); var bytes = new byte[65536]; int count;
+        while ((count = await ctx.Request.InputStream.ReadAsync(bytes)) > 0)
+        { if (buffer.Length + count > 8388608) throw new ArgumentException("Body is too large"); await buffer.WriteAsync(bytes.AsMemory(0, count)); }
+        return JsonSerializer.Deserialize<JsonElement>(buffer.Length == 0 ? "{}" : Encoding.UTF8.GetString(buffer.ToArray()));
+    }
+}

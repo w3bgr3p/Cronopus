@@ -81,7 +81,11 @@ try
     var clipboardService = new ClipboardConverterService(_log);
 
     dashboardService.RegisterHandler(new ZpOrchestratorHandler(dbConnectionService));
-    dashboardService.RegisterHandler(new SchedulerHandler(dbConnectionService, schedulerService, dashboardService.WwwrootPath));
+    var taskerService = new TaskerService(dbConnectionService, schedulerService, dashboardService.WwwrootPath);
+    dashboardService.RegisterHandler(new SchedulerHandler(taskerService));
+    var bridgeStore = new BridgeStore();
+    var bridgeHost = new BridgeHost(bridgeStore, taskerService, schedulerService);
+    dashboardService.RegisterHandler(new BridgeLocalHandler(bridgeStore, bridgeHost));
     dashboardService.RegisterHandler(new TaskControlHandler(schedulerService));
     dashboardService.RegisterHandler(new TasksControlHandler(schedulerService));
     dashboardService.RegisterHandler(new ZpDebugHandler());
@@ -92,6 +96,8 @@ try
 
     dashboardService.Start();
     schedulerService.Init();
+    if (bridgeStore.State.Settings.Enabled)
+    { try { await bridgeHost.StartAsync(CancellationToken.None); } catch (Exception ex) { Console.WriteLine("Remote Tasker failed: " + ex.Message); } }
 
     // Базу меняют и на лету со страницы Config: в новой базе нужны те же таблицы.
     dbConnectionService.Connected += db =>
@@ -121,6 +127,7 @@ try
 
     await exitTcs.Task;
     schedulerService.Dispose();
+    await bridgeHost.StopAsync(CancellationToken.None);
     watchdogService.Dispose();
     clipboardService.Dispose();
 }
