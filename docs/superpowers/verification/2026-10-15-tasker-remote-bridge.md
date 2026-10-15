@@ -58,5 +58,8 @@ Upload publication is atomic per file; a complete directory tree is not transact
 The native source picker is covered through its backend selection/transfer test;
 the browser smoke does not automate a Windows native file dialog.
 
-The implementation remains in its isolated branch pending integration choice;
-no push, PR, installer release, production deployment or user task execution occurred.
+The user authorized integration and master was fast-forwarded to `3c97b8b`.
+Post-merge JavaScript suite: 58 passed. Windows build succeeded at
+`bin/remote-tasker/z3nDash.exe` (0 errors, 9 existing warnings). The normal Debug
+output is locked by the user's running z3nDash; that process was left running.
+No push, PR, installer release or production deployment occurred.
