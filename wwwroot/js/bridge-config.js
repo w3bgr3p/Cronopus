@@ -77,6 +77,8 @@
             document.getElementById('brIdentity').textContent = 'Node ID: ' + s.nodeId + '\nSHA-256: ' + s.fingerprint + '\nExpires: ' + s.expires + '\nURL: ' + (s.actualUrl || 'disabled') + '\n' + s.storageProtection + (s.error ? '\n' + s.error : '');
             document.getElementById('brConnections').innerHTML = connections.map(function(c) {return '<div class="br-row"><span>' + esc(c.name) + ' · ' + esc(c.address) + '</span><button class="btn" data-br-test="' + esc(c.id) + '">Test</button><button class="btn" data-br-edit="' + esc(c.id) + '">Edit</button><button class="btn danger" data-br-delete="' + esc(c.id) + '">Remove</button></div>';}).join('') || 'No connections';
             document.getElementById('brKeys').innerHTML = s.keys.map(function(k) {return '<div class="br-row"><span>' + esc(k.name) + (k.revoked ? ' · revoked' : '') + '</span>' + (k.revoked ? '' : '<button class="btn danger" data-br-revoke="' + esc(k.id) + '">Revoke</button>') + '</div>';}).join('');
+            var revoked=s.keys.filter(function(k){return k.revoked;}).length;
+            if(revoked)document.getElementById('brKeys').innerHTML+='<button class="btn" id="brClearRevoked">Clear revoked keys ('+revoked+')</button>';
             if(!autoIpTried&&!s.settings.enabled&&['','127.0.0.1','0.0.0.0','::1'].includes(s.settings.advertisedAddress)){autoIpTried=true;detectIp();}
         } catch(e) {message(e.message);}
     }
@@ -97,6 +99,10 @@
                 [['brConnectionId',c.id],['brName',c.name],['brAddress',c.address],['brNodeId',c.nodeId],['brFingerprint',c.fingerprint],['brSecret','']].forEach(function(pair) {document.getElementById(pair[0]).value=pair[1];});
             } else if (el.dataset.brTest) {await send('POST','/bridge-local/connections/'+el.dataset.brTest+'/test',{});message('Connected · server identity verified','connection');
             } else if (el.dataset.brDelete && confirm('Remove this connection?')) {await send('DELETE','/bridge-local/connections/'+el.dataset.brDelete); await load({preserveServerDraft:true});
+            } else if (el.id==='brClearRevoked') {
+                if(el.disabled)return;el.disabled=true;keyMessage('Clearing revoked keys…');
+                try{var cleared=await send('DELETE','/bridge-local/keys/revoked');await load({preserveServerDraft:true});keyMessage('Removed revoked keys: '+cleared.removed+'.');}
+                catch(ex){keyMessage(ex.message);throw ex;}finally{el.disabled=false;}
             } else if (el.dataset.brRevoke && confirm('Revoke this key and interrupt its transfers?')) {await send('DELETE','/bridge-local/keys/'+el.dataset.brRevoke);await load({preserveServerDraft:true});keyMessage('Access key revoked.');
             } else if (el.id === 'brCreateKey') {
                 if(el.disabled)return;var label=el.textContent;el.disabled=true;el.textContent='Creating…';message('');keyMessage('Creating access key…');

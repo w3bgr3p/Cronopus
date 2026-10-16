@@ -88,6 +88,15 @@ public sealed class BridgeStore
             Save();
         }
     }
+    public int ClearRevokedKeys()
+    {
+        lock (_gate)
+        {
+            var removed=State.Keys.RemoveAll(k=>k.Revoked);
+            if(removed>0)Save();
+            return removed;
+        }
+    }
     public BridgeConnection Connection(string id)
     { lock (_gate) return State.Connections.FirstOrDefault(c => c.Id == id) ?? throw new KeyNotFoundException("Connection not found"); }
     public X509Certificate2 Certificate(bool regenerate = false)

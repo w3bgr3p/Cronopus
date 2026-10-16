@@ -36,6 +36,8 @@ public sealed partial class BridgeLocalHandler
         { store.State.Connections.Remove(store.Connection(path[12..])); store.Save(); await Write(ctx, new { ok = true }); return; }
         if (path == "keys" && method == "POST")
         { var body = await Body(ctx); await Write(ctx, store.CreateKey(body.GetProperty("name").GetString() ?? "desktop")); return; }
+        if (path == "keys/revoked" && method == "DELETE")
+        { await Write(ctx, new { removed = store.ClearRevokedKeys() }); return; }
         if (path.StartsWith("keys/") && method == "DELETE")
         { store.RevokeKey(path[5..]); await host.CleanupUploads(path[5..]); await Write(ctx, new { ok = true }); return; }
         if (path == "server") { await Server(ctx); return; }
