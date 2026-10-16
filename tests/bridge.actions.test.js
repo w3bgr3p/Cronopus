@@ -34,3 +34,18 @@ test('Open keeps the failure visible beside the firewall buttons',async()=>{
     assert.match(f.elements.brFirewallStatus.textContent,/Administrator approval was cancelled/);
     assert.doesNotMatch(f.elements.brFirewallStatus.textContent,/ZenDash/);
 });
+
+test('clear revoked keys refreshes the list and preserves unsaved settings',async()=>{
+ const data={...server,keys:[{id:'old',name:'Old',revoked:true},{id:'live',name:'Desktop',revoked:false}]};
+ const f=fixture(data);await f.c.BridgeConfig.load();
+ assert.match(f.elements.brKeys.innerHTML,/Clear revoked keys \(1\)/);
+ f.elements.brEnabled.checked=true;f.elements.br_port.value='41237';let requests=0;
+ const original=f.c.fetch;f.c.fetch=async(path,options)=>{
+  if(path==='/bridge-local/keys/revoked'&&options.method==='DELETE'){requests++;data.keys=data.keys.filter(k=>!k.revoked);return new Response('{"removed":1}');}
+  return original(path,options);
+ };
+ const button={id:'brClearRevoked',dataset:{},disabled:false};await f.events.click({target:{closest:()=>button}});
+ assert.equal(requests,1);assert.doesNotMatch(f.elements.brKeys.innerHTML,/revoked|Clear revoked/);
+ assert.match(f.elements.brKeys.innerHTML,/Desktop/);assert.equal(f.elements.brEnabled.checked,true);assert.equal(f.elements.br_port.value,'41237');
+ assert.match(f.elements.brKeyStatus.textContent,/Removed revoked keys: 1/);
+});
