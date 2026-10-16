@@ -4,6 +4,9 @@ z3nDash is a dashboard for schedules, ZennoPoster nodes, logs, HTTP traffic and 
 
 The dashboard itself runs on the machine that started it: the embedded server listens on `localhost` only. The nodes it drives can be anywhere on the network.
 
+[[Remote Tasker]] connects other z3nDash instances through a separate, optional
+HTTPS server. Configure it in [[Config]], then select a node in [[Tasker]].
+
 The windowed build targets Windows. The `net10.0` target builds without WinForms: there is no window, the dashboard address is printed to the console and opened in the system browser. Off Windows only [[System Snapshot]] is unavailable — it reads Windows counters and services.
 
 ## Start-up
@@ -27,7 +30,7 @@ The windowed build targets Windows. The `net10.0` target builds without WinForms
 | [[XML]] | XML tree viewing, formatting and search | `Alt+9` |
 | [[JSON]] | JSON viewing and analysis | `Alt+6` |
 | [[Text Tools]] | Text transforms | `Alt+7` |
-| [[Config]] | Database, server, OmniRoute, watchdog and interface | `Alt+0` |
+| [[Config]] | Database, server, watchdog and interface | `Alt+0` |
 | [[Clips]] | Reusable clipboard templates | `Alt+C` |
 | [[System Snapshot]] | Windows state snapshots and machine tools | — |
 | [[dllGraph]] | C# code graph | `Alt+G` |
@@ -42,10 +45,6 @@ z3nDash supports:
 - SQLite through a path to a file.
 
 For PostgreSQL the schema comes from `Search Path` in the connection string. Tables required by the active handlers are created automatically.
-
-## AI
-
-AI requests go through OmniRoute. Its address is set in [[Config]].
 
 ## Navigation
 

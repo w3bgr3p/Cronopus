@@ -97,28 +97,6 @@ function startSse() {
 // ── Init ──────────────────────────────────────────────────────────────────────
 
 document.addEventListener('DOMContentLoaded', function() {
-    if (typeof AiPanel !== 'undefined') {
-        // default cwd = fetch from server (app.py root)
-        fetch('/ai/cwd').then(function(r){ return r.json(); }).then(function(d){
-            AiPanel._defaultCwd = d.cwd || '';
-            AiPanel._cwd        = d.cwd || '';
-        }).catch(function(){});
-        AiPanel.setContext(function() {
-            if (!AiPanel._schedulerCtx) return '';
-            var s = AiPanel._schedulerCtx;
-            return 'Current scheduler task:\n' + JSON.stringify({
-                id:         s.id,
-                name:       s.name,
-                executor:   s.executor,
-                script_path: s.script_path,
-                status:     s.status,
-                last_run:   s.last_run,
-                last_exit:  s.last_exit,
-                cron:       s.cron,
-                schedule_mode: s.schedule_mode,
-            }, null, 2);
-        });
-    }
     loadList().catch(function(e) {
         document.getElementById('listScroll').innerHTML =
             '<div style="padding:12px;color:red">Error: ' + e.message + '</div>';
@@ -155,7 +133,7 @@ function resetTaskerNode() {
     _resources=null;_instCache={};_selAnchor=null;curProject='';curTaskId='';curRunId='';_outputTaskId=null;
     collapsedGroups=new Set();_groupsInitialized=false;_dropOutputQueue();_resetRuns();_setLive(false);
     if(_liveSoon){clearTimeout(_liveSoon);_liveSoon=null;}
-    _cmFilePath='';_cmScheduleId='';if(typeof AiPanel!=='undefined')AiPanel._schedulerCtx=null;
+    _cmFilePath='';_cmScheduleId='';
     ['bottomPanels','hResizer'].forEach(function(id){var el=document.getElementById(id);if(el)el.style.display='none';});
     ['cmOverlay','killPickOverlay'].forEach(function(id){var el=document.getElementById(id);if(el)el.classList.remove('open');});
     var output=_getOutputBox();if(output)output.textContent='';
@@ -601,13 +579,6 @@ async function selectRow(id, keepSelection, initialTab) {
     setActiveTab(activeTab);
     renderDetail(taskDraft || s);
     showBottomPanels(s);
-    _updateAiContext(s);
-}
-
-function _updateAiContext(s) {
-    if (typeof AiPanel === 'undefined') return;
-    AiPanel._schedulerCtx = s;
-    // cwd is set when AI button is clicked (per-task or header)
 }
 
 function showDetailHeader(s) {
@@ -659,7 +630,6 @@ function renderDetailActions(s) {
 
         + '</div>'
         + '<div class="action-group">'
-        + (s.script_path ? '<button class="btn sm" onclick="openAiForTask(\'' + escHtml(s.id) + '\')" style="border-color:var(--accent);color:var(--accent);">⟡ AI</button>' : '')
         + (s.script_path ? '<button class="btn sm" onclick="openInTerminal(\'' + escHtml(s.id) + '\')" style="border-color:var(--steel);color:var(--steel);">⌨ Terminal</button>' : '')
         + (s.executor === 'csx' ? '<button class="btn sm" onclick="buildCsx(\'' + id + '\')" style="border-color:var(--steel);color:var(--steel);">🔨 Build csx</button>' : '')
         + '</div>';
@@ -2153,14 +2123,6 @@ async function loadHttp() {
 }
 
 // ── CRUD ──────────────────────────────────────────────────────────────────────
-
-function openAiForTask(id) {
-    var s = schedules.find(function(x) { return x.id === id; });
-    if (!s) return;
-    var scriptPath = s.script_path || '';
-    AiPanel.setCwd(scriptPath);
-    AiPanel.open();
-}
 
 async function openInTerminal(id) {
     try {

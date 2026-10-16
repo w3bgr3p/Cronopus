@@ -5,7 +5,7 @@ HTTPS bridge between instances: **Remote Tasker** section, see [[Remote Tasker]]
 The `/config.html` page manages the local z3nDash configuration.
 
 The side rail switches between Overview, Database, Logs & Server, Browsers API,
-OmniRoute, Services, Security, Maintenance and Interface. The last open section is restored
+Services, Remote Tasker, Security, Maintenance and Interface. The last open section is restored
 on the next visit.
 
 ## Server Status
@@ -45,12 +45,6 @@ Local API address and token for two browsers:
   launcher settings) is sent as `Authorization: Bearer`.
 
 The [[Browser]] page and xml tasks with the `shardx` browser mode use these settings.
-
-## OmniRoute
-
-OmniRoute is the only AI provider. The field holds the service URL, `http://localhost:20128` by default.
-
-`Validate & Save AI` stores the address and checks that `/v1/models` answers. The result is shown in a toast.
 
 ## Security
 
@@ -108,7 +102,5 @@ They use `POST /import/proxy` and `POST /import/addresses`.
 - `GET /config/status`
 - `GET /config/storage`
 - `POST /config/jvars`
-- `POST /config/ai-validate`
-- `GET /config/ai-models`
 - `GET /config/ui`
 - `POST /config/ui`

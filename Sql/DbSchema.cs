@@ -96,30 +96,6 @@
             }
         };
 
-        public static readonly TableSchema JsonAnalyzerCache = new()
-        {
-            Name = "ai_json_cache",
-            Columns = new()
-            {
-                { "key",      "TEXT PRIMARY KEY" },
-                { "analysis", "TEXT" },
-                { "model",    "TEXT" },
-                { "ts",       "TEXT" },
-            }
-        };
-
-        public static readonly TableSchema SystemSnapshotAiCache = new()
-        {
-            Name = "system_snapshot_ai_cache",
-            Columns = new()
-            {
-                { "id",     "INTEGER PRIMARY KEY" },
-                { "model",  "TEXT" },
-                { "ts",     "TEXT" },
-                { "report", "TEXT" },
-            }
-        };
-
         public static readonly TableSchema Instance = new()
         {
             Name = "instance",

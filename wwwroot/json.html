@@ -29,7 +29,6 @@
         <button class="btn" onclick="formatInput()">✦ Format</button>
         <button class="btn replay-btn" onclick="openReplayFromRoot()">⚡ Replay</button>
         <button class="btn danger" onclick="clearAll()">✕ Clear</button>
-        <button class="btn accent" onclick="aiToggle()" id="aiBtnOpen" style="margin-left:4px">🤖 AI</button>
     </div>
     <div class="stats" id="stats"></div>
 </div>
@@ -120,30 +119,6 @@
 </div>
 
 <div class="toast" id="toast"></div>
-
-<!-- AI OVERLAY SIDEBAR -->
-<div class="ai-overlay" id="aiOverlay">
-    <div class="ai-overlay-header">
-        <span class="ai-overlay-title">🤖 AI Analysis</span>
-        <button class="ai-overlay-close" onclick="aiToggle()">✕</button>
-    </div>
-    <div class="ai-overlay-controls">
-        <div class="ai-model-row">
-            <select id="aiModel"><option value="deepseek-ai/DeepSeek-V3.2">DeepSeek-V3.2</option></select>
-        </div>
-        <div class="ai-btn-row">
-            <button class="btn accent" id="aiBtnRun" onclick="aiAnalyze()">▶ Analyze</button>
-            <button class="btn" id="aiBtnClear" onclick="aiClearCache()" style="display:none">✕ Clear</button>
-        </div>
-    </div>
-    <div class="ai-result-wrap">
-        <div class="ai-result" id="aiResult"></div>
-    </div>
-    <div class="ai-meta" id="aiMeta">
-        <span id="aiMetaModel"></span>
-        <span id="aiMetaTs"></span>
-    </div>
-</div>
 
 <script>
     // ════════════════════════════════════════════════════════
@@ -685,7 +660,7 @@
         } else {
             document.getElementById('info-banner').classList.remove('show');
         }
-        rebuildAndRender(true); updateStats(); initDepthButtons(); initFieldFilter(); updateHiddenPanel(); aiSyncBtn();
+        rebuildAndRender(true); updateStats(); initDepthButtons(); initFieldFilter(); updateHiddenPanel();
     }
 
     function autoCollapseDeep(data, maxDepth) {
@@ -722,7 +697,7 @@
                 parsedData = JSON.parse(val);
                 collapseStates = {}; manualHideStates = {};
                 document.getElementById('info-banner').classList.remove('show');
-                rebuildAndRender(true); updateStats(); initDepthButtons(); aiSyncBtn();
+                rebuildAndRender(true); updateStats(); initDepthButtons();
             } catch {}
             PageState.save({ inputJson: val });
         }, 300);
@@ -744,7 +719,7 @@
         collapseStates = {}; manualHideStates = {}; searchQuery = ''; filterHideKeys = null;
         document.getElementById('vscroll-rows').innerHTML = '';
         document.getElementById('vscroll-spacer').style.height = '0';
-        updateHiddenPanel(); aiSyncBtn();
+        updateHiddenPanel();
         PageState.save({ inputJson: '', collapseStates: {}, manualHideStates: {}, searchQuery: '', filterHideKeys: null, activePreset: null, ffPanelOpen: false });
     }
 
@@ -1016,99 +991,9 @@
     }
 
     // ════════════════════════════════════════════════════════
-    // AI OVERLAY
-    // ════════════════════════════════════════════════════════
-    const API = '';
-
-    function aiToggle() {
-        const overlay = document.getElementById('aiOverlay');
-        overlay.classList.toggle('show');
-    }
-
-    async function aiLoadModels() {
-        try {
-        const r = await fetch(`${API}/config/ai-models`);
-            const d = await r.json();
-            const sel = document.getElementById('aiModel');
-            if (d.models?.length) {
-                sel.innerHTML = d.models.map(m => `<option value="${escHtml(m)}">${escHtml(m)}</option>`).join('');
-            }
-        } catch(e) {}
-    }
-
-    async function aiLoadCache() {
-        try {
-            const r = await fetch(`${API}/json-analyzer/ai-cache`);
-            const d = await r.json();
-            if (d.entry) aiShowResult(d.entry.analysis, d.entry.model, d.entry.ts, true);
-        } catch(e) {}
-    }
-
-    async function aiAnalyze() {
-        if (!parsedData) { aiSetError('No JSON parsed. Parse JSON first.'); return; }
-        const model  = document.getElementById('aiModel').value;
-        const btnRun = document.getElementById('aiBtnRun');
-        btnRun.disabled = true;
-        aiSetLoading();
-        try {
-            const r = await fetch(`${API}/json-analyzer/ai-analyze`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ model, data: parsedData })
-            });
-            const body = await r.json();
-            if (body.error) aiSetError(body.error);
-            else            aiShowResult(body.analysis, body.model, body.ts, false);
-        } catch(e) {
-            aiSetError(e.message);
-        } finally {
-            btnRun.disabled = false;
-        }
-    }
-
-    async function aiClearCache() {
-        try { await fetch(`${API}/json-analyzer/ai-cache`, { method: 'DELETE' }); } catch(e) {}
-        const res = document.getElementById('aiResult');
-        res.className = 'ai-result';
-        res.textContent = '';
-        document.getElementById('aiMeta').classList.remove('show');
-        document.getElementById('aiBtnClear').style.display = 'none';
-    }
-
-    function aiSetLoading() {
-        const res = document.getElementById('aiResult');
-        res.className = 'ai-result show loading';
-        res.innerHTML = '<span class="spinner-inline"></span> Analyzing...';
-        document.getElementById('aiMeta').classList.remove('show');
-        document.getElementById('aiBtnClear').style.display = 'none';
-    }
-
-    function aiSetError(msg) {
-        const res = document.getElementById('aiResult');
-        res.className   = 'ai-result show error';
-        res.textContent = msg;
-    }
-
-    function aiShowResult(analysis, model, ts, cached) {
-        const res  = document.getElementById('aiResult');
-        const meta = document.getElementById('aiMeta');
-        res.className   = 'ai-result show';
-        res.textContent = analysis;
-        document.getElementById('aiMetaModel').textContent = model ? model.split('/').pop() : '';
-        document.getElementById('aiMetaTs').textContent    = ts ? ts.substring(0,16).replace('T',' ') : '';
-        meta.classList.add('show');
-        document.getElementById('aiBtnClear').style.display = 'inline-block';
-    }
-
-    // Enable/disable Analyze button based on whether data is parsed
-    function aiSyncBtn() {
-        document.getElementById('aiBtnRun').disabled = !parsedData;
-    }
     document.getElementById('vscroll-wrap').addEventListener('scroll', scheduleRender, { passive: true });
     new ResizeObserver(scheduleRender).observe(document.getElementById('vscroll-wrap'));
 
-    aiLoadModels();
-    aiLoadCache();
 
     document.getElementById('input').addEventListener('paste', () => {
         setTimeout(() => {
@@ -1145,7 +1030,7 @@
                     document.getElementById('info-banner').textContent =
                         '⚡ Large JSON (' + (len / 1e6).toFixed(2) + ' MB) — virtual rendering, deep nodes auto-collapsed';
                 }
-                rebuildAndRender(false); updateStats(); initDepthButtons(); initFieldFilter(); updateHiddenPanel(); aiSyncBtn();
+                rebuildAndRender(false); updateStats(); initDepthButtons(); initFieldFilter(); updateHiddenPanel();
                 // Restore field filter state after initFieldFilter rebuilt chips
                 if (st.filterHideKeys && st.filterHideKeys.length) {
                     filterHideKeys = new Set(st.filterHideKeys);
@@ -1281,7 +1166,7 @@
             parsedData = JSON.parse(demo);
             flatRows = buildFlatRows(parsedData);
             visibleRows = flatRows;
-            scheduleRender(); updateStats(); initDepthButtons(); aiSyncBtn();
+            scheduleRender(); updateStats(); initDepthButtons();
         } catch(e) { console.error(e); }
     });
 </script>

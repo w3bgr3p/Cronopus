@@ -19,14 +19,3 @@ The interface marks values that look like secrets or sensitive data. This is a h
 ## Replay
 
 The document can be used as the body when preparing an HTTP replay.
-
-## AI analysis
-
-Optional analysis is sent to OmniRoute. The cache lives in the `ai_json_cache` table.
-
-API:
-
-- `POST /json-analyzer/ai-analyze`
-- `GET /json-analyzer/ai-cache`
-- `DELETE /json-analyzer/ai-cache`
-- `GET /config/ai-models`

@@ -34,10 +34,7 @@ public class EmbeddedServer
     private readonly HttpReplayHandler _replayHandler;
     private readonly ConfigHandler     _configHandler; 
     private readonly ZbHandler _zbHandler;
-    private readonly AiClient _aiClient;
-    private readonly AiAgentHandler _aiAgentHandler;
     private readonly SystemSnapshotHandler _snapshotHandler;
-    private readonly JsonAnalyzerHandler _jsonAnalyzerHandler;
     private readonly GraphHandler _graphHandler;
     private readonly DocsGraphHandler _docsGraphHandler;
     private readonly TerminalHandler _terminalHandler;
@@ -124,11 +121,8 @@ public class EmbeddedServer
         _reportHandler = new ReportHandler(reportsPath, _wwwrootPath, dbService);
         _zbHandler = new ZbHandler();
         _replayHandler  = new HttpReplayHandler();
-        _aiClient            = new AiClient();
-        _configHandler       = new ConfigHandler(logPath, _listener, _port, dbService, _aiClient);
-        _aiAgentHandler      = new AiAgentHandler(dbService, _aiClient);
-        _snapshotHandler     = new SystemSnapshotHandler(dbService, _aiClient);
-        _jsonAnalyzerHandler = new JsonAnalyzerHandler(dbService, _aiClient);
+        _configHandler       = new ConfigHandler(logPath, _listener, _port, dbService);
+        _snapshotHandler     = new SystemSnapshotHandler();
         _graphHandler = new GraphHandler();
         _docsGraphHandler = new DocsGraphHandler();
         _terminalHandler = new TerminalHandler(_wwwrootPath);
@@ -312,7 +306,7 @@ public class EmbeddedServer
                 await _reportHandler.Handle(context, path);
                 return;
             }
-            if (path.StartsWith("/config") || path == "/clear-all-logs")
+            if (_configHandler.Matches(path, method))
             {
                 if (_debug )  $"[handler] ConfigHandler → {path}".Debug();
                 await _configHandler.Handle(context);
@@ -336,19 +330,9 @@ public class EmbeddedServer
                  await _zbHandler.Handle(context);
                  return;
             }
-            if (_aiAgentHandler.Matches(path))
-            {
-                await _aiAgentHandler.Handle(context);
-                return;
-            }
             if (_snapshotHandler.Matches(path))
             {
                 await _snapshotHandler.Handle(context); 
-                return;
-            }
-            if (_jsonAnalyzerHandler.Matches(path))
-            {
-                await _jsonAnalyzerHandler.Handle(context);
                 return;
             }
             if (path.StartsWith("/terminal"))

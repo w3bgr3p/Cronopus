@@ -149,7 +149,7 @@ body {
     max-height: 160px; overflow-y: auto;
 }
 .proc-cmd:empty { display: none; }
-.proc-box .ai-btn-row { margin-top: var(--sp-4); }
+.proc-box .proc-btn-row { margin-top: var(--sp-4); }
 .proc-status { font-size: var(--fs-9); color: var(--text2); word-break: break-word; }
 .proc-status.error { color: var(--red); }
 
@@ -192,32 +192,6 @@ body {
     font-size: var(--fs-9); font-weight: var(--fw-bold); text-transform: uppercase;
     letter-spacing: 0.5px; color: var(--accent); margin-bottom: var(--sp-6);
 }
-
-/* ── AI panel ── */
-.ai-controls { display: flex; flex-direction: column; gap: var(--sp-4); }
-.ai-model-row { display: flex; gap: var(--sp-4); align-items: center; }
-.ai-model-row select {
-    flex: 1; padding: var(--sp-2) var(--sp-4); background: var(--bg); border: 1px solid var(--border);
-    border-radius: var(--radius-sm); color: var(--text); font-size: var(--fs-9); font-family: inherit; outline: none;
-}
-.ai-model-row select:focus { border-color: var(--accent); }
-.ai-btn-row { display: flex; gap: var(--sp-4); }
-.ai-btn-row .btn { flex: 1; font-size: var(--fs-9); padding: var(--sp-2) var(--sp-4); }
-.ai-result {
-    margin-top: var(--sp-6); padding: var(--sp-6); background: var(--bg);
-    border: 1px solid var(--border); border-radius: var(--radius-sm);
-    font-size: var(--fs-10); line-height: 1.55; color: var(--text);
-    white-space: pre-wrap; max-height: none; overflow-y: visible;
-    display: none;
-}
-.ai-result.show    { display: block; }
-.ai-result.loading { color: var(--text2); font-style: italic; }
-.ai-result.error   { color: var(--red); }
-.ai-meta {
-    margin-top: var(--sp-4); font-size: var(--fs-8); color: var(--text2);
-    justify-content: space-between; display: none;
-}
-.ai-meta.show { display: flex; }
 
 /* ── Spinners ── */
 .spinner-inline {
@@ -268,3 +242,6 @@ body {
 .env-path, .env-detail { font-family: "JetBrains Mono", monospace; font-size: 10px; color: var(--text2); white-space: pre-wrap; word-break: break-all; }
 .env-path { color: var(--text); }
 @media (max-width: 700px) { .env-row { grid-template-columns: 1fr; gap: 4px; } }
+
+.proc-btn-row { display: flex; gap: var(--sp-4); }
+.proc-btn-row .btn { flex: 1; font-size: var(--fs-9); padding: var(--sp-2) var(--sp-4); }

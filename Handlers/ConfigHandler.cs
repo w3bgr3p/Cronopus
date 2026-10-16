@@ -11,21 +11,19 @@ internal sealed class ConfigHandler
     private readonly HttpListener _listener;
     private readonly int _port;
     private readonly DbConnectionService _dbService;
-    private readonly AiClient _aiClient;
     private readonly SemaphoreSlim _lock = new(1, 1);
 
-    public ConfigHandler(string logPath, HttpListener listener, int port, DbConnectionService dbService, AiClient aiClient)
+    public ConfigHandler(string logPath, HttpListener listener, int port, DbConnectionService dbService)
     {
         _logPath   = logPath;
         _listener  = listener;
         _port      = port;
         _dbService = dbService;
-        _aiClient  = aiClient;
     }
 
     public bool Matches(string path, string method) =>
-        (method == "GET"  && path is "/config" or "/config/status" or "/config/storage" or "/config/ui" or "/config/ai-models" or "/config/environment") ||
-        (method == "POST" && path is "/config" or "/config/jvars" or "/config/ai-validate" or "/clear-all-logs" or "/config/ui"
+        (method == "GET"  && path is "/config" or "/config/status" or "/config/storage" or "/config/ui" or "/config/environment") ||
+        (method == "POST" && path is "/config" or "/config/jvars" or "/clear-all-logs" or "/config/ui"
                                   or "/config/client-bundle" or "/config/update-templates" or "/config/environment/install");
 
     public async Task Handle(HttpListenerContext ctx)
@@ -36,10 +34,8 @@ internal sealed class ConfigHandler
         if (method == "GET"  && path == "/config")               { await GetConfig(ctx.Response);    return; }
         if (method == "POST" && path == "/config")               { using var r = new StreamReader(ctx.Request.InputStream); await SaveConfig(ctx.Response, await r.ReadToEndAsync()); return; }
         if (method == "POST" && path == "/config/jvars")         { using var r = new StreamReader(ctx.Request.InputStream); await SaveJVars(ctx.Response, await r.ReadToEndAsync()); return; }
-        if (method == "POST" && path == "/config/ai-validate")   { using var r = new StreamReader(ctx.Request.InputStream); await ValidateAiConfig(ctx.Response, await r.ReadToEndAsync()); return; }
         if (method == "GET"  && path == "/config/status")        { await GetStatus(ctx.Response);    return; }
         if (method == "GET"  && path == "/config/storage")       { await GetStorage(ctx.Response);   return; }
-        if (method == "GET"  && path == "/config/ai-models")     { await GetAiModels(ctx.Response);  return; }
         if (method == "GET"  && path == "/config/environment")   { await GetEnvironment(ctx.Response); return; }
         if (method == "POST" && path == "/config/environment/install") { using var r = new StreamReader(ctx.Request.InputStream); await InstallEnvironment(ctx.Response, await r.ReadToEndAsync()); return; }
         if (method == "POST" && path == "/clear-all-logs")       { await ClearAllLogs(ctx.Response); return; }
@@ -81,26 +77,6 @@ internal sealed class ConfigHandler
         {
             response.StatusCode = stage == "parse" ? 400 : 500;
             await HttpHelpers.WriteJson(response, new { ok = false, error = $"step={stage} | {ex.GetType().Name}: {ex.Message}" });
-        }
-    }
-
-    private async Task GetAiModels(HttpListenerResponse response)
-    {
-        if (!_aiClient.IsEnabled)
-        {
-            response.StatusCode = 503;
-            await HttpHelpers.WriteJson(response, new { error = "ai disabled" });
-            return;
-        }
-
-        try
-        {
-            await HttpHelpers.WriteJson(response, new { models = await _aiClient.GetModelsAsync() });
-        }
-        catch (Exception ex)
-        {
-            response.StatusCode = 500;
-            await HttpHelpers.WriteJson(response, new { error = ex.Message });
         }
     }
 
@@ -202,59 +178,6 @@ internal sealed class ConfigHandler
         if (section.Key == null || section.Value.ValueKind != JsonValueKind.Object) return new DbConfig();
         return section.Value.Deserialize<DbConfig>(new JsonSerializerOptions { PropertyNameCaseInsensitive = true })
                ?? new DbConfig();
-    }
-
-    // ── POST /config/ai-validate ───────────────────────────────────────────────
-    // Body: { omniRouteHost: "http://..." }
-    // OmniRoute is the only supported AI provider.
-
-    private async Task ValidateAiConfig(HttpListenerResponse response, string body)
-    {
-        string cfgPath = Path.Combine(AppContext.BaseDirectory, "appsettings.secrets.json");
-        try
-        {
-            var doc           = JsonSerializer.Deserialize<JsonElement>(body);
-            var omniRouteHost = doc.TryGetProperty("omniRouteHost", out var oh) ? oh.GetString() ?? "http://localhost:20128" : "http://localhost:20128";
-            var reachable     = await AiClient.CheckOmniRouteAsync(omniRouteHost);
-
-            // Persist
-            var existing = new Dictionary<string, JsonElement>();
-            if (File.Exists(cfgPath))
-            {
-                var existingDoc = JsonSerializer.Deserialize<JsonElement>(await File.ReadAllTextAsync(cfgPath, Encoding.UTF8));
-                if (existingDoc.ValueKind == JsonValueKind.Object)
-                    foreach (var prop in existingDoc.EnumerateObject())
-                        existing[prop.Name] = prop.Value;
-            }
-
-            existing["AiConfig"] = JsonSerializer.Deserialize<JsonElement>(
-                JsonSerializer.Serialize(new { Provider = "omniroute", OmniRouteHost = omniRouteHost }));
-
-            if (File.Exists(cfgPath)) File.Copy(cfgPath, cfgPath + ".bak", overwrite: true);
-            await File.WriteAllTextAsync(cfgPath, JsonSerializer.Serialize(existing, new JsonSerializerOptions { WriteIndented = true }), Encoding.UTF8);
-
-            Config.Init();
-            AiClient.InvalidateModelsCache();
-
-            if (!reachable)
-            {
-                response.StatusCode = 503;
-                await HttpHelpers.WriteJson(response, new
-                {
-                    ok = false,
-                    provider = "omniroute",
-                    error = $"OmniRoute not reachable at {omniRouteHost}"
-                });
-                return;
-            }
-
-            await HttpHelpers.WriteJson(response, new { ok = true, provider = "omniroute" });
-        }
-        catch (Exception ex)
-        {
-            response.StatusCode = 400;
-            await HttpHelpers.WriteJson(response, new { ok = false, error = ex.Message });
-        }
     }
 
     // Принимает Base64(JSON{pin, jVarsPath})

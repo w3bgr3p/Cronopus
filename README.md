@@ -21,7 +21,6 @@ dashboard and local API are served by the built-in HTTP server.
 - System snapshots with interactive memory and CPU maps, plus a configurable
   process-memory watchdog.
 - Built-in documentation available from the dashboard.
-- OmniRoute integration for AI-assisted features.
 
 ## Requirements
 
@@ -31,7 +30,7 @@ dashboard and local API are served by the built-in HTTP server.
 - .NET 10 SDK when building from source. The repository pins SDK `10.0.103`
   and allows later .NET 10 feature-band versions.
 
-ZennoPoster, ZennoBrowser, ShardX, and OmniRoute are required only for the dashboard
+ZennoPoster, ZennoBrowser, and ShardX are required only for the dashboard
 features that integrate with those services.
 
 PostgreSQL stores z3nDash application data. The SQL page is a separate tool for
@@ -83,7 +82,7 @@ In **Config**:
 1. Select `PostgreSQL`.
 2. Enter the complete PostgreSQL connection string.
 3. Set the dashboard port and storage folders if the defaults are unsuitable.
-4. Add ZennoBrowser, ShardX and OmniRoute endpoints when those integrations are used.
+4. Add ZennoBrowser and ShardX endpoints when those integrations are used.
 5. Save the configuration.
 
 Example connection string:
@@ -139,6 +138,14 @@ or pressing `Ctrl+Alt+Z` while it is visible hides it to the tray. Use the tray
 icon or `Ctrl+Alt+Z` to restore it; choose **Exit** in the tray menu to quit.
 
 ## Network safety
+
+Remote Tasker connects z3nDash instances through a separate, optional HTTPS bridge
+(default port `38473`). Enable it in **Config → Remote Tasker**, create an access
+key and use **Copy connection**. On the client, open Tasker → **New connection**,
+paste the connection code and add the node. Connections use pinned certificates
+and revocable keys. Tasks and schedules run on the selected server; file transfers
+and bounded remote output are available from Tasker. See the bundled
+[Remote Tasker guide](docs-vault-en/Navigation/Pages/Remote%20Tasker.md).
 
 The embedded server binds to `http://localhost:{port}/` and is reachable only
 from the machine it runs on. This is deliberate: its endpoints have no

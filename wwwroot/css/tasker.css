@@ -317,7 +317,7 @@ select.form-input { cursor: pointer; }
 ::-webkit-scrollbar-thumb { background: var(--border); border-radius: var(--radius-sm); }
 #bridgeNode { background:var(--bg2);color:var(--text);border:1px solid var(--border);font:inherit;padding:var(--sp-1) var(--sp-2);max-width:220px; }
 #bridgeStatus { color:var(--text3);font-size:var(--fs-11);max-width:280px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap; }
-body[data-remote="true"] [onclick*="openInTerminal"],body[data-remote="true"] [onclick*="openFile"],body[data-remote="true"] [onclick*="openFolder"],body[data-remote="true"] [onclick*="AiPanel"] { display:none; }
+body[data-remote="true"] [onclick*="openInTerminal"],body[data-remote="true"] [onclick*="openFile"],body[data-remote="true"] [onclick*="openFolder"] { display:none; }
 body[data-remote="true"] [onclick*="openScriptFile"],body[data-remote="true"] [onclick*="openScriptFolder"],body[data-remote="true"] [onclick*="openAiForTask"],body[data-remote="true"] .dtab[data-tab="traffic"],body[data-remote="true"] #logPanelHttp { display:none; }
 .br-file-overlay { position:fixed;inset:0;z-index:2000;background:var(--bg);display:flex;align-items:center;justify-content:center;padding:var(--sp-4); }
 .br-file-dialog { width:min(800px,95vw);max-height:90vh;display:flex;flex-direction:column;gap:var(--sp-12);background:var(--bg1);border:1px solid var(--border);border-radius:var(--radius);padding:var(--sp-4); }

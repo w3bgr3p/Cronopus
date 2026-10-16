@@ -19,14 +19,3 @@ JSON — локальный просмотрщик и редактор JSON.
 ## Replay
 
 JSON можно использовать как body при подготовке HTTP replay.
-
-## AI-анализ
-
-Опциональный анализ отправляется в OmniRoute. Кэш хранится в таблице `ai_json_cache`.
-
-API:
-
-- `POST /json-analyzer/ai-analyze`
-- `GET /json-analyzer/ai-cache`
-- `DELETE /json-analyzer/ai-cache`
-- `GET /config/ai-models`

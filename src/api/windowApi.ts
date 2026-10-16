@@ -1,6 +1,6 @@
 /**
- * Window API for AI Panel integration.
- * Exposes React functionality to vanilla JS code (ai-panel.js).
+ * Window API for editor integration.
+ * Exposes React functionality to external tools.
  */
 
 import { useGraphStore } from '../store/graphStore';
@@ -168,6 +168,5 @@ declare global {
   interface Window {
     ZpEditorAPI: ZpEditorAPI;
     zpEditorStore: any;
-    AiPanel?: any;
   }
 }

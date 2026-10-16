@@ -185,11 +185,6 @@
             setVal('cfgShardXToken', shardX.token ?? shardX.Token ?? '');
             setVal('cfgJVarsPath',     d.securityConfig?.jVarsPath ?? '');
 
-            // AI
-            const aiHost = d.aiConfig?.omniRouteHost ?? d.AiConfig?.omniRouteHost ?? 'http://localhost:20128';
-            setVal('cfgOmniRouteHost', aiHost);
-            document.getElementById('aiProviderStatus').textContent = '● OmniRoute';
-
             togglePgFields();
         } catch(e) {
             toast('Config error: ' + e.message, 'err');
@@ -232,31 +227,6 @@
             input.setSelectionRange(0, 0);
         }
         toast('✓ Connection string copied', 'ok');
-    }
-
-    // ── AI Provider ───────────────────────────────────────────────────
-    async function saveAiConfig() {
-        const omniRouteHost = document.getElementById('cfgOmniRouteHost').value || 'http://localhost:20128';
-        const statusEl      = document.getElementById('aiProviderStatus');
-        statusEl.textContent = '…';
-        try {
-            const r = await fetch('/config/ai-validate', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ omniRouteHost })
-            });
-            const d = await r.json();
-            if (d.ok) {
-                statusEl.textContent = '● OmniRoute';
-                toast('✓ OmniRoute saved', 'ok');
-            } else {
-                statusEl.textContent = '✕ error';
-                toast('AI save error: ' + (d.error ?? 'unknown'), 'err');
-            }
-        } catch(e) {
-            statusEl.textContent = '✕ error';
-            toast('AI save error: ' + e.message, 'err');
-        }
     }
 
     // ── Save Config ───────────────────────────────────────────────────
@@ -696,7 +666,6 @@
         { id: 'db',       icon: '🗄', title: 'Database' },
         { id: 'server',   icon: '⚙',      title: 'Logs & Server' },
         { id: 'browsers', icon: '🌐', title: 'Browsers API' },
-        { id: 'ai',       icon: '✨',      title: 'OmniRoute' },
         { id: 'services', icon: '🛡', title: 'Services',            enter: enterServices, leave: leaveServices },
         { id: 'security', icon: '🔐', title: 'Security · jVars' },
         { id: 'maint',    icon: '🧰', title: 'Maintenance' },
@@ -704,7 +673,7 @@
         { id: 'ui',       icon: '🎨', title: 'Interface',           enter: enterInterface },
     ];
 
-    const SEPARATORS_AFTER = ['overview', 'ai', 'services'];
+    const SEPARATORS_AFTER = ['overview', 'browsers', 'services'];
 
     let _curSec = null;
 

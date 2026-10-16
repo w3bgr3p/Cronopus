@@ -7,7 +7,6 @@
         <script src="/js/diag.js"></script>
         <script src="/js/theme.js"></script>
         <script src="/js/nav.js"></script>
-        <script src="/js/ai-panel.js"></script>
         <link rel="stylesheet" href="/css/sqlite.css" />
     </head>
     <body>
@@ -26,7 +25,6 @@
             >
                 Open File
             </button>
-            <button class="btn" onclick="AiPanel.toggleDefault()">⟡ AI</button>
         </div>
         <form class="pg-connect" id="pgControls" hidden onsubmit="event.preventDefault(); connectPostgres()" autocomplete="off">
             <label for="pgConnection">Connection string</label>
@@ -907,21 +905,6 @@
 
             restoreFile();
 
-            AiPanel.setContext(function () {
-                if (sourceMode === "postgres" ? !postgresConnection : !currentFile) return "";
-                return (
-                    (sourceMode === "postgres" ? "PostgreSQL database: " + document.getElementById("fileLabel").textContent
-                        : "SQLite file: " + currentFile.name) +
-                    "\nTables visible: " +
-                    [...document.querySelectorAll(".table-item")]
-                        .map(function (el) {
-                            return el.textContent;
-                        })
-                        .join(", ") +
-                    "\nCurrent query: " +
-                    document.getElementById("queryInput").value
-                );
-            });
         </script>
     </body>
 </html>

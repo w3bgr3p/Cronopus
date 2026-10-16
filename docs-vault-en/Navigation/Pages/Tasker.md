@@ -1,6 +1,10 @@
 # Tasker
 
-Control another instance by IP: [[Remote Tasker]].
+Control another instance by IP: [[Remote Tasker]]. The node selector chooses Local
+or a saved remote connection; **+ New connection…** accepts a connection code.
+Task settings and commands apply to the selected node. Native editor and terminal
+actions remain local. The Output and Traffic descriptions below refer to Local;
+remote output uses explicit Refresh (↺) / Older / Observe controls, and Traffic is local-only.
 
 Tasker is the `/tasker.html` page that stores schedules and runs local tasks.
 

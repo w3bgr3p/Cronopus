@@ -17,7 +17,7 @@
              ни один csx и ни один OwnCode в xml-шаблоне.
              IncludeAllContentForSelfExtract это чинит, но уводит
              AppContext.BaseDirectory во временный каталог, а по нему ищутся
-             wwwroot, Prompts, sdk и туда же пишется appsettings.secrets.json —
+             wwwroot, sdk и туда же пишется appsettings.secrets.json —
              конфигурация терялась бы при каждом обновлении. -->
         <PublishSingleFile>false</PublishSingleFile>
         <SelfContained>true</SelfContained>
@@ -94,9 +94,6 @@
     </ItemGroup>
 
     <ItemGroup>
-        <None Update="Prompts\**\*">
-            <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-        </None>
         <None Update="appsettings.json">
             <CopyToOutputDirectory>Always</CopyToOutputDirectory>
         </None>

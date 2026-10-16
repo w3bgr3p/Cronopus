@@ -4,8 +4,8 @@ HTTPS-мост между экземплярами: раздел **Remote Tasker
 
 Страница `/config.html` управляет локальной конфигурацией z3nDash.
 
-Разделы Overview, Database, Logs & Server, Browsers API, OmniRoute, Services,
-Security, Maintenance и Interface переключаются в боковой панели. Последний открытый раздел
+Разделы Overview, Database, Logs & Server, Browsers API, Services,
+Remote Tasker, Security, Maintenance и Interface переключаются в боковой панели. Последний открытый раздел
 восстанавливается при следующем посещении страницы.
 
 ## Server Status
@@ -45,12 +45,6 @@ Security, Maintenance и Interface переключаются в боковой 
   лаунчера) уходит как `Authorization: Bearer`.
 
 Эти настройки использует страница [[Browser]] и xml-задачи с режимом браузера `shardx`.
-
-## OmniRoute
-
-OmniRoute — единственный AI-провайдер. Поле содержит URL сервиса, по умолчанию `http://localhost:20128`.
-
-`Validate & Save AI` сохраняет адрес и проверяет доступность `/v1/models`. Результат показывается toast-уведомлением.
 
 ## Security
 
@@ -109,7 +103,5 @@ Watchdog считает память корневого процесса и ег
 - `GET /config/status`
 - `GET /config/storage`
 - `POST /config/jvars`
-- `POST /config/ai-validate`
-- `GET /config/ai-models`
 - `GET /config/ui`
 - `POST /config/ui`

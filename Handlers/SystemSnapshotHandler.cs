@@ -2,9 +2,6 @@
 //
 // Endpoints:
 //   POST   /system-snapshot/capture        → native C# collection, returns { raw }
-//   POST   /system-snapshot/ai-audit       { model, raw } → { analysis, model, ts }
-//   GET    /system-snapshot/ai-cache       → { entry } | { entry: null }
-//   DELETE /system-snapshot/ai-cache       → { ok }
 //   GET    /system-snapshot/process?pid=N  → { pid, name, path, started, memMb, cmdLine, sysInformer } | { error }
 //   POST   /system-snapshot/kill           { pid, name } → { ok } | { error }
 //   POST   /system-snapshot/reveal         { pid, name } → { ok } | { error }   (Explorer, exe selected)
@@ -21,18 +18,6 @@ namespace z3nDash;
 
 internal sealed class SystemSnapshotHandler
 {
-    private readonly DbConnectionService _dbService;
-    private readonly AiClient _aiClient;
-
-    private static string AiCacheTable  => DbSchema.SystemSnapshotAiCache.Name;
-    private const string Lang          = "russian";
-
-    public SystemSnapshotHandler(DbConnectionService dbService, AiClient aiClient)
-    {
-        _dbService = dbService;
-        _aiClient  = aiClient;
-    }
-
     public bool Matches(string path) => path.StartsWith("/system-snapshot");
 
     public async Task Handle(HttpListenerContext ctx)
@@ -41,9 +26,6 @@ internal sealed class SystemSnapshotHandler
         var method = ctx.Request.HttpMethod;
 
         if (method == "POST"   && path == "/system-snapshot/capture")   { await Capture(ctx);       return; }
-        if (method == "POST"   && path == "/system-snapshot/ai-audit")  { await AiAudit(ctx);       return; }
-        if (method == "GET"    && path == "/system-snapshot/ai-cache")  { await AiCacheGet(ctx);    return; }
-        if (method == "DELETE" && path == "/system-snapshot/ai-cache")  { await AiCacheDelete(ctx); return; }
         if (method == "GET"    && path == "/system-snapshot/process")   { await ProcessInfo(ctx);   return; }
         if (method == "POST"   && path == "/system-snapshot/kill")      { await ProcessKill(ctx);   return; }
         if (method == "POST"   && path == "/system-snapshot/reveal")    { await ProcessReveal(ctx); return; }
@@ -274,73 +256,6 @@ internal sealed class SystemSnapshotHandler
         return sb.ToString();
     }
 
-    // ── POST /system-snapshot/ai-audit ────────────────────────────────────────
-
-    private async Task AiAudit(HttpListenerContext ctx)
-    {
-        if (!_dbService.TryGetDb(out var db)) { ctx.Response.StatusCode = 503; await HttpHelpers.WriteJson(ctx.Response, new { error = "db" }); return; }
-        if (!_aiClient.IsEnabled)             { ctx.Response.StatusCode = 503; await HttpHelpers.WriteJson(ctx.Response, new { error = "ai disabled" }); return; }
-
-        string model, raw;
-        try
-        {
-            using var reader = new StreamReader(ctx.Request.InputStream);
-            var json = JsonSerializer.Deserialize<JsonElement>(await reader.ReadToEndAsync());
-            model = json.TryGetProperty("model", out var mp) ? mp.GetString() ?? "" : "";
-            raw   = json.TryGetProperty("raw",   out var rp) ? rp.GetString() ?? "" : "";
-        }
-        catch { ctx.Response.StatusCode = 400; await HttpHelpers.WriteJson(ctx.Response, new { error = "invalid body" }); return; }
-
-        if (string.IsNullOrWhiteSpace(raw)) { ctx.Response.StatusCode = 400; await HttpHelpers.WriteJson(ctx.Response, new { error = "empty raw" }); return; }
-        if (string.IsNullOrEmpty(model)) model = "deepseek-ai/DeepSeek-V3.2";
-
-        var systemPrompt =
-            "You are a system auditor. Analyze the provided system snapshot and identify: " +
-            "1) Memory pressure — distinguish physical RAM from system commit used/limit/headroom. " +
-            "Commit exhaustion can cause allocation failures even with available RAM. Compare process groups by private allocation and RAM; " +
-            "private process totals do not account for all system commit, and UNREADABLE marks incomplete measurements. " +
-            "2) Network anomalies — unusually high connection counts per process, suspicious listening ports, unexpected established connections. " +
-            "3) Disk pressure — drives above 80% utilization. " +
-            "4) CPU load assessment: CPU_PCT is sampled current usage normalized to total logical CPU capacity; " +
-            "CPU_SEC is lifetime time, not current load. Use CPU USAGE groups and note unreadable or short-lived processes. " +
-            "5) Top 3 actionable recommendations based solely on the data. " +
-            $"Use exact numbers. State 'none found' for empty sections. Max 1200 words. Language: {Lang}.";
-
-        string result;
-        try   { result = await _aiClient.CompleteAsync(model, systemPrompt, BuildAuditPrompt(raw), temp: 0.2, maxTokens: 4000, timeoutSec: 300); }
-        catch (Exception ex) { await HttpHelpers.WriteJson(ctx.Response, new { error = ex.Message }); return; }
-
-        var ts = DateTime.UtcNow.ToString("yyyy-MM-ddTHH:mm:ss.fffZ");
-        SaveAiCache(db!, model, result, ts);
-        await HttpHelpers.WriteJson(ctx.Response, new { analysis = result, model, ts });
-    }
-
-    // ── GET /system-snapshot/ai-cache ─────────────────────────────────────────
-
-    private async Task AiCacheGet(HttpListenerContext ctx)
-    {
-        if (!_dbService.TryGetDb(out var db)) { ctx.Response.StatusCode = 503; await HttpHelpers.WriteJson(ctx.Response, new { error = "db" }); return; }
-        EnsureAiCacheTable(db!);
-        foreach (var line in db!.GetLines("model, ts, report", tableName: AiCacheTable, where: "1=1"))
-        {
-            if (string.IsNullOrWhiteSpace(line)) continue;
-            var cols = line.Split('|');
-            if (cols.Length < 3) continue;
-            await HttpHelpers.WriteJson(ctx.Response, new { entry = new { model = cols[0].Trim(), ts = cols[1].Trim(), analysis = cols[2].Trim() } });
-            return;
-        }
-        await HttpHelpers.WriteJson(ctx.Response, new { entry = (object?)null });
-    }
-
-    // ── DELETE /system-snapshot/ai-cache ──────────────────────────────────────
-
-    private async Task AiCacheDelete(HttpListenerContext ctx)
-    {
-        if (!_dbService.TryGetDb(out var db)) { ctx.Response.StatusCode = 503; await HttpHelpers.WriteJson(ctx.Response, new { error = "db" }); return; }
-        EnsureAiCacheTable(db!);
-        db!.Del(tableName: AiCacheTable, where: "1=1");
-        await HttpHelpers.WriteJson(ctx.Response, new { ok = true });
-    }
 
     // ── Process actions ───────────────────────────────────────────────────────
 
@@ -567,49 +482,6 @@ internal sealed class SystemSnapshotHandler
         return null;
     }
 
-    // ── Prompt ────────────────────────────────────────────────────────────────
-
-    private static string BuildAuditPrompt(string raw)
-    {
-        var sb = new StringBuilder();
-        sb.AppendLine($"System audit snapshot. Host: {ExtractField(raw, "Hostname")}, Captured: {ExtractField(raw, "Captured")}, Uptime: {ExtractField(raw, "Uptime")}");
-        sb.AppendLine();
-        foreach (var s in new[] { "SYSTEM MEMORY SUMMARY", "MEMORY ALLOCATION", "CPU SUMMARY", "CPU USAGE", "PROCESS AGGREGATION BY NAME",
-                                   "LISTENING PORTS SUMMARY", "ESTABLISHED TCP CONNECTIONS", "DISK USAGE", "ENVIRONMENT MARKERS" })
-            AppendSection(sb, raw, s);
-        return sb.ToString();
-    }
-
-    private static void AppendSection(StringBuilder sb, string raw, string title)
-    {
-        var start = raw.IndexOf($"## {title}", StringComparison.OrdinalIgnoreCase);
-        if (start < 0) return;
-        var end     = raw.IndexOf("\n## ", start + 4, StringComparison.OrdinalIgnoreCase);
-        var section = end > 0 ? raw[start..end] : raw[start..];
-        sb.AppendLine(string.Join('\n', section.Split('\n').Take(120)));
-        sb.AppendLine();
-    }
-
-    // ── DB helpers ────────────────────────────────────────────────────────────
-
-    private static void EnsureAiCacheTable(Db db) =>
-        db.CreateTable(DbSchema.SystemSnapshotAiCache.Columns, AiCacheTable);
-
-    private static void SaveAiCache(Db db, string model, string analysis, string ts)
-    {
-        EnsureAiCacheTable(db);
-        db.Del(tableName: AiCacheTable, where: "1=1");
-        db.Query($"INSERT INTO \"{AiCacheTable}\" (\"model\", \"ts\", \"report\") VALUES ('{Esc(model)}', '{Esc(ts)}', '{Esc(analysis)}')");
-    }
-
-    private static string ExtractField(string raw, string label)
-    {
-        var m = System.Text.RegularExpressions.Regex.Match(raw, $@"{label}\s*:\s*(.+)",
-            System.Text.RegularExpressions.RegexOptions.IgnoreCase);
-        return m.Success ? m.Groups[1].Value.Trim() : "";
-    }
-
-    private static string Esc(string s) => s.Replace("'", "''");
 }
 
 // ── Платформенная абстракция ──────────────────────────────────────────────────

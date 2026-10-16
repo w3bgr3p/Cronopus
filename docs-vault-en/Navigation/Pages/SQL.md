@@ -29,8 +29,7 @@ overall request timeout is 40 seconds.
 
 PostgreSQL data editing and saved connection profiles are not supported.
 The connection string stays on the current page and is cleared when switching
-sources or reloading. AI context includes the database name, SQL and displayed
-data; it excludes the connection string.
+sources or reloading.
 
 ## API
 

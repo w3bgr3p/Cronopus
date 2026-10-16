@@ -14,11 +14,19 @@ on the server when the client disconnects.
    **Close ZenDash rule** and **Check firewall**, using the actual bound port.
    Closing removes only this instance's rule. Hosting firewall/NAT configuration
    is separate and is managed through the hosting provider.
-4. Create a named key. Copy the key, Node ID and certificate SHA-256 fingerprint.
-5. In local Tasker's node selector choose **+ New connection…**. Enter a name,
-   `https://IP:port`, Node ID, pin and key, then **Add connection**. It is saved
-   and selected immediately. Config → Remote Tasker → Connections also supports
-   adding and testing connections.
+4. Create a named key, then press **Copy connection**. The copied JSON contains
+   the HTTPS address, Node ID, certificate SHA-256 fingerprint and access key.
+5. In local Tasker's node selector choose **+ New connection…** and paste the JSON
+   into **Connection code**. Review the filled fields, then **Add connection**.
+   The connection is saved and selected immediately. You can also enter the fields
+   manually; a bare IP uses HTTPS port `38473`, and `IP:port` uses that port.
+   Config → Remote Tasker → Connections also supports adding and testing connections.
+
+The key is shown only when created; copy the connection before leaving or reloading
+the page. Treat the connection code as a secret: it grants remote Tasker access.
+**Revoke** disables a key and interrupts its streams and uploads. **Clear revoked
+keys** removes only already revoked entries and preserves active keys. Editing a
+saved connection with an empty key field keeps its existing key.
 
 An occupied port falls back to an OS-selected port. Config displays the actual URL;
 save that port for a stable next startup. No domain is required. The client checks
@@ -34,12 +42,14 @@ the API reports UTC. Stale edits are rejected: reload before saving again.
 Switching nodes stops remaining bulk steps and asks about unsaved changes.
 Native editor and terminal commands remain local.
 
-Upload file/folder selects a native local source, then a server destination.
+**Upload file / Upload folder** selects a native local source, then a server destination.
 Server drives are accessible within the server process's Windows permissions.
 Folders retain their tree and empty directories; links are skipped. Existing files
 require explicit replacement confirmation. Use a new folder for an executing
-project. Uploading does not edit or restart tasks. Choose uploaded script sets the
-form path for an explicit save.
+project. Uploading does not edit or restart tasks. The result shows **Saved on
+server** and **Left unchanged** counts; declining replacement leaves that file
+unchanged. **Use another script in task…** sets the form path for an explicit save.
+To use an updated script in a running task, stop and run the task again.
 
 Transfers use 4 MiB blocks and SHA-256, support cancellation and resume, and expire
 after 24 hours. Publication is atomic per file, not per tree. Limits: 10,000 files,
@@ -48,7 +58,7 @@ configurable. Safe upload publication currently requires a Windows server.
 
 ## Logs and connection failures
 
-Load / Older / Observe are explicit; no log stream starts automatically. Pages are
+Refresh (↺) / Older / Observe are explicit; no log stream starts automatically. Pages are
 limited to 200 entries / 256 KiB. Each key gets one stream capped at 64 KiB/s.
 The browser retains 2,000 entries; the bridge buffer is capped at 64 MiB and
 15 minutes. Gaps are marked. Saved output is read as a bounded tail.

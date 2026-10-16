@@ -305,21 +305,6 @@ export default function Toolbar() {
         >
           🔍
         </button>
-        <button
-          onClick={() => window.dispatchEvent(new CustomEvent('zp-editor:open-ai-panel'))}
-          style={{
-            padding: '4px 12px',
-            fontSize: '11px',
-            background: 'var(--bg2)',
-            color: 'var(--text)',
-            border: '1px solid var(--border)',
-            borderRadius: 'var(--radius)',
-            cursor: 'pointer',
-          }}
-          title="Открыть AI панель"
-        >
-          🤖 AI
-        </button>
       </div>
 
       <div style={{ display: 'flex', gap: '8px' }}>

@@ -46,8 +46,8 @@ internal static class EnvironmentInstall
 
     /// <summary>
     /// Официальный способ без магазина: msixbundle App Installer и его зависимости из релиза winget-cli.
-    /// Ссылки /releases/latest/download/... и состав архива (папки x64, arm64, x86) проверены 2026-09-30.
-    /// Установка для текущего пользователя, права администратора не нужны.
+    /// Пакет, зависимости и лицензия берутся из одного релиза.
+    /// Обычно установка пользовательская; восстановление лицензии требует UAC.
     /// </summary>
     private const string WingetScript = """
         $ErrorActionPreference = 'Stop'
@@ -55,20 +55,44 @@ internal static class EnvironmentInstall
         $ProgressPreference = 'SilentlyContinue'
         $arch = if ($env:PROCESSOR_ARCHITECTURE -eq 'ARM64') { 'arm64' } else { 'x64' }
         $dir  = Join-Path $env:TEMP 'z3nDash-winget'
-        $base = 'https://github.com/microsoft/winget-cli/releases/latest/download'
         New-Item -ItemType Directory -Force $dir | Out-Null
         try {
+            $release = Invoke-RestMethod 'https://api.github.com/repos/microsoft/winget-cli/releases/latest'
+            $bundle = @($release.assets | Where-Object name -eq 'Microsoft.DesktopAppInstaller_8wekyb3d8bbwe.msixbundle')
+            $dependencies = @($release.assets | Where-Object name -eq 'DesktopAppInstaller_Dependencies.zip')
+            if ($bundle.Count -ne 1 -or $dependencies.Count -ne 1) { throw 'App Installer release assets not found.' }
             Write-Host 'Downloading App Installer (about 215 MB)...'
-            Invoke-WebRequest "$base/Microsoft.DesktopAppInstaller_8wekyb3d8bbwe.msixbundle" -OutFile "$dir\winget.msixbundle"
+            Invoke-WebRequest $bundle[0].browser_download_url -OutFile "$dir\winget.msixbundle"
             Write-Host 'Downloading dependencies (about 95 MB)...'
-            Invoke-WebRequest "$base/DesktopAppInstaller_Dependencies.zip" -OutFile "$dir\deps.zip"
+            Invoke-WebRequest $dependencies[0].browser_download_url -OutFile "$dir\deps.zip"
             Expand-Archive "$dir\deps.zip" -DestinationPath "$dir\deps" -Force
             $deps = @(Get-ChildItem "$dir\deps\$arch" -Filter *.appx | ForEach-Object FullName)
             Write-Host 'Installing...'
             Add-AppxPackage -Path "$dir\winget.msixbundle" -DependencyPath $deps
+            try {
+                $version = & winget --version
+                if ($LASTEXITCODE -ne 0 -or !($version -match '^v?\d+\.\d+')) { throw 'winget --version failed.' }
+            } catch {
+                Write-Host ("WinGet did not start: " + $_.Exception.Message)
+                $license = @($release.assets | Where-Object name -like '*_License1.xml')
+                if ($license.Count -ne 1) { throw 'App Installer license not found in release.' }
+                Write-Host 'Downloading license; repairing App Installer requires administrator approval...'
+                Invoke-WebRequest $license[0].browser_download_url -OutFile "$dir\license.xml"
+                $quotedDeps = ($deps | ForEach-Object { "'" + $_.Replace("'", "''") + "'" }) -join ','
+                $repair = '$ErrorActionPreference = ''Stop''; Add-AppxProvisionedPackage -Online -PackagePath ''{0}\winget.msixbundle'' -DependencyPackagePath @({1}) -LicensePath ''{0}\license.xml'' | Out-Null' -f $dir.Replace("'", "''"), $quotedDeps
+                $encoded = [Convert]::ToBase64String([Text.Encoding]::Unicode.GetBytes($repair))
+                $process = Start-Process powershell.exe -Verb RunAs -WindowStyle Hidden -Wait -PassThru -ArgumentList "-NoProfile -ExecutionPolicy Bypass -EncodedCommand $encoded"
+                if ($process.ExitCode -ne 0) { throw "App Installer license repair failed (exit $($process.ExitCode))." }
+                # Регистрация для исходного пользователя, даже если UAC использовал другую учётную запись.
+                Add-AppxPackage -Path "$dir\winget.msixbundle" -DependencyPath $deps
+                $version = & winget --version
+                if ($LASTEXITCODE -ne 0 -or !($version -match '^v?\d+\.\d+')) { throw 'winget --version failed after license repair.' }
+            }
+            Write-Host $version
             Write-Host 'Done. Press Check in z3nDash.'
         } catch {
             Write-Host ("FAILED: " + $_.Exception.GetType().Name + ": " + $_.Exception.Message) -ForegroundColor Red
+            throw
         }
         """;
 

@@ -50,12 +50,6 @@ public class SecurityConfig
     public string JVarsPath { get; set; } = string.Empty;
 }
 
-public class AiConfig
-{
-    public string Provider { get; set; } = "omniroute";
-    public string OmniRouteHost { get; set; } = "http://localhost:20128";
-}
-
 public class WatchdogConfig
 {
     // Слежение за памятью процесса ZennoPoster; при превышении лимита процесс убивается.

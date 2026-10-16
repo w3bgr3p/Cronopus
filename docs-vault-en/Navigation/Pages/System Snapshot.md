@@ -17,7 +17,7 @@ critical at 97%, even when physical RAM is still available.
 
 Process groups show private allocation and resident RAM separately, summed across
 instances. Unreadable private-memory measurements are counted so incomplete totals
-remain visible. The AI audit receives the same distinction.
+remain visible.
 
 An interactive map sizes blocks by each process group's memory use.
 `Block size` switches between private allocation and resident RAM. Shares use
@@ -50,6 +50,11 @@ button: the installer opens in a separate console window; press `Check` when it 
 
 An open Environment section survives `Refresh` and the next visit to the page.
 
+The winget installer downloads App Installer and its dependencies from the same
+release. If winget cannot start, it also downloads that release's license and
+requests Windows UAC approval to repair provisioning. Success is reported only
+after `winget --version` succeeds; a failed repair stays an installation error.
+
 ## Diagnostic recording
 
 On instrumented dashboard pages, `Ctrl+Shift+D` starts or stops recording.
@@ -62,15 +67,8 @@ Stopping writes a readable `.txt` report beside the dump. Reports include slow
 requests, route timings and browser stalls; SQL events keep operation and table
 names instead of query values.
 
-## AI audit
-
-An optional audit sends the current page data to OmniRoute. The cache lives in `system_snapshot_ai_cache`; a cached report is not loaded automatically when the page opens.
-
 ## API
 
 - `POST /system-snapshot/capture`
-- `POST /system-snapshot/ai-audit`
-- `GET /system-snapshot/ai-cache`
-- `DELETE /system-snapshot/ai-cache`
 - `GET /config/environment`
 - `POST /config/environment/install`

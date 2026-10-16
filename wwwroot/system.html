@@ -83,31 +83,12 @@
                     <div class="proc-path" id="procPath"></div>
                     <div class="proc-cmd" id="procCmd" title="Click to copy" onclick="procCopyCmd()"></div>
                     <div class="proc-ports" id="procPorts"></div>
-                    <div class="ai-btn-row">
+                    <div class="proc-btn-row">
                         <button class="btn danger" id="procKillBtn" onclick="procKill()">Kill</button>
                         <button class="btn" id="procSiBtn" onclick="procSystemInformer()" title="Opens this process's properties in System Informer" style="display:none">System Informer</button>
                         <button class="btn" id="procRevealBtn" onclick="procReveal()">Show in Explorer</button>
                     </div>
                     <div class="proc-status" id="procStatus"></div>
-                </div>
-            </div>
-
-            <!-- AI Audit -->
-            <div class="sidebar-section">
-                <div class="sidebar-title">AI Audit</div>
-                <div class="ai-controls">
-                    <div class="ai-model-row">
-                        <select id="aiModel"><option value="">— loading —</option></select>
-                    </div>
-                    <div class="ai-btn-row">
-                        <button class="btn primary" id="aiBtnRun" onclick="aiAudit()" disabled>Audit</button>
-                        <button class="btn danger"  id="aiBtnClear" onclick="aiClearCache()" style="display:none">Clear</button>
-                    </div>
-                    <div class="ai-result" id="aiResult"></div>
-                    <div class="ai-meta"   id="aiMeta">
-                        <span id="aiMetaModel"></span>
-                        <span id="aiMetaTs"></span>
-                    </div>
                 </div>
             </div>
 
@@ -129,7 +110,6 @@
     let globalFilter  = '';
 
     // ── Init ──────────────────────────────────────────────────────────────────
-    loadModels();
     appendEnvNav(document.getElementById('sectionNav'));
     if (PageState.load().env) activateEnv();
     captureNow();
@@ -163,8 +143,6 @@
         renderAllSections();
         populateHeaderStats();
         document.getElementById('emptyState').style.display = 'none';
-        document.getElementById('aiBtnRun').disabled = false;
-        aiClearDisplay();
     }
 
     function parseSnapshot(raw) {
@@ -442,78 +420,6 @@
         if (estSection?.rows) {
             document.getElementById('sTcp').textContent = estSection.rows.length;
         }
-    }
-
-    // ── AI Audit ──────────────────────────────────────────────────────────────
-    async function loadModels() {
-        try {
-        const r   = await fetch(`${API}/config/ai-models`);
-            const d   = await r.json();
-            const sel = document.getElementById('aiModel');
-            if (d.models?.length) {
-                sel.innerHTML = d.models.map(m => `<option value="${esc(m)}">${esc(m)}</option>`).join('');
-            }
-        } catch(e) {}
-    }
-
-    async function aiAudit() {
-        if (!currentRaw) return;
-        const model = document.getElementById('aiModel').value;
-        document.getElementById('aiBtnRun').disabled = true;
-        aiSetLoading();
-        try {
-            const r = await fetch(`${API}/system-snapshot/ai-audit`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ model, raw: currentRaw })
-            });
-            if (!r.ok) { aiSetError(`HTTP ${r.status}: ${await r.text()}`); return; }
-            const d = await r.json();
-            if (d.error) aiSetError(d.error);
-            else         aiShowResult(d.analysis, d.model, d.ts, false);
-        } catch(e) {
-            aiSetError(e.message);
-        } finally {
-            document.getElementById('aiBtnRun').disabled = false;
-        }
-    }
-
-    async function aiClearCache() {
-        try { await fetch(`${API}/system-snapshot/ai-cache`, { method: 'DELETE' }); } catch(e) {}
-        aiClearDisplay();
-    }
-
-    function aiClearDisplay() {
-        const res = document.getElementById('aiResult');
-        res.className = 'ai-result';
-        res.innerHTML = '';
-        document.getElementById('aiMeta').classList.remove('show');
-        document.getElementById('aiBtnClear').style.display = 'none';
-    }
-
-    function aiSetLoading() {
-        const res = document.getElementById('aiResult');
-        res.className = 'ai-result show loading';
-        res.innerHTML = '<span class="spinner-inline"></span> Analyzing…';
-        document.getElementById('aiMeta').classList.remove('show');
-        document.getElementById('aiBtnClear').style.display = 'none';
-    }
-
-    function aiSetError(msg) {
-        const res = document.getElementById('aiResult');
-        res.className   = 'ai-result show error';
-        res.textContent = msg;
-    }
-
-    function aiShowResult(analysis, model, ts, cached) {
-        const res  = document.getElementById('aiResult');
-        const meta = document.getElementById('aiMeta');
-        res.className   = 'ai-result show';
-        res.textContent = analysis;
-        document.getElementById('aiMetaModel').textContent = model ? model.split('/').pop() : '';
-        document.getElementById('aiMetaTs').textContent    = ts ? ts.substring(0,16).replace('T',' ') : '';
-        meta.classList.add('show');
-        document.getElementById('aiBtnClear').style.display = 'inline-block';
     }
 
     // ── Selected process ──────────────────────────────────────────────────────
