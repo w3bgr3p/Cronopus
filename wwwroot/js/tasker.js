@@ -97,6 +97,7 @@ function startSse() {
 // ── Init ──────────────────────────────────────────────────────────────────────
 
 document.addEventListener('DOMContentLoaded', function() {
+    loadTaskerGrouping();
     loadList().catch(function(e) {
         document.getElementById('listScroll').innerHTML =
             '<div style="padding:12px;color:red">Error: ' + e.message + '</div>';
@@ -111,6 +112,8 @@ document.addEventListener('DOMContentLoaded', function() {
     });
     document.addEventListener('keydown', onListKeyDown);
 });
+
+window.addEventListener('focus', loadTaskerGrouping);
 
 // Delete removes the selected task, but only when the key is not meant for
 // something else: a field being typed into, or a dialog/modal on top.
@@ -235,6 +238,22 @@ function loadResources() {
 
 var collapsedGroups    = new Set();
 var _groupsInitialized = false;
+var taskGroupDepth = 1;
+
+async function loadTaskerGrouping() {
+    try {
+        var res = await fetch('/config/ui');
+        if (!res.ok) return;
+        var state = await res.json();
+        var depth = state.taskerGroupDepth;
+        if (!Number.isSafeInteger(depth) || depth < 0) depth = 1;
+        if (depth === taskGroupDepth) return;
+        taskGroupDepth = depth;
+        collapsedGroups.clear();
+        _groupsInitialized = false;
+        renderList();
+    } catch (e) { console.warn('Tasker grouping settings:', e); }
+}
 
 function toggleGroup(grp) {
     if (collapsedGroups.has(grp)) collapsedGroups.delete(grp);
@@ -261,10 +280,42 @@ function triggerLabel(s) {
     } catch (e) { return 'zp'; }
 }
 
-function getGroupName(name) {
+function getGroupName(name, level) {
     if (!name) return '';
-    var dot = name.indexOf('.');
-    return dot > 0 ? name.substring(0, dot) : '';
+    var start = 0, dot;
+    for (var i = 0; i <= (level || 0); i++) {
+        dot = name.indexOf('.', start);
+        if (dot <= start) return '';
+        start = dot + 1;
+    }
+    return name.substring(0, dot);
+}
+
+function buildTaskTree(items, level) {
+    var groups = new Map(), rows = [];
+    items.forEach(function(s) {
+        var path = level < taskGroupDepth ? getGroupName(s.name, level) : '';
+        if (!path) { rows.push(s); return; }
+        if (!groups.has(path)) groups.set(path, []);
+        groups.get(path).push(s);
+    });
+    var nodes = [];
+    Array.from(groups.keys()).sort().forEach(function(path) {
+        var tasks = groups.get(path);
+        if (tasks.length < 2) { rows.push(tasks[0]); return; }
+        if (!_groupsInitialized) collapsedGroups.add(path);
+        nodes.push({ path: path, depth: level, count: tasks.length,
+            running: tasks.filter(function(s) { return s.status === 'running'; }).length,
+            children: buildTaskTree(tasks, level + 1) });
+    });
+    rows.sort(function(a, b) {
+        var disabledA = (a.schedule_mode || 'off') !== 'off' && a.enabled === 'false';
+        var disabledB = (b.schedule_mode || 'off') !== 'off' && b.enabled === 'false';
+        if (disabledA !== disabledB) return disabledA ? 1 : -1;
+        return (a.name || '').localeCompare(b.name || '', undefined, { sensitivity: 'base' });
+    });
+    rows.forEach(function(s) { nodes.push({ task: s, depth: level }); });
+    return nodes;
 }
 
 function renderList() {
@@ -277,60 +328,39 @@ function renderList() {
     var countEl = document.getElementById('listCount');
     if (countEl) countEl.textContent = filtered.length;
 
-    var groupCounts = {};
-    filtered.forEach(function(s) {
-        var g = getGroupName(s.name);
-        if (g) groupCounts[g] = (groupCounts[g] || 0) + 1;
-    });
-
-    filtered.sort(function(a, b) {
-        var ga = getGroupName(a.name), gb = getGroupName(b.name);
-        var showA = ga && groupCounts[ga] > 1, showB = gb && groupCounts[gb] > 1;
-        if (showA && !showB) return -1;
-        if (!showA && showB) return 1;
-        if (showA && showB && ga !== gb) return ga < gb ? -1 : 1;
-        var disabledA = (a.schedule_mode || 'off') !== 'off' && a.enabled === 'false';
-        var disabledB = (b.schedule_mode || 'off') !== 'off' && b.enabled === 'false';
-        if (disabledA !== disabledB) return disabledA ? 1 : -1;
-        return (a.name || '').localeCompare(b.name || '', undefined, { sensitivity: 'base' });
-    });
-
-    if (!_groupsInitialized) {
-        _groupsInitialized = true;
-        Object.keys(groupCounts).forEach(function(g) {
-            if (groupCounts[g] > 1) collapsedGroups.add(g);
+    var tree = buildTaskTree(filtered, 0), entries = [];
+    if (filtered.length) _groupsInitialized = true;
+    function visit(nodes, parent) {
+        nodes.forEach(function(node) {
+            node.parent = parent;
+            entries.push(node);
+            if (node.children && !collapsedGroups.has(node.path)) visit(node.children, node.path);
         });
     }
-
-    var html = '', lastGrp = null, firstUngrouped = true;
-
-    filtered.forEach(function(s) {
-        var grp      = getGroupName(s.name);
-        var showGrp  = grp && groupCounts[grp] > 1;
-        var collapsed = showGrp && collapsedGroups.has(grp);
-        var shortName = showGrp && s.name.length > grp.length + 1 ? s.name.substring(grp.length + 1) : s.name;
-
-        if (showGrp && grp !== lastGrp) {
-            var grpRunning = filtered.filter(function(x) { return getGroupName(x.name) === grp && x.status === 'running'; }).length;
+    visit(tree, '');
+    var html = '';
+    entries.forEach(function(node) {
+        var s = node.task;
+        var showGrp = !!node.parent;
+        var shortName = s && showGrp && s.name.length > node.parent.length + 1
+            ? s.name.substring(node.parent.length + 1) : s && s.name;
+        if (node.children) {
+            var grp = node.path;
+            var grpRunning = node.running;
             var dots = grpRunning > 0
                 ? Array(grpRunning).fill('<span style="display:inline-block;width:6px;height:6px;border-radius:50%;background:var(--green);margin-right:2px"></span>').join('')
                 : '';
             var isCollapsed = collapsedGroups.has(grp);
-            html += '<div class="group-header" onclick="toggleGroup(\'' + grp + '\')">'
+            html += '<div class="group-header" style="--group-depth:' + node.depth + '"'
+                + ' data-group="' + escHtml(grp) + '" onclick="event.stopPropagation();toggleGroup(this.dataset.group)">'
                 + '<span class="group-dot"></span>'
-                + '<span class="group-name">' + escHtml(grp) + '</span>'
+                + '<span class="group-name">' + escHtml(showGrp ? grp.substring(node.parent.length + 1) : grp) + '</span>'
                 + (dots ? '<span>' + dots + '</span>' : '')
-                + '<span class="group-count">' + groupCounts[grp] + '</span>'
+                + '<span class="group-count">' + node.count + '</span>'
                 + '<span class="group-chevron' + (isCollapsed ? ' collapsed' : '') + '">&#9660;</span>'
                 + '</div>';
-            lastGrp = grp;
-        } else if (!showGrp) {
-            if (lastGrp !== null) firstUngrouped = true;
-            if (firstUngrouped && lastGrp !== null) { html += '<div class="ungrouped-separator"></div>'; firstUngrouped = false; }
-            lastGrp = null;
+            return;
         }
-
-        if (collapsed) return;
 
         var status    = getTaskStatus(s);
         // Включённость — свойство расписания. У задачи «по требованию» её нет:
@@ -346,7 +376,7 @@ function renderList() {
             + (showGrp ? ' group-child' : '')
             + (s.id === selectedId ? ' active' : (selectedIds.has(s.id) ? ' multi' : ''))
             + (disabled ? ' row-disabled' : '')
-            + '" data-id="' + s.id + '"'
+            + '" style="--group-depth:' + node.depth + '" data-id="' + s.id + '"'
             + ' onmousedown="if(event.shiftKey||event.ctrlKey||event.metaKey)event.preventDefault()"'
             + ' onclick="onRowClick(event,\'' + s.id + '\')">'
             + (scheduled

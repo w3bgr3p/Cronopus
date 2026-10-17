@@ -12,6 +12,13 @@ Tasker is the `/tasker.html` page that stores schedules and runs local tasks.
 
 Tasks are read from the `schedules` table. The list shows the name, the state and the main run parameters.
 
+Set dot-separated name grouping in **Config → Interface → Tasker grouping depth**.
+Changes save automatically: `0` gives a flat list, `1` is the default single level,
+`2` gives two levels, and so on. For example, `Project.Accounts.Register` at depth `2`
+appears under `Project → Accounts`. Groups require at least two tasks. Each level
+collapses independently; parent counts include nested tasks. This interface setting
+applies to both Local and remote nodes when opening Tasker.
+
 ## Editing
 
 A task is defined by:

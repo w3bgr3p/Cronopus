@@ -31,7 +31,8 @@ body {
 .group-chevron.collapsed { transform: rotate(-90deg); }
 
 .schedule-row { padding: var(--sp-6) var(--sp-10) var(--sp-6) var(--sp-18); border-bottom: 1px solid var(--border); cursor: pointer; display: flex; align-items: center; gap: var(--sp-8); transition: background 0.08s; }
-.schedule-row.group-child { padding-left: var(--sp-24); border-left: 2px solid var(--border); }
+.schedule-row.group-child { padding-left: calc(var(--sp-10) + var(--group-depth, 1) * var(--sp-14)); border-left: 2px solid var(--border); }
+.group-header { padding-left: calc(var(--sp-10) + var(--group-depth, 0) * var(--sp-14)); }
 .schedule-row:hover    { background: var(--bg2); }
 .schedule-row.active   { background: var(--bg3); }
 /* Р’С‹РґРµР»РµРЅР° РІРјРµСЃС‚Рµ СЃ РѕСЃРЅРѕРІРЅРѕР№: РїСЂР°РІРєРё С„РѕСЂРјС‹ СѓР№РґСѓС‚ Рё РІ РЅРµС‘. */

@@ -377,6 +377,14 @@
                     </select>
                 </div>
             </div>
+            <div class="field-row">
+                <div class="field">
+                    <label for="uiTaskerGroupDepth">Tasker grouping depth</label>
+                    <input id="uiTaskerGroupDepth" type="number" min="0" step="1" value="1"
+                           onchange="saveTaskerGroupDepth(this)">
+                    <p>Levels from dots in task names. 0: flat list; 1: Project; 2: Project → Accounts. Saved automatically.</p>
+                </div>
+            </div>
             <div class="card-hdr" style="margin-top:16px"><h2>Dock pages</h2></div>
             <p style="font-size:10px; color:var(--text-dim); margin:0 0 10px;">
                 The dock shows the checked pages. Changes apply at once and are saved for every page. Config always stays in the dock.

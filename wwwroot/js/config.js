@@ -609,6 +609,18 @@
         postUi({ dockPosition: pos });
     }
 
+    let _taskerGroupingEdit = 0;
+    function saveTaskerGroupDepth(input) {
+        _taskerGroupingEdit++;
+        const depth = Number(input.value);
+        if (input.value === '' || !Number.isSafeInteger(depth) || depth < 0) {
+            input.reportValidity();
+            toast('Grouping depth must be a non-negative integer', 'err');
+            return;
+        }
+        postUi({ taskerGroupDepth: depth });
+    }
+
     function navConfigReady(cb) {
         if (window.NAV_CONFIG) { cb(); return; }
         const s = document.createElement('script');
@@ -627,6 +639,17 @@
         document.getElementById('uiDockPos').value =
             (window.getDockPosition?.() || localStorage.getItem('zp-dock-pos') || 'bottom');
         navConfigReady(renderDockPages);
+        const groupingEdit = _taskerGroupingEdit;
+        fetch('/config/ui').then(r => {
+            if (!r.ok) throw new Error('HTTP ' + r.status);
+            return r.json();
+        }).then(state => {
+            const input = document.getElementById('uiTaskerGroupDepth');
+            if (_taskerGroupingEdit === groupingEdit && document.activeElement !== input) {
+                const depth = state.taskerGroupDepth;
+                input.value = Number.isSafeInteger(depth) && depth >= 0 ? depth : 1;
+            }
+        }).catch(e => toast('Interface settings unavailable: ' + e.message, 'err'));
     }
 
     function renderDockPages() {
