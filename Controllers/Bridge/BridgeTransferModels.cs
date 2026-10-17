@@ -26,5 +26,7 @@ public sealed class BridgeTransfer
     public List<string> Conflicts { get; set; }=new();
     public List<string>? Replace { get; set; }
     public List<BridgeTransferResult>? Results { get; set; }
+    public Dictionary<string,string>? TaskSettings { get; set; }
+    public string RemoteTaskId { get; set; }="";
 }
 public sealed record BridgeTransferResult(string Path,string State,string? Error);

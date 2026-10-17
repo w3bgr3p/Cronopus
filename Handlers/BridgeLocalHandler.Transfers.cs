@@ -15,6 +15,10 @@ public sealed partial class BridgeLocalHandler
             await Write(ctx,string.IsNullOrEmpty(selected)?new{cancelled=true}:_transfers.Public(_transfers.Select(selected)));return true;
         }
         var parts=path.Split('/');
+        if(parts.Length==2&&parts[1]=="task-upload"&&method=="POST"){
+            var body=await Body(ctx);
+            await Write(ctx,_transfers.StartTask(body.GetProperty("task"),parts[0],body.GetProperty("destination").GetString()!));return true;
+        }
         if(parts.Length==2&&parts[1]=="transfers"&&method=="POST"){
             var body=await Body(ctx);store.Connection(parts[0]);
             await Write(ctx,_transfers.Start(body.GetProperty("selectionId").GetString()!,parts[0],body.GetProperty("destination").GetString()!));return true;

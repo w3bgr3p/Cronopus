@@ -9,6 +9,7 @@ public sealed partial class BridgeTransfers
     public object Start(string id,string connectionId,string destination)
     {
         var job=Get(id);
+        if(job.State=="completed")return Public(job);
         if(job.CancelRequested)throw new ArgumentException("Cancelled transfers require a new selection");
         if(job.ConnectionId.Length>0&&job.ConnectionId!=connectionId)throw new ArgumentException("Transfer belongs to a different connection");
         if(job.Destination.Length>0&&job.Destination!=destination)throw new ArgumentException("Transfer destination cannot change");
@@ -37,6 +38,9 @@ public sealed partial class BridgeTransfers
     }
     private async Task Run(BridgeTransfer job,CancellationToken ct)
     {
+        if(job.TaskSettings!=null&&job.Results is {Count:>0}&&job.Results.All(r=>r.State=="published")){
+            await CreateTask(job,ct);return;
+        }
         await client.CheckAsync(job.ConnectionId,ct);job.State="hashing";job.Error="";Save(job);
         foreach(var file in job.Files){ct.ThrowIfCancellationRequested();await using var input=File.OpenRead(file.Source);
             var hash=Convert.ToHexString(await System.Security.Cryptography.SHA256.HashDataAsync(input,ct));
@@ -67,6 +71,10 @@ public sealed partial class BridgeTransfers
         var committed=await JsonRequest(job,HttpMethod.Post,"/bridge/v1/uploads/"+job.UploadId+"/commit",new{replace=job.Replace??new()},ct);
         job.Results=committed.GetProperty("files").EnumerateArray().Select(f=>new BridgeTransferResult(f.GetProperty("relativePath").GetString()!,f.GetProperty("state").GetString()!,f.GetProperty("error").GetString())).ToList();
         var errors=committed.GetProperty("files").EnumerateArray().Where(f=>f.GetProperty("error").GetString()?.Length>0).Select(f=>f.GetProperty("relativePath").GetString()+": "+f.GetProperty("error").GetString()).ToArray();
-        job.State=errors.Length>0?"failed":"completed";job.Error=string.Join("\n",errors);Save(job);
+        job.State=errors.Length>0?"failed":job.TaskSettings!=null?"creating_task":"completed";job.Error=string.Join("\n",errors);Save(job);
+        if(errors.Length==0&&job.TaskSettings!=null){
+            if(job.Results.Any(r=>r.State!="published"))throw new IOException("Task not created: its file was left unchanged. Start a new task upload and confirm replacement.");
+            await CreateTask(job,ct);
+        }
     }
 }

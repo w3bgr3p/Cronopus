@@ -619,6 +619,7 @@ function renderDetailActions(s) {
         + '<button class="btn stop sm" title="Interrupt' + onTitle + '" onclick="' + (many ? 'stopSelected()' : 'stopNow(\'' + id + '\')') + '">■' + suffix + '</button>'
         + '<button class="btn danger sm" title="Eliminate' + onTitle + '" onclick="' + (many ? 'deleteSelected()' : 'deleteSchedule(\'' + id + '\',\'' + escHtml(s.name || '') + '\')') + '">🗑' + suffix + '</button>'
         + '<button class="btn sm" onclick="duplicateSchedule(\'' + id + '\')" style="border-color:var(--yellow);color:var(--yellow);">📋📋</button>'
+        + (!(window.TaskerBridge && window.TaskerBridge.remote()) ? '<button class="btn sm" title="Upload task to a connected server" onclick="uploadSchedule(\'' + id + '\')">↑ Upload</button>' : '')
         + '</div>'
         + '<div class="action-group">'
         + '<button class="btn green sm" title="Payload: values, schema, import, export" onclick="openPayloadModal(\'' + id + '\',\'' + escHtml(s.name || '') + '\')">⚙ Payload</button>'
@@ -2271,6 +2272,17 @@ function _nextDuplicateName(name, existingNames) {
     var candidate;
     do { n++; candidate = base + ' (' + n + ')'; } while (existingNames.indexOf(candidate) >= 0);
     return candidate;
+}
+
+async function uploadSchedule(id) {
+    if (!window.TaskerUpload || (window.TaskerBridge && window.TaskerBridge.remote()) || selectedId !== id) return;
+    captureTaskDraft();
+    var context = _taskerContext(), source = schedules.find(function(s) { return s.id === id; });
+    var draft = Object.assign({}, source, taskDraft);
+    if (!draft.script_path) { Dialog.error('Choose a task file first.'); return; }
+    if (!(await prepareScriptPayload(draft, source.script_path || ''))) return;
+    if (!_taskerCurrent(context) || selectedId !== id) return;
+    await window.TaskerUpload.task(draft);
 }
 
 async function duplicateSchedule(id) {

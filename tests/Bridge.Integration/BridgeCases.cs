@@ -34,6 +34,7 @@ static partial class BridgeCases
         Directory.CreateDirectory(Path.Combine(root,"journal-expiry"));await ApiCases(root,http,uri);
         await UploadFailures(root,http,uri);
         await NativeTransfer(root,store,connection);
+        await TaskUpload(root,store,connection,http,uri);
         var output=new BridgeOutput();var encoded=Encoding.UTF8.GetBytes("😀");output.Append("utf","run",encoded.AsMemory(0,2));output.Append("utf","run",encoded.AsMemory(2));
         var page=output.Read("utf","run",null,200);Check(page.GetProperty("items")[0].GetProperty("line").GetString()=="😀","split UTF-8 damaged");
         Console.WriteLine("PASS split-utf8");
