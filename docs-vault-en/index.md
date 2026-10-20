@@ -1,5 +1,7 @@
 # z3nDash
 
+For external agents: [[MCP]] — connection setup, tools and bundled documentation.
+
 z3nDash is a dashboard for schedules, ZennoPoster nodes, logs, HTTP traffic and a set of supporting tools.
 
 The dashboard itself runs on the machine that started it: the embedded server listens on `localhost` only. The nodes it drives can be anywhere on the network.

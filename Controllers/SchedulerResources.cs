@@ -14,6 +14,8 @@ public sealed partial class SchedulerService
 {
     /// <summary>CpuPct — доля всей машины (как в диспетчере задач); -1, пока нет второго снимка.</summary>
     public sealed record TaskResources(int Instances, int Processes, long MemoryMB, double CpuPct);
+    public sealed record InstanceResources(string RunId, int Pid, long UptimeSec,
+        int Processes, long MemoryMB, double CpuPct, bool InProcess);
 
     public sealed record ResourceSnapshot(
         Dictionary<string, TaskResources> Tasks,
@@ -22,7 +24,10 @@ public sealed partial class SchedulerService
         long MemoryMB,
         double CpuPct,
         int  InProcessRuns,
-        long MasterMB);
+        long MasterMB)
+    {
+        public Dictionary<string, List<InstanceResources>> InstanceDetails { get; init; } = new();
+    }
 
     private readonly object _resLock = new();
     private ResourceSnapshot? _resCache;
@@ -55,7 +60,9 @@ public sealed partial class SchedulerService
             .Select(kv =>
             {
                 var cut = kv.Key.IndexOf(':');
-                return (TaskId: cut > 0 ? kv.Key[..cut] : kv.Key, Pid: kv.Value.Pid);
+                return (TaskId: cut > 0 ? kv.Key[..cut] : kv.Key,
+                    RunId: cut > 0 ? kv.Key[(cut + 1)..] : "",
+                    Pid: kv.Value.Pid, UptimeSec: kv.Value.UptimeSec);
             })
             .ToList();
 
@@ -74,37 +81,50 @@ public sealed partial class SchedulerService
             return cur >= old ? (cur - old) / 1e7 : 0;   // 100-нс тики → секунды
         }
 
-        var tasks = new Dictionary<string, (int inst, int procs, long bytes, double cpuSec)>();
+        var tasks = new Dictionary<string, (int inst, int procs, long memoryMB, double cpuSec)>();
         var counted  = new HashSet<int>();   // процесс не должен попасть в сумму дважды
+        var details = new Dictionary<string, List<InstanceResources>>();
         int inProc   = 0;
 
-        foreach (var (taskId, pid) in live)
+        double Pct(double cpuSec) => cpuOk
+            ? Math.Round(cpuSec / elapsed / Environment.ProcessorCount * 100, 1)
+            : -1;
+
+        foreach (var (taskId, runId, pid, uptimeSec) in live)
         {
             tasks.TryGetValue(taskId, out var acc);
             acc.inst++;
 
             // Прогон без внешнего процесса (xml-шаблон) идёт внутри Master:
             // его память не отделить от памяти самого приложения.
-            if (pid <= 0) { inProc++; tasks[taskId] = acc; continue; }
+            if (pid <= 0) inProc++;
+            long instanceBytes = 0;
+            int instanceProcesses = 0;
+            double instanceCpu = 0;
 
-            foreach (var p in WalkTree(pid, table))
+            foreach (var p in pid > 0 ? WalkTree(pid, table) : Enumerable.Empty<int>())
             {
                 if (!counted.Add(p)) continue;
                 if (!table.Memory.TryGetValue(p, out var bytes)) continue;
-                acc.procs++;
-                acc.bytes += bytes;
-                acc.cpuSec += Cpu(p);
+                instanceProcesses++;
+                instanceBytes += bytes;
+                instanceCpu += Cpu(p);
             }
+            if (!details.TryGetValue(taskId, out var instances))
+                details[taskId] = instances = new();
+            var instanceMB = instanceBytes / 1024 / 1024;
+            instances.Add(new InstanceResources(runId, pid, uptimeSec, instanceProcesses,
+                instanceMB, Pct(instanceCpu), pid <= 0));
+            acc.procs += instanceProcesses;
+            // Итоги складываются из тех же MB, которые показываются у инстансов.
+            acc.memoryMB += instanceMB;
+            acc.cpuSec += instanceCpu;
             tasks[taskId] = acc;
         }
 
-        double Pct(double cpuSec) => cpuOk
-            ? Math.Round(cpuSec / elapsed / Environment.ProcessorCount * 100, 1)
-            : -1;
-
         var perTask = tasks.ToDictionary(
             kv => kv.Key,
-            kv => new TaskResources(kv.Value.inst, kv.Value.procs, kv.Value.bytes / 1024 / 1024, Pct(kv.Value.cpuSec)));
+            kv => new TaskResources(kv.Value.inst, kv.Value.procs, kv.Value.memoryMB, Pct(kv.Value.cpuSec)));
 
         _prevCpu   = table.Cpu;
         _prevCpuAt = now;
@@ -121,10 +141,10 @@ public sealed partial class SchedulerService
             perTask,
             live.Count,
             tasks.Values.Sum(t => t.procs),
-            tasks.Values.Sum(t => t.bytes) / 1024 / 1024,
+            tasks.Values.Sum(t => t.memoryMB),
             Pct(tasks.Values.Sum(t => t.cpuSec)),
             inProc,
-            master);
+            master) { InstanceDetails = details };
     }
 
     private sealed record ProcessTable(

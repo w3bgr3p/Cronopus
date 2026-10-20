@@ -6,6 +6,7 @@ public sealed partial class TaskerService
     public static readonly HashSet<string> RemoteRoutes = new(StringComparer.Ordinal) {
         "GET /tasker/list", "GET /tasker/detail", "POST /tasker/save", "POST /tasker/delete", "POST /tasker/run",
         "POST /tasker/stop", "POST /tasker/pause", "POST /tasker/resume", "POST /tasker/defer",
+        "POST /tasker/reset-attempts",
         "GET /tasker/payload", "POST /tasker/payload", "GET /tasker/instances", "GET /tasker/queue",
         "GET /tasker/process-stats", "GET /tasker/resources", "POST /tasker/kill-instance",
         "POST /tasker/clear-queue", "GET /tasker/scan-folder", "GET /tasker/package-scripts",

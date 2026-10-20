@@ -1,6 +1,6 @@
 [Setup]
 AppName=z3nDash
-AppVersion=1.1.0.0
+AppVersion=1.1.2.0
 ; По умолчанию предлагаем локальную папку, но даем ВЫБОР
 DefaultDirName={localappdata}\z3nDash
 DefaultGroupName=z3nDash

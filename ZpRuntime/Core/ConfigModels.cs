@@ -3,7 +3,14 @@
 public class DbConfig
 {
     public string Type { get; set; } = "";
-    public string SqlitePath { get; set; } = string.Empty;
+    private string _sqlitePath = string.Empty;
+    public string SqlitePath
+    {
+        get => string.IsNullOrWhiteSpace(_sqlitePath)
+            ? Path.Combine(AppContext.BaseDirectory, "z3nDash.db")
+            : _sqlitePath;
+        set => _sqlitePath = value;
+    }
     public string PostgresConnectionString { get; set; } = string.Empty;
     
     public dbMode Mode => Type.ToLower() == "sqlite" ? dbMode.SQLite : dbMode.Postgre;

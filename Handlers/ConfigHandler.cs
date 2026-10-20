@@ -93,6 +93,8 @@ internal sealed class ConfigHandler
             foreach (var p in json.EnumerateObject())
                 dict[p.Name] = p.Value;
 
+        dict.Remove("dbConfig");
+        dict["DbConfig"] = Config.DbConfig;
         dict["securityConfig"] = new { jVarsPath = Config.SecurityConfig.JVarsPath };
         dict["browsersApi"] = Config.BrowsersApi;
 
@@ -133,6 +135,9 @@ internal sealed class ConfigHandler
             // раньше сохранялся, и следующий запуск падал, не дойдя до страницы Config.
             stage = "db-connect";
             var newDb = ReadDbConfig(existing);
+            if (newDb.Mode == dbMode.SQLite)
+                existing["DbConfig"] = JsonSerializer.SerializeToElement(newDb,
+                    new JsonSerializerOptions { IgnoreReadOnlyProperties = true });
             if (Config.HasDb(newDb))
             {
                 try { DbConnectionService.Open(newDb); }

@@ -173,7 +173,8 @@ public class DashboardOverlay : Form
         bool ok = RegisterHotKey(_hotkeyReceiver.Handle, HOTKEY_ID,
                                  MOD_CONTROL | MOD_ALT | MOD_NOREPEAT, VK_Z);
 
-        if (!ok)
+        // Another instance may already own the global shortcut.
+        if (!ok && Marshal.GetLastWin32Error() != 1409)
             MessageBox.Show(
                 $"Hotkey Ctrl+Alt+Z already in use (err {Marshal.GetLastWin32Error()})",
                 "z3nDash", MessageBoxButtons.OK, MessageBoxIcon.Warning);

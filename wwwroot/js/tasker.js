@@ -231,7 +231,40 @@ function loadResources() {
             });
             var tot = document.getElementById('procTotalMem');
             if (tot) tot.textContent = taskMemText(selectedId) || '—';
+            updateInstanceResources(selectedId);
         }).catch(function() {});
+}
+
+function updateInstanceResources(id, fallback) {
+    if (id !== selectedId || activeTab !== 'execution') return;
+    var details = _resources && _resources.InstanceDetails;
+    var list = details && details[id];
+    if (!list && details) list = [];
+    if (!list && fallback) list = fallback.map(function(r) {
+        return { RunId: r.runId, UptimeSec: r.uptimeSec, MemoryMB: r.memoryMB,
+            Processes: r.processes, InProcess: r.inProcess === 'true' };
+    });
+    if (!list) return;
+    list = list.slice().sort(function(a, b) { return b.UptimeSec - a.UptimeSec; });
+    var mem = document.getElementById('procMem');
+    if (mem) mem.textContent = list.length === 1
+        ? (list[0].InProcess ? 'in-process (shared z3nDash memory)' : fmtMB(list[0].MemoryMB)) : '—';
+    var el = document.getElementById('instancesList');
+    if (!el) return;
+    var count = document.getElementById('instancesCount');
+    var cnt = list.length ? String(list.length) : '';
+    if (count) count.textContent = cnt;
+    var html = !list.length ? '(none)' : list.map(function(inst) {
+        var usage = inst.InProcess ? 'in-process (shared z3nDash memory)'
+            : fmtMB(inst.MemoryMB) + ' · ' + (inst.Processes == null ? '—' : inst.Processes) + ' proc';
+        return '<div class="inst-row">'
+            + '<span class="inst-id">' + escHtml(inst.RunId) + '</span>'
+            + '<span class="inst-meta" title="Instance with all child processes">' + inst.UptimeSec + 's · ' + usage + '</span>'
+            + '<button class="btn stop sm" title="Kill this instance" onclick="killOneInstance(\'' + escHtml(id) + '\',\'' + escHtml(inst.RunId) + '\')">✕</button>'
+            + '</div>';
+    }).join('');
+    _instCache[id] = { html: html, count: cnt };
+    if (el.innerHTML !== html) el.innerHTML = html;
 }
 
 // ── List rendering ────────────────────────────────────────────────────────────
@@ -457,7 +490,7 @@ function renderBulkState() {
         el.style.display = n > 1 ? '' : 'none';
         el.textContent = n > 1
             ? n + ' tasks selected. Fields you change in Settings or Schedule are saved to all of them (the name is not); '
-              + 'Run, pause, Restart, Interrupt and Eliminate also apply to all of them. '
+              + 'Run, pause, Restart, Interrupt, Reset attempts and Eliminate also apply to all of them. '
               + 'Ctrl+click adds or removes a task, Shift+click selects a range.'
             : '';
     }
@@ -647,6 +680,7 @@ function renderDetailActions(s) {
         + (held ? '<button class="btn sm" title="Clear script pause and deferral' + onTitle + '" onclick="' + (many ? 'resumeSelected()' : 'resumeSchedule(\'' + id + '\')') + '">Resume schedule</button>' : '')
         + '<button class="btn sm" title="Restart' + onTitle + '" onclick="' + (many ? 'restartSelected()' : 'restartNow(\'' + id + '\')') + '" style="border-color:var(--yellow);color:var(--yellow);">↺</button>'
         + '<button class="btn stop sm" title="Interrupt' + onTitle + '" onclick="' + (many ? 'stopSelected()' : 'stopNow(\'' + id + '\')') + '">■' + suffix + '</button>'
+        + '<button class="btn sm" title="Reset successful and failed attempt counters' + onTitle + '" onclick="resetAttempts()">Reset attempts' + suffix + '</button>'
         + '<button class="btn danger sm" title="Eliminate' + onTitle + '" onclick="' + (many ? 'deleteSelected()' : 'deleteSchedule(\'' + id + '\',\'' + escHtml(s.name || '') + '\')') + '">🗑' + suffix + '</button>'
         + '<button class="btn sm" onclick="duplicateSchedule(\'' + id + '\')" style="border-color:var(--yellow);color:var(--yellow);">📋📋</button>'
         + (!(window.TaskerBridge && window.TaskerBridge.remote()) ? '<button class="btn sm" title="Upload task to a connected server" onclick="uploadSchedule(\'' + id + '\')">↑ Upload</button>' : '')
@@ -1053,12 +1087,10 @@ function renderExecution(s) {
                     if (!isCurrentPoll()) return;
                     var elPid    = document.getElementById('procPid');
                     var elUptime = document.getElementById('procUptime');
-                    var elMem    = document.getElementById('procMem');
                     if (!elPid) { stopProcStatsPoll(); return; }
                     if (!d.running) { stopProcStatsPoll(); return; }
                     elPid.textContent    = d.pid > 0 ? d.pid : '—';
                     elUptime.textContent = d.uptimeSec + 's';
-                    elMem.textContent    = d.memoryMB + ' MB';
                 }).catch(function() {});
         }
 
@@ -1068,25 +1100,11 @@ function renderExecution(s) {
                 .then(function(r) { return r.json(); })
                 .then(function(list) {
                     if (!isCurrentPoll()) return;
-                    var el = document.getElementById('instancesList');
-                    if (!el) return;
-                    var count = document.getElementById('instancesCount');
-                    var cnt = list && list.length ? String(list.length) : '';
-                    if (count) count.textContent = cnt;
-                    var html = (!list || !list.length) ? '(none)' : list.map(function(inst) {
-                        return '<div class="inst-row">'
-                            + '<span class="inst-id">' + escHtml(inst.runId) + '</span>'
-                            + '<span class="inst-meta">' + inst.uptimeSec + 's · ' + inst.memoryMB + 'MB</span>'
-                            + '<button class="btn stop sm" title="Kill this instance" onclick="killOneInstance(\'' + escHtml(id) + '\',\'' + escHtml(inst.runId) + '\')">✕</button>'
-                            + '</div>';
-                    }).join('');
-                    // Карточка пересоздаётся при каждой перерисовке задачи и до
-                    // ответа опроса показывала бы «—»: берём прошлый список.
-                    _instCache[id] = { html: html, count: cnt };
-                    if (el.innerHTML !== html) el.innerHTML = html;
+                    updateInstanceResources(id, list);
                 }).catch(function() {});
         }
 
+        updateInstanceResources(id);
         if (!isMulti) pollStats();
         if (isMulti)  pollInstances();
         _procStatsPoll = setInterval(function() {
@@ -2409,6 +2427,29 @@ async function toggleEnabled(id, current) {
     await loadList();
 }
 
+async function resetAttempts() {
+    var context = _taskerContext();
+    var tasks = _selectedList();
+    var failed = [];
+    for (var task of tasks) {
+        if (!_taskerCurrent(context)) return;
+        try {
+            var res = await taskerFetch('/tasker/reset-attempts', {
+                method: 'POST', headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({id: task.id})
+            });
+            var data = await res.json();
+            if (!res.ok || data.ok !== true) failed.push((task.name || task.id) + ': ' + (data.error || 'Reset failed'));
+        } catch (e) {
+            if (e.name === 'AbortError') return;
+            failed.push((task.name || task.id) + ': ' + e.message);
+        }
+    }
+    if (!_taskerCurrent(context)) return;
+    await loadList();
+    if (failed.length) Dialog.error(failed.join('\n'));
+}
+
 async function resumeSchedule(id) {
     var res = await taskerFetch('/tasker/resume', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({id:id}) });
     if (!res.ok) { alert((await res.json()).error || 'Could not resume schedule'); return; }
@@ -2513,8 +2554,9 @@ function _pickInstanceToKill(id, instances) {
             document.body.appendChild(overlay);
         }
         overlay.innerHTML =
-            '<div style="background:var(--bg1);border:1px solid var(--border);border-radius:8px;padding:20px;min-width:320px;max-width:480px">'
-            + '<div style="font-weight:600;margin-bottom:12px">Select instance to kill</div>'
+            '<div style="background:var(--bg1);border:1px solid var(--border);border-radius:var(--radius);padding:var(--sp-20);width:360px;max-width:calc(100vw - 32px);max-height:calc(100vh - 32px);box-sizing:border-box;display:flex;flex-direction:column;overflow:hidden">'
+            + '<div style="font-weight:600;margin-bottom:12px;flex-shrink:0">Select instance to kill</div>'
+            + '<div style="min-height:0;overflow-y:auto">'
             + instances.map(function(inst) {
                 return '<div style="display:flex;align-items:center;gap:8px;margin:4px 0;padding:4px 0;border-bottom:1px solid var(--border)">'
                     + '<span style="font-family:monospace;font-size:11px;flex:1;color:var(--accent)">' + escHtml(inst.runId) + '</span>'
@@ -2522,7 +2564,7 @@ function _pickInstanceToKill(id, instances) {
                     + '<button class="btn stop sm" onclick="_killPickResolve(\'' + escHtml(inst.runId) + '\')">■ Kill</button>'
                     + '</div>';
             }).join('')
-            + '<div style="display:flex;justify-content:flex-end;gap:8px;margin-top:12px">'
+            + '</div><div style="display:flex;justify-content:flex-end;gap:8px;margin-top:12px;flex-shrink:0">'
             + '<button class="btn sm" onclick="_killPickResolve(null)">Cancel</button>'
             + '<button class="btn danger sm" onclick="_killPickResolve(\'__all__\')">■ Kill all</button>'
             + '</div></div>';
@@ -2739,9 +2781,16 @@ var Dialog = {
         if (this._resolve) { this._resolve(val); this._resolve = null; }
     },
     _buttons: function(btns) {
-        document.getElementById('dialogButtons').innerHTML = btns.map(function(b) {
-            return '<button class="btn ' + b.cls + '" onclick="Dialog._close(' + JSON.stringify(b.val) + ')">' + b.label + '</button>';
-        }).join('');
+        var container = document.getElementById('dialogButtons');
+        var self = this;
+        container.innerHTML = '';
+        btns.forEach(function(b) {
+            var button = document.createElement('button');
+            button.className = 'btn ' + (b.cls || '');
+            button.textContent = b.label;
+            button.onclick = function() { self._close(b.val); };
+            container.appendChild(button);
+        });
     },
     alert:   function(msg, title)       { this._buttons([{label:'OK',cls:'primary',val:true}]); return this._open('i', title||'Info', msg, 'alert'); },
     confirm: function(msg, title, danger) { this._buttons([{label:'Cancel',cls:'',val:false},{label:'Confirm',cls:danger?'danger':'primary',val:true}]); return this._open('?', title||'Confirm', msg, 'confirm'); },

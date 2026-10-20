@@ -111,6 +111,14 @@ real configuration file or paste its contents into an issue.
 
 The default dashboard address is `http://localhost:33333`.
 
+### MCP for agents
+
+Launch `z3nDash.exe --mcp` from an MCP client to control Tasker and saved Remote
+Tasker connections. The normal dashboard must already be running. The native
+stdio server discovers its actual port and includes typed tools, revision
+protection, bounded pages, read-only mode and offline documentation resources.
+See [MCP setup and tool reference](Mcp/README.md).
+
 | Section | Purpose |
 |---|---|
 | Tasker | Configure, run, stop, and monitor scheduled tasks |

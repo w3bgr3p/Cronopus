@@ -1170,7 +1170,9 @@ public sealed partial class SchedulerService : IDisposable
             .Select(kv => kv.Value)
             .FirstOrDefault();
         if (inst == null) return (-1, 0, 0, false);
-        return (inst.Pid, inst.UptimeSec, inst.MemoryMB, true);
+        var resources = GetResources().InstanceDetails.GetValueOrDefault(id)?
+            .FirstOrDefault(r => r.Pid == inst.Pid);
+        return (inst.Pid, inst.UptimeSec, resources?.MemoryMB ?? 0, true);
     }
 
     // runId == null → все инстансы; задан → только этот
@@ -1229,14 +1231,15 @@ public sealed partial class SchedulerService : IDisposable
     }
 
     public List<Dictionary<string, string>> GetInstances(string id)
-        => _running
-            .Where(kv => kv.Key.StartsWith(id + ":") && !kv.Value.HasExited)
-            .Select(kv => new Dictionary<string, string>
+        => (GetResources().InstanceDetails.GetValueOrDefault(id) ?? new())
+            .Select(r => new Dictionary<string, string>
             {
-                { "runId",     kv.Key[(id.Length + 1)..] },
-                { "uptimeSec", kv.Value.UptimeSec.ToString() },
-                { "pid",       kv.Value.Pid.ToString() },
-                { "memoryMB",  kv.Value.MemoryMB.ToString() },
+                { "runId",     r.RunId },
+                { "uptimeSec", r.UptimeSec.ToString() },
+                { "pid",       r.Pid.ToString() },
+                { "memoryMB",  r.MemoryMB.ToString() },
+                { "processes", r.Processes.ToString() },
+                { "inProcess", r.InProcess ? "true" : "false" },
             })
             .ToList();
 
@@ -1534,20 +1537,6 @@ public sealed partial class SchedulerService : IDisposable
 
         public int Pid =>
             _process == null ? -1 : (_process.HasExited ? -1 : _process.Id);
-
-        public long MemoryMB
-        {
-            get
-            {
-                try
-                {
-                    var target = _process is { HasExited: false } ? _process : System.Diagnostics.Process.GetCurrentProcess();
-                    target.Refresh();
-                    return target.WorkingSet64 / 1024 / 1024;
-                }
-                catch { return 0; }
-            }
-        }
 
         public long UptimeSec => (long)(DateTime.UtcNow - StartedAt).TotalSeconds;
 

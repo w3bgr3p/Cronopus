@@ -249,7 +249,27 @@ public class EmbeddedServer
             string path   = request.Url?.AbsolutePath.ToLower() ?? "";
             string method = request.HttpMethod;
 
+            // A discovered MCP client must never mutate a different/restarted instance.
+            if (request.Headers["X-Z3nDash-Instance"] is { } instance && instance != z3nDash.Mcp.McpRuntime.ActiveInstanceId)
+            {
+                response.StatusCode = 409;
+                response.ContentType = "application/json";
+                await response.OutputStream.WriteAsync(Encoding.UTF8.GetBytes("{\"error\":\"Dashboard instance changed. Reconnect MCP.\",\"code\":\"instance_changed\"}"));
+                return;
+            }
+
             if (DiagHandler.Matches(path)) { await _diagHandler.Handle(context, path, method); return; }
+            // Serve pages before API handlers: a failed DB connection must not hide navigation.
+            if (method == "GET" && (path == "/" || path == "/index.html"))
+            {
+                await ServePage(response, request.QueryString["page"] ?? "home");
+                return;
+            }
+            if (method == "GET" && path.EndsWith(".html"))
+            {
+                await ServeFile(response, request.Url!.AbsolutePath.TrimStart('/'), _wwwrootPath);
+                return;
+            }
 // Script handlers (/zp, /py, /node, ...)
             foreach (var handler in _scriptHandlers)
             {
@@ -274,15 +294,6 @@ public class EmbeddedServer
             
             
             
-            // Pages
-            if (method == "GET" && (path == "/" || path == "/index.html"))
-            {
-                var page = request.QueryString["page"] ?? "home";
-                if (_debug )  $"[handler] Page → {page}".Debug();
-                await ServePage(response, page);
-                return;
-            }
-
 // Domain handlers
             if (path == "/dllgraph" || path.StartsWith("/dllgraph/"))
             {

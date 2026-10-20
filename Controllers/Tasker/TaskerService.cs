@@ -56,6 +56,13 @@ public sealed partial class TaskerService
 
         if (!path.StartsWith("/tasker")) return false;
 
+        // HTML and its navigation must remain available when the database is unavailable.
+        if (method == "GET" && path is "/tasker" or "/tasker/" or "/tasker.html")
+        {
+            await ServePage(context.Response);
+            return true;
+        }
+
         if (!_dbService.TryGetDb(out var db) || db == null)
         {
             context.Response.StatusCode = 503;
@@ -65,12 +72,12 @@ public sealed partial class TaskerService
 
         try
         {
-            if (path == "/tasker" || path == "/tasker/" || path == "/tasker.html")           { await ServePage(context.Response);          return true; }
             if (path == "/tasker/list"    && method == "GET")         { await List(context, db);                    return true; }
             if (path == "/tasker/detail" && method == "GET") { await Detail(context, db); return true; }
             if (path == "/tasker/save"    && method == "POST")        { await Save(context, db);                    return true; }
             if (path == "/tasker/delete"  && method == "POST")        { await Delete(context, db);                  return true; }
             if (path == "/tasker/run"     && method == "POST")        { await RunNow(context, db);                  return true; }
+            if (path == "/tasker/reset-attempts" && method == "POST") { await ResetAttempts(context, db); return true; }
             if (path == "/tasker/defer" && method == "POST")
             {
                 var id = context.Request.QueryString["id"] ?? "";
@@ -227,6 +234,18 @@ public sealed partial class TaskerService
         using (DiagTrace.Span("kill")) _scheduler.Kill(id);
         db.Del(Table, where: $"\"id\" = '{id}'");
         await WriteJson(ctx.Response, new { ok = true });
+    }
+
+    private async Task ResetAttempts(TaskerExchange ctx, Db db)
+    {
+        var json = await ReadJson(ctx.Request);
+        if (json == null || !json.Value.TryGetProperty("id", out var value))
+            throw new ArgumentException("Task ID is required");
+        var id = value.GetString() ?? "";
+        ValidateId(id);
+        var changed = db.Query($"UPDATE \"{Table}\" SET \"runs_total\" = '0', \"runs_success\" = '0' WHERE \"id\" = '{id}'", thrw: true);
+        if (changed == "0") throw new KeyNotFoundException("Task not found");
+        await WriteJson(ctx.Response, new { ok = true, id });
     }
 
     private async Task RunNow(TaskerExchange ctx, Db db)

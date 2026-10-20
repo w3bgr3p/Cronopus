@@ -5,6 +5,7 @@
         <OutputType>WinExe</OutputType>
         <ImplicitUsings>enable</ImplicitUsings>
         <Nullable>enable</Nullable>
+        <DefaultItemExcludes>$(DefaultItemExcludes);artifacts/**</DefaultItemExcludes>
 
         <ApplicationIcon Condition="'$(TargetFramework)' == 'net10.0-windows'">icon.ico</ApplicationIcon>
 
@@ -43,6 +44,9 @@
     <!-- Cross-platform packages -->
     <ItemGroup>
         <FrameworkReference Include="Microsoft.AspNetCore.App" />
+        <PackageReference Include="ModelContextProtocol" Version="2.2.0" />
+        <None Update="Mcp/README.md" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
+        <None Update="Mcp/AGENT.md" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
         <PackageReference Include="System.Security.Cryptography.ProtectedData" Version="10.0.0" />
         <!-- Patchright вместо Microsoft.Playwright — см. пояснение в ZpRuntime.csproj -->
         <PackageReference Include="Patchright"                                Version="1.61.0" />

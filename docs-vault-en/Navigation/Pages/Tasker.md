@@ -52,6 +52,9 @@ RAM and CPU appear per task and in the header total. On Windows, each instance
 includes its child processes, including browsers. CPU is shown as a share of the
 whole machine after the second sample. z3nDash's own memory is separate;
 in-process XML runs are marked instead of receiving an individual memory figure.
+Each active instance shows the memory of its entire process tree and its process
+count. Instance figures, task totals and header RAM use one snapshot; a task's
+memory equals the sum of its instances.
 
 ## Schedule
 
@@ -122,7 +125,24 @@ runs.
 replace saved arguments in the queued runs without changing the task; payload
 flags are still added. See [[Task API]].
 
-## Output
+## Attempt counters
+
+**Reset attempts** clears the successful and failed attempt counters for all
+selected tasks. It does not stop running instances or change
+their schedules.
+
+## Upload a local task
+
+Select a local task and press **↑ Upload**, choose a saved Remote Tasker server
+and its destination folder, then confirm. This copies the task's script file or
+folder, current settings, schedule and payload, and creates a task on the server.
+The script path is changed to the destination; run counters start at zero.
+An enabled schedule remains enabled and can start on the server immediately.
+File replacement requires confirmation. If task creation is unconfirmed after
+a connection failure, inspect the server's tasks before starting a new upload;
+Resume checks the same operation. See [[Remote Tasker]].
+
+## Local output
 
 Output of the active run is streamed over SSE. Parallel instances each get their own `runId`.
 

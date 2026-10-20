@@ -1,5 +1,5 @@
 # Repository-local source and tooling
-tests/
+tests/*
 *.test.js
 *.spec.js
 /z3nStub/z3nStub/StubSmokeTest.cs
@@ -109,6 +109,12 @@ dev_state/
 *.jsonl
 safu.key
 crash.log
+.runtime/
+
+# Keep the native MCP integration harness reproducible after cloning.
+!tests/Mcp.Integration/
+!tests/Mcp.Integration/*.cs
+!tests/Mcp.Integration/*.csproj
 
 # Temporary and OS-generated files
 *.tmp

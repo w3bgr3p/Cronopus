@@ -25,6 +25,10 @@ using System.Text;
 try { Console.OutputEncoding = new UTF8Encoding(false); } catch { }
 try { Console.InputEncoding  = new UTF8Encoding(false); } catch { }
 
+// MCP branches before configuration, database access, UI and scheduler startup.
+if (args.Contains("--mcp", StringComparer.OrdinalIgnoreCase))
+    return await z3nDash.Mcp.McpHost.RunAsync(args);
+
 // Аналог -SelfTest из clipboard-heget.ps1: проверка преобразования без буфера,
 // без хоткеев и без запуска сервера. Результат дублируется в файл: у WinExe
 // stdout не всегда доходит до вызывающей консоли.
@@ -83,6 +87,8 @@ try
     dashboardService.RegisterHandler(new ZpOrchestratorHandler(dbConnectionService));
     var taskerService = new TaskerService(dbConnectionService, schedulerService, dashboardService.WwwrootPath);
     dashboardService.RegisterHandler(new SchedulerHandler(taskerService));
+    using var mcpRuntime = new z3nDash.Mcp.McpRuntime(dashboardService.Port, dbConnectionService, taskerService, schedulerService);
+    dashboardService.RegisterHandler(mcpRuntime);
     var bridgeStore = new BridgeStore();
     var bridgeHost = new BridgeHost(bridgeStore, taskerService, schedulerService);
     dashboardService.RegisterHandler(new BridgeLocalHandler(bridgeStore, bridgeHost));
@@ -95,6 +101,7 @@ try
     dashboardService.RegisterHandler(new ClipboardConverterHandler(clipboardService));
 
     dashboardService.Start();
+    mcpRuntime.Publish();
     schedulerService.Init();
     if (bridgeStore.State.Settings.Enabled)
     { try { await bridgeHost.StartAsync(CancellationToken.None); } catch (Exception ex) { Console.WriteLine("Remote Tasker failed: " + ex.Message); } }
