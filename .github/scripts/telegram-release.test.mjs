@@ -30,7 +30,7 @@ test('release introduction and complete sections stay visible with working downl
 
 test('a flat changelog stays visible and missing files do not produce download buttons', () => {
   const [message] = buildMessages({ ...release, body: '# z3nDash 1.2.0\n\n- First\n- Second', assets: [] });
-  assert.match(message.rich_message.markdown, /## Изменения/);
+  assert.match(message.rich_message.markdown, /^# z3nDash v1\.2\.0\n\n- First\n- Second$/);
   assert.match(message.rich_message.markdown, /- First\n- Second/);
   assert.equal(message.reply_markup.inline_keyboard.flat().length, 2);
 });

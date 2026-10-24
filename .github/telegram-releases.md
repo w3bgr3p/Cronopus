@@ -44,7 +44,7 @@ After verifying the test topic, set repository variable `TELEGRAM_MODE` to
 The title is the release name (or product and tag). A redundant opening
 `# z3nDash <version>` heading is removed. A short leading paragraph remains
 visible. Level 1/2 sections and their contents are displayed directly; flat lists
-go into “Изменения”. Download sections (`Downloads`, `Download`, `Загрузки`,
+appear directly without an added heading. Download sections (`Downloads`, `Download`, `Загрузки`,
 `Скачать`, `Скачивание`) are omitted because downloads are available via buttons.
 Markdown lists, links and inline formatting are retained.
 Installer/portable buttons appear only for matching release assets, alongside
