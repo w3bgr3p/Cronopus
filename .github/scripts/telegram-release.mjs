@@ -105,19 +105,21 @@ export function buildMessages(release) {
     }
   }
   const header = `# ${escapeHtml(title)}\n\n${intro ? safeMarkdown(intro) + '\n\n' : ''}`;
-  const blocks = parsed.filter(s => s.text).flatMap(s => fragments(safeMarkdown(s.text)).map((part, i) =>
-    `<details><summary>${escapeHtml(s.title || 'Изменения')}${i ? ' (продолжение)' : ''}</summary>\n\n${part}\n\n</details>`));
+  const blocks = parsed.filter(s => s.text && !/^(downloads?|загрузки|скачать|скачивание)$/i.test(s.title.trim()))
+    .flatMap(s => fragments(safeMarkdown(s.text)).map((part, i) =>
+      `## ${escapeHtml(s.title || 'Изменения')}${i ? ' (продолжение)' : ''}\n\n${part}`));
   const messages = [];
   let markdown = header;
   let count = 0;
   for (const block of blocks) {
-    if (markdown.length + block.length > 24000 || count >= 2) {
+    const lines = block.split('\n').length;
+    if (markdown.length + block.length > 24000 || count + lines > 350) {
       messages.push({ rich_message: { markdown: markdown.trim() }, reply_markup: keyboard(release) });
       markdown = header;
       count = 0;
     }
     markdown += block + '\n\n';
-    count++;
+    count += lines;
   }
   messages.push({ rich_message: { markdown: markdown.trim() }, reply_markup: keyboard(release) });
   return messages;

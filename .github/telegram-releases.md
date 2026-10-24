@@ -33,7 +33,7 @@ Actions → notify-site → Run workflow:
 
 The run summary and `telegram-release-test` artifact contain the Markdown
 preview and JSON payload. GitHub's preview is approximate; check the actual
-Telegram client for native Rich Message appearance and disclosure behavior.
+Telegram client for native Rich Message appearance.
 Manual runs do not rebuild the site. The release-triggered rebuild is unchanged.
 
 After verifying the test topic, set repository variable `TELEGRAM_MODE` to
@@ -43,8 +43,10 @@ After verifying the test topic, set repository variable `TELEGRAM_MODE` to
 
 The title is the release name (or product and tag). A redundant opening
 `# z3nDash <version>` heading is removed. A short leading paragraph remains
-visible. Level 1/2 sections become collapsed `<details>` blocks; flat lists go
-into “Изменения”. Markdown lists, links and inline formatting are retained.
+visible. Level 1/2 sections and their contents are displayed directly; flat lists
+go into “Изменения”. Download sections (`Downloads`, `Download`, `Загрузки`,
+`Скачать`, `Скачивание`) are omitted because downloads are available via buttons.
+Markdown lists, links and inline formatting are retained.
 Installer/portable buttons appear only for matching release assets, alongside
 release and documentation links. Long sections are split into bounded messages;
 code fences are closed and reopened across boundaries.

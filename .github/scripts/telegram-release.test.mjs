@@ -18,26 +18,44 @@ test('test is the default; prod is explicit and unknown modes fail closed', () =
   assert.throws(() => destination('production'), /mode/i);
 });
 
-test('release introduction stays visible; complete sections collapse with working download URLs', () => {
+test('release introduction and complete sections stay visible with working download URLs', () => {
   const [message] = buildMessages(release);
   assert.match(message.rich_message.markdown, /^# z3nDash v1\.2\.0\n\nShort introduction\./);
-  assert.match(message.rich_message.markdown, /<details><summary>Added<\/summary>\n\n- \*\*Remote\*\* control\.\n\n<\/details>/);
+  assert.match(message.rich_message.markdown, /## Added\n\n- \*\*Remote\*\* control\./);
+  assert.doesNotMatch(message.rich_message.markdown, /<details>|<summary>/);
   assert.match(message.rich_message.markdown, /Keep `a_b` intact/);
   assert.equal(message.reply_markup.inline_keyboard[0][0].url, 'https://example.com/setup.exe');
   assert.equal(message.reply_markup.inline_keyboard[0][1].url, 'https://example.com/portable.zip');
 });
 
-test('a flat changelog collapses and missing files do not produce download buttons', () => {
+test('a flat changelog stays visible and missing files do not produce download buttons', () => {
   const [message] = buildMessages({ ...release, body: '# z3nDash 1.2.0\n\n- First\n- Second', assets: [] });
-  assert.match(message.rich_message.markdown, /<summary>Изменения<\/summary>/);
+  assert.match(message.rich_message.markdown, /## Изменения/);
   assert.match(message.rich_message.markdown, /- First\n- Second/);
   assert.equal(message.reply_markup.inline_keyboard.flat().length, 2);
 });
 
 test('headings in code fences stay in the same section', () => {
   const [message] = buildMessages({ ...release, body: '## Added\n```sh\n# example\n```\nEnd.' });
-  assert.equal((message.rich_message.markdown.match(/<details>/g) || []).length, 1);
+  assert.equal((message.rich_message.markdown.match(/^## Added$/gm) || []).length, 1);
   assert.match(message.rich_message.markdown, /```sh\n# example\n```\nEnd\./);
+});
+
+test('download sections are omitted while buttons and following changes remain', () => {
+  const body = '## Added\n- Keep this.\n\n## Downloads\n- Installer description.\n\n## Fixed\n- Keep this too.';
+  const [message] = buildMessages({ ...release, body });
+  assert.doesNotMatch(message.rich_message.markdown, /Downloads|Installer description/);
+  assert.match(message.rich_message.markdown, /Keep this\./);
+  assert.match(message.rich_message.markdown, /Keep this too\./);
+  assert.equal(message.reply_markup.inline_keyboard[0][0].url, 'https://example.com/setup.exe');
+});
+
+test('several short sections fit together without hiding download-related changes', () => {
+  const body = '## Added\n- A\n\n## Fixed\n- B\n\n## Download fixes\n- C\n\n## Загрузки\n- Duplicate\n\n## Notes\n- D';
+  const messages = buildMessages({ ...release, body });
+  assert.equal(messages.length, 1);
+  assert.match(messages[0].rich_message.markdown, /## Download fixes\n\n- C/);
+  assert.doesNotMatch(messages[0].rich_message.markdown, /Загрузки|Duplicate/);
 });
 
 test('long sections are split without losing text or leaving unbalanced code fences', () => {
@@ -49,13 +67,11 @@ test('long sections are split without losing text or leaving unbalanced code fen
   for (const message of messages) {
     assert.ok(message.rich_message.markdown.length < 30000);
     assert.equal((message.rich_message.markdown.match(/^```/gm) || []).length % 2, 0);
-    assert.ok((message.rich_message.markdown.match(/<details>/g) || []).length > 0);
-    assert.equal((message.rich_message.markdown.match(/<details>/g) || []).length,
-      (message.rich_message.markdown.match(/<\/details>/g) || []).length);
+    assert.doesNotMatch(message.rich_message.markdown, /<details>|<summary>/);
   }
 });
 
-test('release HTML cannot close the generated details wrapper', () => {
+test('raw release HTML is escaped while Markdown is retained', () => {
   const [message] = buildMessages({ ...release, body: '## Added </summary>\nLiteral </details> & <tag>.' });
   assert.match(message.rich_message.markdown, /Added &lt;\/summary&gt;/);
   assert.match(message.rich_message.markdown, /Literal &lt;\/details&gt; &amp; &lt;tag&gt;/);
@@ -84,7 +100,7 @@ test('sender delivers a rich message to the chosen topic', async () => {
   assert.equal(requests[0].url, 'https://api.telegram.org/botfake-token/sendRichMessage');
   assert.equal(requests[0].body.chat_id, '-1002225536706');
   assert.equal(requests[0].body.message_thread_id, 332);
-  assert.match(requests[0].body.rich_message.markdown, /<details>/);
+  assert.match(requests[0].body.rich_message.markdown, /## Added/);
 });
 
 test('unknown delivery is not retried and does not leak the token', async () => {
