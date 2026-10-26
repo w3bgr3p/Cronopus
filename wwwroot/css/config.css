@@ -426,3 +426,10 @@
 .br-firewall p { margin-block:var(--sp-6);font-size:var(--fs-11);color:var(--text2); }
 .br-action-status { margin-block:var(--sp-8);font-size:var(--fs-11);color:var(--text);overflow-wrap:anywhere; }
 .br-action-status:empty { display:none; }
+/* About uses the shared z3n theme tokens. */
+.about-links { justify-content: flex-start; flex-wrap: wrap; }
+.about-links a { text-decoration: none; }
+.about-auto { display: flex; align-items: center; gap: 8px; }
+.about-progress { width: 100%; accent-color: var(--accent); margin-block: 10px; }
+.about-restart { color: var(--accent); border-left: 2px solid var(--accent); padding: 10px 12px; }
+.about-error { color: var(--red); white-space: pre-wrap; overflow-wrap: anywhere; }

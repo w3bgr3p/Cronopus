@@ -694,6 +694,7 @@
         { id: 'maint',    icon: '🧰', title: 'Maintenance' },
         { id: 'remote-tasker', icon: '⇄', title: 'Remote Tasker', enter: () => BridgeConfig.load() },
         { id: 'ui',       icon: '🎨', title: 'Interface',           enter: enterInterface },
+        { id: 'about',    icon: 'ⓘ', title: 'About', enter: () => AboutUpdates.enter(), leave: () => AboutUpdates.leave() },
     ];
 
     const SEPARATORS_AFTER = ['overview', 'browsers', 'services'];

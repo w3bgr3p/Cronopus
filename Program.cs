@@ -53,9 +53,12 @@ if (args.Contains("--clipconv-selftest"))
     return selfTestFailed == 0 ? 0 : 1;
 }
 
+// Dashboard startup alone activates staged updates; MCP and self-tests never do.
+if (AppUpdateService.TryApplyOnStartup(args)) return 0;
+
 try
 {
-    
+
     Config.Init();
     var logsConfig = Config.IsConfigured ? Config.LogsConfig : new LogsConfig { DashboardPort = "33333" };
 
@@ -71,6 +74,8 @@ try
     }
 
     var dashboardService = new EmbeddedServer(logsConfig, dbConnectionService);
+    var appUpdates = new AppUpdateService();
+    dashboardService.RegisterHandler(new AppUpdateHandler(appUpdates));
     if (Config.IsConfigured)
     {
         dashboardService.RegisterHandler(new ZpOrchestratorHandler(dbConnectionService));
@@ -101,6 +106,7 @@ try
     dashboardService.RegisterHandler(new ClipboardConverterHandler(clipboardService));
 
     dashboardService.Start();
+    appUpdates.Start();
     mcpRuntime.Publish();
     schedulerService.Init();
     if (bridgeStore.State.Settings.Enabled)

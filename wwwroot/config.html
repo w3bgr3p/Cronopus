@@ -29,6 +29,35 @@
     <nav class="cfg-rail" id="cfgRail"></nav>
 
     <div class="cfg-pane" id="cfgPane">
+        <section class="cfg-sec" data-sec="about" hidden>
+            <section class="card config-card">
+                <div class="card-hdr"><h2>About z3nDash</h2><span class="badge" id="aboutVersion">—</span></div>
+                <p class="page-sub">Task automation, runtime monitoring and developer tools.</p>
+                <div class="status-grid">
+                    <div class="stat-item"><span class="stat-label">Installed version</span><span class="stat-value mono" id="updateCurrent">—</span></div>
+                    <div class="stat-item"><span class="stat-label">Latest release</span><span class="stat-value mono" id="updateLatest">Not checked</span></div>
+                    <div class="stat-item"><span class="stat-label">Last checked</span><span class="stat-value" id="updateChecked">—</span></div>
+                    <div class="stat-item"><span class="stat-label">License</span><span class="stat-value">AGPL-3.0</span></div>
+                </div>
+                <div class="btn-row about-links">
+                    <a class="btn" href="https://github.com/w3bgr3p/z3nDash" target="_blank" rel="noopener noreferrer">Source code</a>
+                    <a class="btn" href="https://github.com/w3bgr3p/z3nDash/releases" target="_blank" rel="noopener noreferrer">Release notes</a>
+                </div>
+            </section>
+            <section class="card config-card">
+                <div class="card-hdr"><h2>Updates</h2></div>
+                <label class="about-auto"><input type="checkbox" id="updateAutomatic" onchange="AboutUpdates.setAutomatic(this.checked)"> Automatically check and download updates</label>
+                <p class="page-sub">Checks on startup and every 6 hours. Updates are prepared separately while your tasks keep running. A prepared version is applied at your next manual start.</p>
+                <p id="updateStatus" role="status" aria-live="polite">Loading update status…</p>
+                <progress id="updateProgress" class="about-progress" hidden aria-label="Update download progress"></progress>
+                <p id="updateRestart" class="about-restart" role="status" hidden></p>
+                <p id="updateError" class="about-error" role="alert" hidden></p>
+                <div class="btn-row">
+                    <button class="btn" id="updateCheck" type="button" onclick="AboutUpdates.action('check')">Check for updates</button>
+                    <button class="btn primary" id="updateInstall" type="button" onclick="AboutUpdates.action('install')" disabled>Download update</button>
+                </div>
+            </section>
+        </section>
         <section class="cfg-sec" data-sec="remote-tasker" hidden>
             <section class="card config-card">
                 <h2>Remote Tasker · Server</h2>
@@ -478,6 +507,7 @@
 
 <script src="/js/bridge-connection-code.js?v=1"></script>
 <script src="/js/bridge-config.js?v=20261015-key-cleanup"></script>
+<script src="/js/about-updates.js"></script>
 <script src="/js/config.js"></script>
 </body>
 </html>

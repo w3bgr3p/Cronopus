@@ -28,6 +28,7 @@
     </PropertyGroup>
 
     <ItemGroup>
+        <EmbeddedResource Include="App/Updates/apply-update.ps1" LogicalName="z3nDash.apply-update.ps1" />
         <None Update="sdk\python\*.py" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" ExcludeFromSingleFile="true" />
     </ItemGroup>
 
