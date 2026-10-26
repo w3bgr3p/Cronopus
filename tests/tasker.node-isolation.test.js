@@ -1,6 +1,6 @@
 const test=require('node:test'),assert=require('node:assert/strict'),fs=require('node:fs'),vm=require('node:vm');
 function tasker(){
-    const c={console,document:{addEventListener(){}},window:{addEventListener(){}},fetch:async()=>({ok:true,json:async()=>({Tasks:{}})}),setInterval(){},clearInterval(){},setTimeout,clearTimeout,URLSearchParams};
+    const c={console,document:{addEventListener(){}},window:{addEventListener(){}},fetch:()=>new Promise(()=>{}),setInterval(){},clearInterval(){},setTimeout,clearTimeout,URLSearchParams};
     vm.createContext(c);vm.runInContext(fs.readFileSync('wwwroot/js/tasker.js','utf8'),c);return c;
 }
 test('bulk mutation stops when the initiating node changes',async()=>{
@@ -14,7 +14,7 @@ test('From Script uses the Tasker transport and folder prompt exists',async()=>{
     const c=tasker();const calls=[];
     c.pmScheduleId='remote';c.taskDraft={id:'remote',executor:'python',script_path:'D:/server.py'};
     c.taskerFetch=async url=>{calls.push(url);return {ok:true,json:async()=>({ok:true,params:[]})};};
-    c._showPayloadTab=()=>{};c.Dialog.alert=()=>{};
+    c.renderPayloadFields=()=>{};c.Dialog.alert=()=>{};
     await c.importSchemaFromScript();
     assert.equal(calls.length,1);assert.match(calls[0],/server.py/);assert.equal(typeof c.Dialog.prompt,'function');
 });
@@ -33,6 +33,6 @@ test('payload from a previous node cannot open or save on the new node',async()=
     c.window.TaskerBridge={context:()=>({node}),isCurrent:x=>x.node===node};
     c.document.getElementById=()=>({classList:{add(){opened=true;},remove(){}},style:{}});
     c.taskerFetch=async(_url,options)=>{if(options){posts++;return;}return new Promise((_r,j)=>reject=j);};
-    const opening=c.openPayloadModal('same-id','A payload');node='B';reject(Object.assign(new Error('Node changed'),{name:'AbortError'}));
+    const opening=c.openPayloadEditor('same-id','A payload');node='B';reject(Object.assign(new Error('Node changed'),{name:'AbortError'}));
     await opening;await c.savePayload();assert.equal(opened,false);assert.equal(posts,0);
 });

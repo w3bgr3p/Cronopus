@@ -121,7 +121,7 @@ function onListKeyDown(e) {
     if (e.key !== 'Delete' || e.ctrlKey || e.altKey || e.metaKey || e.shiftKey) return;
     var t = e.target;
     if (t && (t.isContentEditable || /^(INPUT|TEXTAREA|SELECT)$/.test(t.tagName))) return;
-    if (document.querySelector('#dialogOverlay.open, .pm-overlay.open, .cm-modal-overlay.open, .br-connection-overlay, .br-file-overlay')) return;
+    if (document.querySelector('#dialogOverlay.open, .cm-modal-overlay.open, .br-connection-overlay, .br-file-overlay')) return;
     if (!selectedId || selectedId === '__new__') return;
     var ids = _selectedList().map(function(s) { return s.id; });
     if (!ids.length) return;
@@ -133,6 +133,7 @@ function onListKeyDown(e) {
 
 function taskerFetch(url, options) { return window.TaskerBridge ? window.TaskerBridge.fetch(url, options) : fetch(url, options); }
 function resetTaskerNode() {
+    resetPayloadEditor();
     _scheduleAction = null;
     _renderScheduleAction();
     _resources=null;_instCache={};_commandCache=Object.create(null);_selAnchor=null;curProject='';curTaskId='';curRunId='';_outputTaskId=null;
@@ -512,6 +513,7 @@ function _saveLabel() {
 
 function deselect() {
     if (!selectedId) return;
+    resetPayloadEditor();
     selectedIds = new Set();
     selectedId = null;
     taskDraft = null;
@@ -635,7 +637,7 @@ async function selectRow(id, keepSelection, initialTab) {
         } catch(e) { if (e.name !== 'AbortError') window.TaskerBridge.status(e.message); return; }
     }
     if (selectedId === id) captureTaskDraft();
-    else { taskDraft = null; formDirty = false; _formBaseline = {}; }
+    else { resetPayloadEditor(); taskDraft = null; formDirty = false; _formBaseline = {}; }
     if (!keepSelection) selectedIds = new Set([id]);
     selectedIds.add(id);
     selectedId = id;
@@ -692,9 +694,6 @@ function renderDetailActions(s) {
         + '<button class="btn danger sm" title="Eliminate' + onTitle + '" onclick="' + (many ? 'deleteSelected()' : 'deleteSchedule(\'' + id + '\',\'' + escHtml(s.name || '') + '\')') + '">🗑' + suffix + '</button>'
         + '<button class="btn sm" onclick="duplicateSchedule(\'' + id + '\')" style="border-color:var(--yellow);color:var(--yellow);">📋📋</button>'
         + (!(window.TaskerBridge && window.TaskerBridge.remote()) ? '<button class="btn sm" title="Upload task to a connected server" onclick="uploadSchedule(\'' + id + '\')">↑ Upload</button>' : '')
-        + '</div>'
-        + '<div class="action-group">'
-        + '<button class="btn green sm" title="Payload: values, schema, import, export" onclick="openPayloadModal(\'' + id + '\',\'' + escHtml(s.name || '') + '\')">⚙ Payload</button>'
         + '</div>'
         + '<div class="action-group">'
         
@@ -946,6 +945,7 @@ function showBottomPanels(s) {
 
 function renderDetail(s) {
     if      (activeTab === 'settings') renderSettings(s);
+    else if (activeTab === 'payload') renderPayloadTab(s);
     else if (activeTab === 'schedule') renderSchedule(s);
     else if (activeTab === 'traffic')  renderTrafficTab(s);
     else                               renderExecution(s);
@@ -989,6 +989,8 @@ function renderTrafficTab(s) {
 }
 
 function switchTab(tab) {
+    if (activeTab === 'payload') _collectValues();
+    pmSequence++;
     captureTaskDraft();
     activeTab = tab;
     setActiveTab(tab);
@@ -2880,7 +2882,7 @@ var Dialog = {
     },
 };
 
-// ── Payload modals ────────────────────────────────────────────────────────────
+// ── Payload tab ───────────────────────────────────────────────────────────────
 
 var pmScheduleId = null;
 var pmSchema     = [];
@@ -2908,20 +2910,36 @@ async function _loadPayload(id) {
     } catch(e) { if(e.name==='AbortError')return false;pmSchema = []; pmValues = {}; }
 }
 
-var pmTab = 'values';
 var pmPreviewTimer = null;
+var pmScriptPath = null;
+var pmLoaded = false;
 
-async function openPayloadModal(id, name) {
+async function renderPayloadTab(s) {
+    var body = document.getElementById('detailBody');
+    if (pmLoaded && pmScheduleId === s.id && pmScriptPath === s.script_path && document.getElementById('payloadEditor')) return;
+    body.innerHTML = document.getElementById('payloadTemplate').innerHTML;
+    var editor = document.getElementById('payloadEditor');
+    editor.querySelectorAll('button').forEach(function(button) { button.disabled = true; });
+    await openPayloadEditor(s.id);
+    if (pmLoaded && document.getElementById('payloadEditor') === editor) {
+        editor.querySelectorAll('button').forEach(function(button) { button.disabled = false; });
+    }
+}
+
+async function openPayloadEditor(id) {
+    var s = taskDraft || schedules.find(function(x) { return x.id === id; }) || {};
+    var cached = pmLoaded && pmScheduleId === id && pmScriptPath === s.script_path;
+    pmLoaded = false;
     var context=_taskerContext(),sequence=++pmSequence;pmContext=context;
     pmScheduleId = id;
-    if(await _loadPayload(id)===false||!_taskerCurrent(context)||sequence!==pmSequence)return;
-    document.getElementById('payloadTitle').textContent = 'Payload: ' + (name || id);
+    pmScriptPath = s.script_path;
+    if(!cached && (await _loadPayload(id)===false||!_taskerCurrent(context)||sequence!==pmSequence)) { if (sequence === pmSequence) resetPayloadEditor(); return; }
+    pmLoaded = true;
     document.getElementById('payloadImport').style.display = 'none';
-    document.getElementById('payloadOverlay').classList.add('open');
     vmActiveTab = 0;
-    _showPayloadTab('values');
+    renderPayloadFields();
 }
-function closePayloadModal() { pmSequence++;pmScheduleId=null;pmContext=null;if(pmPreviewTimer)clearTimeout(pmPreviewTimer);document.getElementById('payloadOverlay').classList.remove('open'); }
+function resetPayloadEditor() { pmSequence++;pmScheduleId=null;pmContext=null;pmScriptPath=null;pmLoaded=false;if(pmPreviewTimer)clearTimeout(pmPreviewTimer); }
 
 function _collectValues() {
     document.querySelectorAll('#valuesBody [data-vkey]').forEach(function(el) {
@@ -2930,18 +2948,9 @@ function _collectValues() {
     });
 }
 
-function pmSwitch(tab) {
-    if (pmTab === 'values') _collectValues();
-    _showPayloadTab(tab);
-}
-
-function _showPayloadTab(tab) {
-    pmTab = tab;
-    document.getElementById('valuesBody').style.display = tab === 'values' ? '' : 'none';
-    document.getElementById('schemaBody').style.display = tab === 'schema' ? '' : 'none';
-    document.getElementById('payloadTabValues').classList.toggle('active', tab === 'values');
-    document.getElementById('payloadTabSchema').classList.toggle('active', tab === 'schema');
-    if (tab === 'values') renderValues(); else renderConstructor();
+function renderPayloadFields() {
+    renderValues();
+    renderConstructor();
     refreshPayloadPreview();
 }
 
@@ -2955,20 +2964,22 @@ async function _loadPayloadPreview() {
     pmPreviewTimer = null;
     var el = document.getElementById('payloadPreview');
     if (!el || !pmScheduleId || !_taskerCurrent(pmContext)) return;
+    var sequence = pmSequence;
     try {
         var res  = await taskerFetch('/tasker/args-preview', { method:'POST', headers:{'Content-Type':'application/json'},
             body: JSON.stringify({id:pmScheduleId, schema:JSON.stringify(pmSchema), values:JSON.stringify(pmValues)}) });
         var data = await res.json();
+        if (sequence !== pmSequence || document.getElementById('payloadPreview') !== el) return;
         if (!data.ok) { el.textContent = '[' + (data.step || 'error') + '] ' + (data.error || ''); return; }
         var text = data.command || data.note || '';
         (data.skipped || []).forEach(function(f) { text += '\n' + f + ' skipped: set in Args'; });
         el.textContent = text;
-    } catch(e) { el.textContent = e.message; }
+    } catch(e) { if (sequence === pmSequence) el.textContent = e.message; }
 }
 
 async function savePayload() {
-    if (!pmScheduleId||!_taskerCurrent(pmContext)) return;
-    if (pmTab === 'values') _collectValues();
+    if (!pmLoaded||!pmScheduleId||!_taskerCurrent(pmContext)) return;
+    _collectValues();
     for (var i = 0; i < pmSchema.length; i++) {
         var f = pmSchema[i];
         if (f.type !== 'section' && f.type !== 'html' && f.type !== 'tab' && !(f.key || '').trim()) { Dialog.error('Field #'+(i+1)+' must have a key.'); return; }
@@ -2980,7 +2991,6 @@ async function savePayload() {
         taskDraft.payload_schema = schema;
         taskDraft.payload_values = values;
         formDirty = true;
-        closePayloadModal();
         return;
     }
     try {
@@ -2988,7 +2998,6 @@ async function savePayload() {
         var data = await res.json();
         if (!res.ok || !data.ok) { Dialog.error(data.error || 'Save failed'); return; }
         payloadSaved(id, schema, values);
-        if (pmScheduleId === id) closePayloadModal();
     } catch(e) { Dialog.error(e.message); }
 }
 
@@ -3020,11 +3029,11 @@ function applyPayloadImport() {
         pmValues = parsed.values ? JSON.parse(parsed.values) : {};
     } catch(e) { Dialog.error('Invalid JSON: ' + e.message); return; }
     document.getElementById('payloadImport').style.display = 'none';
-    _showPayloadTab(pmTab);
+    renderPayloadFields();
 }
 
 async function exportPayload() {
-    if (pmTab === 'values') _collectValues();
+    _collectValues();
     try {
         await navigator.clipboard.writeText(JSON.stringify({ schema:JSON.stringify(pmSchema), values:JSON.stringify(pmValues) }, null, 2));
         Dialog.alert('Payload JSON copied to clipboard.', 'Exported');
@@ -3043,7 +3052,7 @@ async function clearPayload() {
         var data = await res.json();
         if (!res.ok || !data.ok) { Dialog.error(data.error || 'Clear failed'); return; }
         payloadSaved(id, '', '');
-        closePayloadModal();
+        if (pmScheduleId === id) { pmSchema = []; pmValues = {}; renderPayloadFields(); }
     } catch(e) { Dialog.error(e.message); }
 }
 
@@ -3094,6 +3103,7 @@ function schemaFromScriptParams(schema, values, params) {
 // Заполняет только окно; в БД схема попадает по Save.
 async function importSchemaFromScript() {
     if (!pmScheduleId) return;
+    var sequence = pmSequence;
     var id = pmScheduleId;
     var draft = taskDraft && taskDraft.id === id ? taskDraft : null;
     var data;
@@ -3104,13 +3114,13 @@ async function importSchemaFromScript() {
         var res = await taskerFetch(url);
         data = await res.json();
     } catch(e) { Dialog.error(e.message); return; }
-    if (pmScheduleId !== id || (draft && taskDraft && taskDraft.script_path !== draft.script_path)) return;
+    if (sequence !== pmSequence || pmScheduleId !== id || (draft && taskDraft && taskDraft.script_path !== draft.script_path)) return;
     if (!res.ok || !data.ok) { Dialog.error('[' + (data.step || 'error') + '] ' + (data.error || '')); return; }
 
     var r = schemaFromScriptParams([], {}, data.params);
     pmSchema = r.schema;
     pmValues = r.values;
-    _showPayloadTab(pmTab);
+    renderPayloadFields();
 
     var lines = ['Added: ' + (r.added.length ? r.added.join(' ') : 'nothing')];
     if (r.skipped.length) lines.push('Skipped:\n' + r.skipped.join('\n'));
@@ -3153,7 +3163,7 @@ function renderConstructor() {
     }).join('');
     body.innerHTML = (pmSchema.length ? '<div class="schema-col-header"><span></span><span>Key</span><span>Type</span><span>Label / Options</span><span>Empty</span><span></span></div>' : '')
         + rows
-        + '<div style="margin-top:10px;display:flex;gap:6px">'
+        + '<div class="schema-actions">'
         + '<button class="btn sm" onclick="pmSchemaAdd(\'text\')">+ Field</button>'
         + '<button class="btn sm accent" onclick="pmSchemaAdd(\'section\')">+ Section</button>'
         + '<button class="btn sm" onclick="pmSchemaAdd(\'html\')">+ HTML</button>'
@@ -3164,12 +3174,13 @@ function renderConstructor() {
 }
 function pmSchemaUpdate(idx, prop, val) {
     if (!pmSchema[idx]) return;
+    _collectValues();
     pmSchema[idx][prop] = val;
     if (prop === 'type' && (val === 'section' || val === 'html' || val === 'tab')) pmSchema[idx].key = '';
-    refreshPayloadPreview();
+    renderValues(); refreshPayloadPreview();
 }
-function pmSchemaAdd(type)   { pmSchema.push({key:'',label:'',type:type||'text',options:''}); renderConstructor(); refreshPayloadPreview(); }
-function pmSchemaRemove(idx) { pmSchema.splice(idx, 1); renderConstructor(); refreshPayloadPreview(); }
+function pmSchemaAdd(type)   { _collectValues(); pmSchema.push({key:'',label:'',type:type||'text',options:''}); renderPayloadFields(); }
+function pmSchemaRemove(idx) { _collectValues(); pmSchema.splice(idx, 1); renderPayloadFields(); }
 
 var _dragSrcIdx = null;
 function _bindSchemaDrag(container) {
@@ -3177,7 +3188,7 @@ function _bindSchemaDrag(container) {
         row.addEventListener('dragstart', function(e) { _dragSrcIdx = parseInt(row.dataset.idx); row.classList.add('dragging'); e.dataTransfer.effectAllowed = 'move'; });
         row.addEventListener('dragend',   function()  { row.classList.remove('dragging'); container.querySelectorAll('.schema-field-row').forEach(function(r) { r.classList.remove('drag-over'); }); });
         row.addEventListener('dragover',  function(e) { e.preventDefault(); e.dataTransfer.dropEffect = 'move'; container.querySelectorAll('.schema-field-row').forEach(function(r) { r.classList.remove('drag-over'); }); row.classList.add('drag-over'); });
-        row.addEventListener('drop',      function(e) { e.preventDefault(); var targetIdx = parseInt(row.dataset.idx); if (_dragSrcIdx === null || _dragSrcIdx === targetIdx) return; pmSchema.splice(targetIdx, 0, pmSchema.splice(_dragSrcIdx, 1)[0]); _dragSrcIdx = null; renderConstructor(); });
+        row.addEventListener('drop',      function(e) { e.preventDefault(); var targetIdx = parseInt(row.dataset.idx); if (_dragSrcIdx === null || _dragSrcIdx === targetIdx) return; _collectValues(); pmSchema.splice(targetIdx, 0, pmSchema.splice(_dragSrcIdx, 1)[0]); _dragSrcIdx = null; renderPayloadFields(); });
     });
 }
 
@@ -3222,7 +3233,7 @@ function renderFieldHtml(f) {
 var vmActiveTab = 0;
 function renderValues() {
     var body = document.getElementById('valuesBody');
-    if (!pmSchema.length) { body.innerHTML = '<div style="color:var(--text2);font-size:11px;padding:12px 0">No fields. Add them on the Schema tab.</div>'; return; }
+    if (!pmSchema.length) { body.innerHTML = '<div class="pm-hint">No fields. Add them in the Schema column.</div>'; return; }
     var groups = [], current = {label:null, fields:[]};
     pmSchema.forEach(function(f) {
         if (f.type === 'tab') { groups.push(current); current = {label:f.label||('Tab '+(groups.length+1)), fields:[]}; }

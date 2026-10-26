@@ -16,7 +16,7 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.17/mode/python/python.min.js"></script>
 
     <title>z3nDash | Tasker</title>
-    <link rel="stylesheet" href="/css/tasker.css?v=20261026-server-tools">
+    <link rel="stylesheet" href="/css/tasker.css?v=20261026-payload-tab">
     <link rel="stylesheet" href="/css/overview.css">
 </head>
 <body>
@@ -61,6 +61,7 @@
                     <div class="detail-tabs">
                         <div class="dtab active" data-tab="execution" onclick="switchTab('execution')">Execution</div>
                         <div class="dtab"        data-tab="settings"  onclick="switchTab('settings')">Settings</div>
+                        <div class="dtab"        data-tab="payload"   onclick="switchTab('payload')">Payload</div>
                         <div class="dtab"        data-tab="schedule"  onclick="switchTab('schedule')">Schedule</div>
                         <div class="dtab"        data-tab="traffic"   onclick="switchTab('traffic')">Traffic</div>
                     </div>
@@ -109,16 +110,19 @@
     </div>
 </div>
 
-<!-- Payload modal -->
-<div id="payloadOverlay" class="pm-overlay" onclick="if(event.target===this)closePayloadModal()">
-    <div class="pm-modal">
-        <div class="pm-header"><h3 id="payloadTitle">Payload</h3><button class="pm-close" onclick="closePayloadModal()">✕</button></div>
-        <div class="pm-tabs">
-            <button class="pm-tab active" id="payloadTabValues" onclick="pmSwitch('values')">Values</button>
-            <button class="pm-tab" id="payloadTabSchema" onclick="pmSwitch('schema')">Schema</button>
+<!-- Payload detail tab -->
+<template id="payloadTemplate">
+    <div class="payload-editor" id="payloadEditor">
+        <div class="payload-columns">
+            <section class="payload-column" aria-label="Values">
+                <h3 class="payload-column-title">Values</h3>
+                <div class="pm-body" id="valuesBody"></div>
+            </section>
+            <section class="payload-column" aria-label="Schema">
+                <h3 class="payload-column-title">Schema</h3>
+                <div class="pm-body" id="schemaBody"></div>
+            </section>
         </div>
-        <div class="pm-body" id="valuesBody"></div>
-        <div class="pm-body" id="schemaBody" style="display:none"></div>
         <div class="pm-import" id="payloadImport" style="display:none">
             <div class="pm-hint">Paste <code>{"schema":"...","values":"..."}</code></div>
             <textarea id="importPayloadInput" placeholder='{"schema":"[...]","values":"{...}"}'></textarea>
@@ -130,11 +134,11 @@
             <button class="btn sm" onclick="exportPayload()">📤 Export</button>
             <button class="btn sm danger" onclick="clearPayload()">🗑 Clear</button>
             <span class="pm-footer-gap"></span>
-            <button class="btn" onclick="closePayloadModal()">Cancel</button>
+            <button class="btn" onclick="resetPayloadEditor();renderPayloadTab(taskDraft || schedules.find(function(s){return s.id===selectedId;}))">Cancel</button>
             <button class="btn primary" onclick="savePayload()">Save</button>
         </div>
     </div>
-</div>
+</template>
 
 <!-- CodeMirror config modal -->
 <div id="cmOverlay" class="cm-modal-overlay" onclick="if(event.target===this)closeCmModal()">
@@ -154,11 +158,11 @@
 <script src="/js/logline.js?v=1"></script>
 <script src="/js/bridge-connection-code.js?v=1"></script>
 <script src="/js/tasker-connection.js?v=20261015-code"></script>
-<script src="/js/tasker-transport.js"></script>
+<script src="/js/tasker-transport.js?v=20261026-payload-tab"></script>
 <script src="/js/tasker-file-editor.js"></script>
 <script src="/js/tasker-files.js?v=20261026-server-tools"></script>
 <script src="/js/tasker-upload.js"></script>
 <script src="/js/tasker-remote-output.js"></script>
-<script src="/js/tasker.js?v=20261026-machine-resources"></script>
+<script src="/js/tasker.js?v=20261026-payload-tab"></script>
 </body>
 </html>

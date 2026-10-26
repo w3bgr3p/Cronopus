@@ -134,7 +134,7 @@
         if(typeof root.stopProcStatsPoll==='function')root.stopProcStatsPoll();
         if(typeof root.clearOutputPoll==='function')root.clearOutputPoll();
         transport.selectNode(id);details.clear();listCache=null;changeCursor=null;listPromise=null;
-        if(root.closePayloadModal)root.closePayloadModal();
+        if(root.resetPayloadEditor)root.resetPayloadEditor();
         runtimeCursors.clear();
         root.dispatchEvent(new CustomEvent('bridge-node-changed'));
         root.selectedId=null;root.selectedIds=new Set();root.taskDraft=null;root.formDirty=false;root.schedules=[];
