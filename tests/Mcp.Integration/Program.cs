@@ -46,6 +46,28 @@ try
     Check((await client.ReadResourceAsync("z3ndash://docs/mcp")).Contents.OfType<TextResourceContents>().Single().Text.Contains("run_task"), "resource content missing");
     Console.WriteLine("PASS MCP handshake, catalog, schemas, tools and resources");
 
+    // Queue must round-trip in the scheduler's storage format, including clones of get_task output.
+    foreach (var policy in new[] { "parallel", "queue" })
+    {
+        var overlapTask = await Call(client, "create_task", new { settings = new {
+            name = "mcp overlap " + policy, executor = "cmd", script_path = "echo overlap", on_overlap = policy } });
+        var overlapId = overlapTask.GetProperty("id").GetString()!;
+        var overlapDetail = await Call(client, "get_task", new { id = overlapId });
+        Check(overlapDetail.GetProperty("on_overlap").GetString() == "parallel", "Queue creation did not save scheduler policy");
+        foreach (var updatePolicy in new[] { "skip", "parallel", "kill_restart", "queue" })
+        {
+            await Call(client, "update_task", new { id = overlapId,
+                revision = overlapDetail.GetProperty("_revision").GetString(), settings = new { on_overlap = updatePolicy } });
+            overlapDetail = await Call(client, "get_task", new { id = overlapId });
+            Check(overlapDetail.GetProperty("on_overlap").GetString() == (updatePolicy == "queue" ? "parallel" : updatePolicy),
+                "Overlap update did not save scheduler policy: " + updatePolicy);
+        }
+        await Call(client, "update_task", new { id = overlapId,
+            revision = overlapDetail.GetProperty("_revision").GetString(), settings = new { on_overlap = "invalid" } }, "invalid_argument");
+        await Call(client, "delete_task", new { id = overlapId, revision = overlapDetail.GetProperty("_revision").GetString() });
+    }
+    Console.WriteLine("PASS Queue create/update round-trip and alias normalization; invalid overlap rejected");
+
     var created = await Call(client, "create_task", new { settings = new { name = "mcp smoke тест", executor = "cmd", script_path = "echo MCP-SMOKE-OK" } });
     var id = created.GetProperty("id").GetString()!;
     var detail = (await Call(client, "get_task", new { id }));

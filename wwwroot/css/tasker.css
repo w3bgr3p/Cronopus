@@ -131,10 +131,11 @@ select.form-input { cursor: pointer; }
 #instancesCard { display: flex; flex-direction: column; min-height: 0; }
 #instancesCard .inst-list { flex: 1; min-height: 0; max-height: none; align-content: start; }
 .inst-count    { color: var(--text2); margin-left: var(--sp-4); }
-.inst-list     { display: grid; grid-template-columns: repeat(auto-fill, minmax(210px, 1fr)); gap: var(--sp-2) var(--sp-20); max-height: 180px; overflow-y: auto; }
-.inst-row      { display: flex; align-items: center; gap: var(--sp-6); font-size: var(--fs-10); }
-.inst-id       { font-family: var(--mono); color: var(--accent); }
-.inst-meta     { color: var(--text2); white-space: nowrap; min-width: 13ch; font-variant-numeric: tabular-nums; }
+.inst-list     { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 290px), 1fr)); gap: var(--sp-2) var(--sp-20); max-height: 180px; overflow-y: auto; }
+.inst-row      { display: flex; align-items: center; gap: var(--sp-6); font-size: var(--fs-10); min-width: 0; }
+.inst-id       { font-family: var(--mono); color: var(--accent); flex-shrink: 0; }
+.inst-meta     { color: var(--text2); min-width: 0; flex: 1; overflow-wrap: anywhere; font-variant-numeric: tabular-nums; }
+.inst-row > .btn { flex-shrink: 0; }
 .info-row { display: flex; justify-content: space-between; align-items: baseline; padding: var(--sp-2) 0; border-bottom: 1px solid var(--border); }
 .info-row:last-child { border-bottom: none; }
 .info-key { font-size: var(--fs-10); color: var(--text2); }
@@ -346,3 +347,14 @@ body[data-remote="true"] [onclick="clearOutputBottom()"] { display:none; }
 .br-connection-dialog .btn.primary { color:var(--on-accent); }
 .br-connection-dialog .br-connection-error { color:var(--red);min-height:var(--sp-16); }
 .br-connection-dialog .br-connection-error[data-valid-code="true"] { color:var(--green); }
+.schedule-action-status {
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+    max-height: 140px;
+    overflow-y: auto;
+    margin: var(--sp-4) 0;
+    padding: var(--sp-4) var(--sp-8);
+    border: 1px solid var(--border);
+    background: var(--bg2);
+    color: var(--text2);
+}

@@ -117,7 +117,9 @@ Creation requires name/executor/script_path. Updates change only supplied fields
 Saving an enabled task whose schedule is due can start it immediately.
 
 `schedule_mode`: off, cron, zp. Read the Tasker guide before using ZP schedules.
-`on_overlap`: skip, queue, kill_restart. The last policy terminates prior work.
+`on_overlap`: skip, parallel (Queue in the UI), kill_restart. `queue` is also
+accepted and saved as `parallel`, which is the value returned by `get_task`.
+The last policy terminates prior work.
 Task definitions can execute arbitrary scripts, including network operations;
 write tools are intended for a trusted local MCP client with user authorization.
 There is no generic HTTP/SQL/terminal tool or credential-reading tool.

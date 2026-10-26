@@ -133,7 +133,9 @@ function onListKeyDown(e) {
 
 function taskerFetch(url, options) { return window.TaskerBridge ? window.TaskerBridge.fetch(url, options) : fetch(url, options); }
 function resetTaskerNode() {
-    _resources=null;_instCache={};_selAnchor=null;curProject='';curTaskId='';curRunId='';_outputTaskId=null;
+    _scheduleAction = null;
+    _renderScheduleAction();
+    _resources=null;_instCache={};_commandCache=Object.create(null);_selAnchor=null;curProject='';curTaskId='';curRunId='';_outputTaskId=null;
     collapsedGroups=new Set();_groupsInitialized=false;_dropOutputQueue();_resetRuns();_setLive(false);
     if(_liveSoon){clearTimeout(_liveSoon);_liveSoon=null;}
     _cmFilePath='';_cmScheduleId='';
@@ -675,7 +677,7 @@ function renderDetailActions(s) {
         + '<input type="number" class="form-input" id="runCount" value="' + escHtml(countVal) + '" min="1" max="' + MAX_BURST + '"'
         +   ' title="How many runs to queue. They start as threads free up." style="width:54px;text-align:center;padding:2px 4px">'
         + '<button class="btn primary sm" title="Run' + onTitle + '" onclick="' + (many ? 'runSelected()' : 'runNow(\'' + id + '\')') + '">' + runLabel + suffix + '</button>'
-        + (scheduled ? '<button class="btn sm" title="' + (anyOn ? 'Pause schedule' : 'Enable schedule') + (many ? ' — ' + schedSel.length + ' scheduled of ' + n + ' selected' : '') + '"'
+        + (scheduled ? '<button id="scheduleToggle" class="btn sm"' + (_scheduleAction && _scheduleAction.busy && _taskerCurrent(_scheduleAction.context) ? ' disabled' : '') + ' title="' + (anyOn ? 'Pause schedule (running instances continue; use Interrupt to stop them)' : 'Enable schedule') + (many ? ' — ' + schedSel.length + ' scheduled of ' + n + ' selected' : '') + '"'
             + ' onclick="' + (many ? 'toggleEnabledSelected()' : 'toggleEnabled(\'' + id + '\',\'' + (s.enabled || 'true') + '\')') + '">' + pauseLabel + '</button>' : '')
         + (held ? '<button class="btn sm" title="Clear script pause and deferral' + onTitle + '" onclick="' + (many ? 'resumeSelected()' : 'resumeSchedule(\'' + id + '\')') + '">Resume schedule</button>' : '')
         + '<button class="btn sm" title="Restart' + onTitle + '" onclick="' + (many ? 'restartSelected()' : 'restartNow(\'' + id + '\')') + '" style="border-color:var(--yellow);color:var(--yellow);">↺</button>'
@@ -1012,6 +1014,7 @@ function stopProcStatsPoll() {
 }
 
 var _instCache = {};
+var _commandCache = Object.create(null);
 
 function renderExecution(s) {
     stopProcStatsPoll();
@@ -1034,7 +1037,7 @@ function renderExecution(s) {
         '<div class="detail-grid">'
         + '<div class="detail-section">'
         + '<div class="info-card-title">Execution</div>'
-        + infoRow('Command', '<code id="executionCommand" style="white-space:pre-wrap;overflow-wrap:anywhere;user-select:text">Loading…</code>')
+        + infoRow('Command', '<code id="executionCommand" style="white-space:pre-wrap;overflow-wrap:anywhere;user-select:text">' + escHtml(_commandCache[s.id] || 'Loading…') + '</code>')
         + infoRow('Status',     '<span class="' + (isRunning ? 'green' : status === 'error' ? 'red' : '') + '">' + status + '</span>')
         + infoRow('Is Working', isRunning ? '<span class="green">Yes</span>' : 'No')
         + infoRow('Done',       '<span class="green">' + done + '</span>')
@@ -1126,6 +1129,7 @@ async function refreshExecutionCommand(id) {
         var data = await res.json();
         if (selectedId !== id || activeTab !== 'execution' || document.getElementById('executionCommand') !== el) return;
         el.textContent = data.ok ? (data.command || data.note || '—') : (data.error || 'Cannot build command');
+        _commandCache[id] = el.textContent;
     } catch(e) {
         if (document.getElementById('executionCommand') === el) el.textContent = e.message;
     }
@@ -2419,12 +2423,82 @@ async function openScriptFolder(filePath) {
     } catch(e) { Dialog.error(e.message); }
 }
 
+var _scheduleAction = null;
+function _renderScheduleAction() {
+    var state = _scheduleAction;
+    if (state && !_taskerCurrent(state.context)) return;
+    var el = document.getElementById('scheduleActionStatus');
+    if (el) {
+        el.hidden = !state;
+        el.textContent = state ? state.text + (state.busy ? ' · ' + Math.floor((Date.now() - state.started) / 1000) + 's elapsed' : '') : '';
+        el.style.color = state && state.error ? 'var(--red)' : 'var(--text2)';
+    }
+    var button = document.getElementById('scheduleToggle');
+    if (button) button.disabled = !!(state && state.busy);
+}
+
+async function _setScheduleEnabled(list, target) {
+    if (!list.length || (_scheduleAction && _scheduleAction.busy && _taskerCurrent(_scheduleAction.context))) return;
+    var state = { context: _taskerContext(), busy: true, started: Date.now(), text: '', error: false };
+    _scheduleAction = state;
+    var label = target === 'false' ? 'Pause schedule' : 'Enable schedule';
+    var confirmed = 0, attempted = 0, failed = [], remote = window.TaskerBridge && window.TaskerBridge.remote();
+    var timer = setInterval(_renderScheduleAction, 1000);
+    try {
+        for (var i = 0; i < list.length; i++) {
+            if (!_taskerCurrent(state.context)) return;
+            var task = list[i], response = null, stop = false;
+            state.text = label + ': ' + (i + 1) + '/' + list.length + ' · ' + (task.name || task.id) + ' · waiting for response';
+            _renderScheduleAction();
+            attempted++;
+            try {
+                var body = { id: task.id, enabled: target };
+                if (task._revision) body._revision = task._revision;
+                response = await taskerFetch('/tasker/save', { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify(body) });
+                stop = remote && (response.status === 202 || response.status >= 500 || response.status === 401 || response.status === 403);
+                var data;
+                try { data = await response.json(); }
+                catch (e) { stop = remote; throw new Error('Invalid server response (HTTP ' + response.status + '); command result is unconfirmed'); }
+                if (!_taskerCurrent(state.context)) return;
+                if (!response.ok || data.ok === false || response.status === 202) throw new Error(data.error || 'HTTP ' + response.status);
+                confirmed++;
+            } catch (e) {
+                if (!_taskerCurrent(state.context)) return;
+                failed.push((task.name || task.id) + ': ' + e.message);
+                // A broken connection must not cost one full timeout per remaining task.
+                if (remote && (!response || stop)) {
+                    failed.push('Batch stopped. ' + (list.length - attempted) + ' not sent. Check commands before repeating an unconfirmed command.');
+                    break;
+                }
+            }
+        }
+        if (!_taskerCurrent(state.context)) return;
+        state.busy = false;
+        state.error = failed.length > 0;
+        state.text = label + ': ' + confirmed + '/' + list.length + ' confirmed.'
+            + (target === 'false' ? ' Running instances continue; use Interrupt to stop them.' : '')
+            + (failed.length ? '\n' + failed.join('\n') : '');
+        _renderScheduleAction();
+        _reportFailed(label, failed);
+        try { await loadList(); }
+        catch (e) {
+            if (_taskerCurrent(state.context)) {
+                state.error = true;
+                state.text += '\nTask list could not be refreshed; displayed state may be stale: ' + e.message;
+            }
+        }
+    } finally {
+        clearInterval(timer);
+        state.busy = false;
+        if (_scheduleAction === state && _taskerCurrent(state.context)) _renderScheduleAction();
+    }
+}
+
 async function toggleEnabled(id, current) {
     var newVal = current === 'true' ? 'false' : 'true';
     var s = schedules.find(function(x) { return x.id === id; });
     if (!s) return;
-    await taskerFetch('/tasker/save', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(Object.assign({}, s, {enabled: newVal})) });
-    await loadList();
+    await _setScheduleEnabled([s], newVal);
 }
 
 async function resetAttempts() {
@@ -2634,10 +2708,7 @@ async function toggleEnabledSelected() {
     var list = _selectedList().filter(function(s) { return (s.schedule_mode || 'off') !== 'off'; });
     if (!list.length) return;
     var target = list.some(function(s) { return s.enabled !== 'false'; }) ? 'false' : 'true';
-    var failed = await _forSelected(list.filter(function(s) { return (s.enabled === 'false' ? 'false' : 'true') !== target; }),
-        '/tasker/save', function(s) { return { id: s.id, enabled: target }; });
-    await loadList();
-    _reportFailed(target === 'false' ? 'Not paused' : 'Not enabled', failed);
+    await _setScheduleEnabled(list.filter(function(s) { return (s.enabled === 'false' ? 'false' : 'true') !== target; }), target);
 }
 
 async function resumeSelected() {
