@@ -187,15 +187,19 @@ function updateHeaderStats() {
         return (s.schedule_mode || 'off') !== 'off' && s.enabled !== 'false';
     }).length;
     var res = _resources;
+    var machine = res && res.Machine;
+    var machineCpu = machine && Number.isFinite(machine.CpuPct) && machine.CpuPct >= 0 ? machine.CpuPct.toFixed(1) + '%' : '—';
+    var machineRam = machine && machine.TotalMemoryMB > 0 ? fmtMB(machine.MemoryMB) + ' / ' + fmtMB(machine.TotalMemoryMB) : '—';
     document.getElementById('headerStats').innerHTML =
         '<div class="stat-item">Tasks: <span class="stat-val">' + total + '</span></div>' +
         '<div class="stat-item">Running: <span class="stat-val stat-running">' + running + '</span></div>' +
         '<div class="stat-item">Scheduled: <span class="stat-val">' + enabled + '</span></div>' +
         (errors ? '<div class="stat-item">Errors: <span class="stat-val stat-error">' + errors + '</span></div>' : '') +
+        '<div class="stat-item" title="Total usage of the selected machine: all processes and the operating system. CPU is averaged between resource samples; — means unavailable or warming up.">Machine CPU: <span class="stat-val' + (machine && machine.CpuPct >= 90 ? ' stat-error' : '') + '">' + machineCpu + '</span> RAM: <span class="stat-val">' + machineRam + '</span></div>' +
         (res && res.Instances > 0
             ? '<div class="stat-item" title="Memory of all running task processes (with child processes), without z3nDash itself ('
                 + fmtMB(res.MasterMB) + ')' + (res.InProcessRuns ? '; ' + res.InProcessRuns + ' in-process run(s) not counted' : '') + '">'
-                + 'RAM: <span class="stat-val">' + fmtMB(res.MemoryMB) + '</span>'
+                + 'Tasker RAM: <span class="stat-val">' + fmtMB(res.MemoryMB) + '</span>'
                 + (res.CpuPct >= 0 ? ' CPU: <span class="stat-val">' + res.CpuPct.toFixed(1) + '%</span>' : '')
                 + ' <span style="opacity:.6">' + res.Instances + ' inst · ' + res.Processes + ' proc</span></div>'
             : '');
@@ -222,9 +226,11 @@ function taskMemText(id) {
 }
 
 function loadResources() {
+    var context = _taskerContext();
     taskerFetch('/tasker/resources')
-        .then(function(r) { return r.json(); })
+        .then(function(r) { if (r.ok === false) throw new Error('Resources unavailable'); return r.json(); })
         .then(function(d) {
+            if (!_taskerCurrent(context)) return;
             _resources = d;
             updateHeaderStats();
             document.querySelectorAll('[data-mem]').forEach(function(el) {
@@ -234,7 +240,7 @@ function loadResources() {
             var tot = document.getElementById('procTotalMem');
             if (tot) tot.textContent = taskMemText(selectedId) || '—';
             updateInstanceResources(selectedId);
-        }).catch(function() {});
+        }).catch(function() { if (_taskerCurrent(context)) { _resources = null; updateHeaderStats(); } });
 }
 
 function updateInstanceResources(id, fallback) {

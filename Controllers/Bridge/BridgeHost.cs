@@ -81,7 +81,7 @@ public sealed partial class BridgeHost(BridgeStore store, TaskerService tasker, 
             await ctx.Response.WriteAsJsonAsync(new { node_id = store.NodeId, api_version = 1,
                 version = typeof(BridgeHost).Assembly.GetName().Version!.ToString(), database_epoch = tasker.DatabaseEpoch,
                 time = DateTimeOffset.UtcNow, timezone = TimeZoneInfo.Utc.Id,
-                capabilities = new[] { "tasks", "payload", "schedules", "files", "output", "changes", "long-operations" }.Concat(OperatingSystem.IsWindows()?new[]{"uploads"}:Array.Empty<string>()),
+                capabilities = new[] { "tasks", "payload", "schedules", "files", "file-text", "output", "changes", "long-operations" }.Concat(OperatingSystem.IsWindows()?new[]{"uploads"}:Array.Empty<string>()),
                 limits = new { page = 500, json_bytes = 8388608, log_bytes = 262144, upload_bytes_per_second = store.State.Settings.TransferBytesPerSecond } }, ct); return;
         }
         await DispatchApi(ctx, key, ct);

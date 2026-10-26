@@ -27,6 +27,7 @@ public sealed partial class SchedulerService
         long MasterMB)
     {
         public Dictionary<string, List<InstanceResources>> InstanceDetails { get; init; } = new();
+        public MachineResources? Machine { get; init; }
     }
 
     private readonly object _resLock = new();
@@ -34,6 +35,7 @@ public sealed partial class SchedulerService
     private DateTime _resCachedAt;
     private Dictionary<int, ulong>? _prevCpu;
     private DateTime _prevCpuAt;
+    private readonly MachineResourceSampler _machineResources = new();
 
     /// <summary>
     /// Снимок берётся не чаще раза в 3 секунды: WMI-запрос по всем процессам
@@ -144,7 +146,7 @@ public sealed partial class SchedulerService
             tasks.Values.Sum(t => t.memoryMB),
             Pct(tasks.Values.Sum(t => t.cpuSec)),
             inProc,
-            master) { InstanceDetails = details };
+            master) { InstanceDetails = details, Machine = _machineResources.Sample() };
     }
 
     private sealed record ProcessTable(

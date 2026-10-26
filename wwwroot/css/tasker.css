@@ -9,10 +9,10 @@ body {
 }
 #app { width: 100%; display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
 
-.main-header { background: var(--bg1); padding: var(--sp-6) var(--sp-14); border-bottom: 1px solid var(--border); flex-shrink: 0; display: flex; align-items: center; gap: var(--sp-10); }
+.main-header { background: var(--bg1); padding: var(--sp-6) var(--sp-14); border-bottom: 1px solid var(--border); flex-shrink: 0; display: flex; align-items: center; gap: var(--sp-10); flex-wrap:wrap; }
 .main-header h1 { font-size: var(--fs-13); font-weight: var(--fw-bold); color: var(--accent); }
-.header-stats { display: flex; gap: var(--sp-14); font-size: var(--fs-10); color: var(--text2); }
-.stat-item { display: flex; gap: var(--sp-4); align-items: center; }
+.header-stats { display: flex; gap: var(--sp-4) var(--sp-14); font-size: var(--fs-10); color: var(--text2); flex-wrap:wrap; }
+.stat-item { display: flex; gap: var(--sp-4); align-items: center; flex-wrap:wrap; }
 .stat-val     { color: var(--text); font-weight: var(--fw-semi); }
 .stat-running { color: var(--green); }
 .stat-error   { color: var(--red); }
@@ -328,6 +328,13 @@ body[data-remote="true"] [onclick*="openScriptFile"],body[data-remote="true"] [o
 .br-file-list { min-height:200px;max-height:55vh;overflow:auto;border:1px solid var(--border); }
 .br-file-entry { display:block;width:100%;text-align:left;background:var(--bg1);color:var(--text);border:0;border-bottom:1px solid var(--border);padding:var(--sp-2);font:inherit;overflow-wrap:anywhere;cursor:pointer; }
 .br-file-entry:hover { background:var(--bg3); }
+.br-file-toolbar [aria-pressed="true"] { border-color:var(--accent);color:var(--accent); }
+.br-file-editor { z-index:2001; }
+.br-file-editor .br-file-dialog { width:min(1100px,95vw);height:85vh;min-height:0; }
+.br-editor-path { overflow-wrap:anywhere;color:var(--text); }
+.br-editor-info { color:var(--text2); }
+.br-file-editor textarea { flex:1;min-height:0;width:100%;box-sizing:border-box;resize:none;background:var(--bg2);color:var(--text);border:1px solid var(--border);border-radius:var(--radius-sm);padding:var(--sp-8);font:inherit;font-family:var(--mono);tab-size:4;white-space:pre;overflow:auto; }
+.br-file-editor [role="status"] { white-space:pre-wrap;overflow-wrap:anywhere; }
 .br-remote-only { display:none; }
 body[data-remote="true"] .br-remote-only { display:inline-flex; }
 #brTransfers { position:fixed;right:var(--sp-12);bottom:var(--sp-12);z-index:1500;width:min(420px,90vw);max-height:45vh;overflow:auto; }

@@ -16,7 +16,7 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.17/mode/python/python.min.js"></script>
 
     <title>z3nDash | Tasker</title>
-    <link rel="stylesheet" href="/css/tasker.css">
+    <link rel="stylesheet" href="/css/tasker.css?v=20261026-server-tools">
     <link rel="stylesheet" href="/css/overview.css">
 </head>
 <body>
@@ -27,6 +27,7 @@
         <span id="bridgeStatus" role="status">Local</span>
         <button class="btn sm br-remote-only" onclick="TaskerUpload.begin('file')">Upload file</button>
         <button class="btn sm br-remote-only" onclick="TaskerUpload.begin('folder')">Upload folder</button>
+        <button class="btn sm br-remote-only" onclick="TaskerFiles.open({mode:'edit'})">Edit server file</button>
         <button class="btn sm br-remote-only" onclick="TaskerBridge.recoverPending()">Check commands</button>
         <div class="header-stats" id="headerStats"></div>
         <div class="header-right">
@@ -154,9 +155,10 @@
 <script src="/js/bridge-connection-code.js?v=1"></script>
 <script src="/js/tasker-connection.js?v=20261015-code"></script>
 <script src="/js/tasker-transport.js"></script>
-<script src="/js/tasker-files.js"></script>
+<script src="/js/tasker-file-editor.js"></script>
+<script src="/js/tasker-files.js?v=20261026-server-tools"></script>
 <script src="/js/tasker-upload.js"></script>
 <script src="/js/tasker-remote-output.js"></script>
-<script src="/js/tasker.js?v=20261020-schedule-feedback"></script>
+<script src="/js/tasker.js?v=20261026-machine-resources"></script>
 </body>
 </html>

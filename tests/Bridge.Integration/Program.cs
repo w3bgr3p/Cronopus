@@ -7,8 +7,7 @@ if(args.Contains("--reset-attempts")){await ResetAttemptsCases.Run();return;}
 if(args.Contains("--firewall-live")){await FirewallCases.Live();return;}
 if(args.Contains("--load")){await LoadCases.Run(args.Contains("--quick")?1:15);return;}
 if(args.Contains("--public-ip")){await PublicAddressCases.Run(true);return;}
-await PublicAddressCases.Run();
-await FirewallCases.Run();
+if(!args.Contains("--file-text")){await PublicAddressCases.Run();await FirewallCases.Run();}
 if(args.Length>=2&&args[0]=="--setup-e2e"){PublishedFixture.Setup(args[1]);return;}
 
 var root = Path.Combine(Path.GetTempPath(), "z3ndash-bridge-tests", Guid.NewGuid().ToString("N"));
@@ -70,6 +69,8 @@ try
     Check((await anonymous.SendAsync(runRequest)).IsSuccessStatusCode, "pause API failed");
     var rootsResponse = await anonymous.GetAsync(new Uri(uri, "/bridge/v1/files/roots"));
     Check(rootsResponse.IsSuccessStatusCode, "server disk API unavailable");
+    await BridgeCases.FileText(root, anonymous, uri);
+    if(args.Contains("--file-text")){if(args.Contains("--serve"))await BrowserFixture.Serve(root,(BridgeStore)reopened,uri,(string)good.Secret);await host.StopAsync(CancellationToken.None);return;}
     var uploadDir = Path.Combine(root, "destination"); Directory.CreateDirectory(uploadDir);
     var bytes = new byte[] { 1, 2, 3, 4 };
     var manifest = JsonSerializer.Serialize(new { destination = uploadDir, directories = new[] { "empty" },

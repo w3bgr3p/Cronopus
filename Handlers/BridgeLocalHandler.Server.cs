@@ -34,6 +34,7 @@ public sealed partial class BridgeLocalHandler
         var allowed = api.StartsWith("tasker/") && TaskerService.RemoteRoutes.Contains(method + " /" + api)
             || api == "info" && method == "GET" || api is "tasks" or "changes" && method == "GET"
             || api is "files/roots" or "files/list" && method == "GET"
+            || api == "files/text" && method is "GET" or "PUT"
             || api == "files/directories" && method == "POST"
             || System.Text.RegularExpressions.Regex.IsMatch(api,"^tasks/[A-Za-z0-9_-]{1,128}/output(/stream)?$") && method == "GET"
             || System.Text.RegularExpressions.Regex.IsMatch(api,"^tasks/[A-Za-z0-9_-]{1,128}/(instances|queue)$") && method == "GET"

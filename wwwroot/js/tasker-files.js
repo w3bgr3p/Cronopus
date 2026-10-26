@@ -13,8 +13,11 @@
         return new Promise(function(resolve){
             var overlay=document.createElement('div');overlay.className='br-file-overlay';
             overlay.innerHTML='<div class="br-file-dialog"><h3></h3><div class="br-file-toolbar"><button class="btn" data-root>Disks</button><button class="btn" data-up>Up</button><input aria-label="Server folder"><button class="btn" data-go>Go</button><button class="btn" data-new>New folder</button></div><div class="br-file-list"></div><p role="status"></p><div class="br-file-toolbar"><button class="btn" data-more hidden>More</button><button class="btn primary" data-select>Select folder</button><button class="btn" data-cancel>Cancel</button></div></div>';
-            document.body.appendChild(overlay);overlay.querySelector('h3').textContent=(connection?connection.name:'Server')+' · '+(options.mode==='folder'?'Choose folder':'Choose script');
-            var list=overlay.querySelector('.br-file-list'),input=overlay.querySelector('input'),message=overlay.querySelector('p'),current='',parent=null,cursor=null,seq=0;
+            document.body.appendChild(overlay);
+            var editing=options.mode==='edit',editButton=document.createElement('button');editButton.className='btn';editButton.textContent='Edit text';editButton.setAttribute('aria-pressed',String(editing));overlay.querySelector('.br-file-toolbar').appendChild(editButton);
+            function title(){overlay.querySelector('h3').textContent=(connection?connection.name:'Server')+' · '+(editing?'Choose text file':options.mode==='folder'?'Choose folder':'Choose script');editButton.setAttribute('aria-pressed',String(editing));}
+            title();editButton.onclick=function(){editing=!editing;title();};
+            var list=overlay.querySelector('.br-file-list'),input=overlay.querySelector('input'),message=overlay.querySelector('p'),current='',parent=null,cursor=null,seq=0,items=[];
             var select=overlay.querySelector('[data-select]');select.hidden=options.mode!=='folder';
             function changed(){close(null);}
             function close(path){root.removeEventListener('bridge-node-changed',changed);overlay.remove();resolve(path);}
@@ -25,9 +28,12 @@
                     var response=await api(path?'files/list?path='+encodeURIComponent(path)+(more&&cursor?'&cursor='+encodeURIComponent(cursor):''):'files/roots');
                     var data=await response.json();if(!response.ok)throw new Error(data.error||'Cannot read folder');
                     if(request!==seq||!bridge.isCurrent(context))return;
-                    if(!more)list.textContent='';current=path||'';input.value=current;parent=data.parent;cursor=data.next_cursor;overlay.querySelector('[data-more]').hidden=!cursor;
-                    (Array.isArray(data)?data:data.items).forEach(function(item){var button=document.createElement('button');button.className='br-file-entry';button.textContent=(item.kind==='directory'?'▸ ':'  ')+(item.name||item.path)+(item.link?' ↗':'');
-                        button.onclick=function(){if(item.kind==='directory')load(item.path,false);else if(options.mode!=='folder'){localStorage.setItem('bridge-folder:'+folderKey,current);close(item.path);}};list.appendChild(button);});
+                    if(!more)items=[];current=path||'';input.value=current;parent=data.parent;cursor=data.next_cursor;overlay.querySelector('[data-more]').hidden=!cursor;
+                    items=items.concat(Array.isArray(data)?data:data.items);
+                    items.sort(function(a,b){return Number(b.kind==='directory')-Number(a.kind==='directory')||(a.name||a.path).localeCompare(b.name||b.path);});
+                    list.textContent='';
+                    items.forEach(function(item){var button=document.createElement('button');button.className='br-file-entry';button.textContent=(item.kind==='directory'?'▸ ':'  ')+(item.name||item.path)+(item.link?' ↗':'');
+                        button.onclick=function(){if(item.kind==='directory')load(item.path,false);else if(editing){localStorage.setItem('bridge-folder:'+folderKey,current);root.TaskerFileEditor.open({path:item.path,connection:connection});}else if(options.mode!=='folder'){localStorage.setItem('bridge-folder:'+folderKey,current);close(item.path);}};list.appendChild(button);});
                     message.textContent='';select.disabled=!current;
                 }catch(e){message.textContent=e.message;}
             }
