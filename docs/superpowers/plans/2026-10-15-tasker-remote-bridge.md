@@ -2,7 +2,7 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** Полное управление Tasker серверного z3nDash из локального z3nDash по IP, включая настройки, payload, расписания и загрузку файлов/папок.
+**Goal:** Полное управление Tasker серверного Cronopus из локального Cronopus по IP, включая настройки, payload, расписания и загрузку файлов/папок.
 
 **Architecture:** Отдельный HTTPS-хост в процессе сервера вызывает общий сервис Tasker. Локальная панель использует adapter local/remote; соединение с сервером и секреты принадлежат локальному backend. Один существующий SchedulerService продолжает выполнять задачи независимо от клиента.
 
@@ -62,7 +62,7 @@ ScanFolder, PackageScripts, GetConfig, SaveConfig, Build, EnsureVenv, Install.
   использует отдельную SQLite БД и DbConnectionService, не вызывает Program приложения.
   C# runner: `Check(bool ok, string message)` бросает исключение; `--case <name>` выбирает тест.
   Проект: net10.0-windows, RuntimeIdentifier=win-x64, SelfContained=true,
-  ProjectReference на ../../z3nDash.csproj; основной проект уже исключает tests/**/*.cs.
+  ProjectReference на ../../Cronopus.csproj; основной проект уже исключает tests/**/*.cs.
 ```csharp
 var saved = await f.CreatePythonAsync();
 var read = await f.GetAsync(saved.Data.GetProperty("id").GetString()!);
@@ -122,7 +122,7 @@ RETURNING "edit_version";
 
 **Files:** создать `Controllers/Bridge/BridgeContracts.cs`, `BridgeStore.cs`,
 `BridgeSecrets.cs`, `BridgeIdentity.cs`, `BridgeKeyRegistry.cs`, `tests/Bridge.Integration/IdentityCases.cs`;
-изменить `z3nDash.csproj` только при необходимости ссылки на DPAPI.
+изменить `Cronopus.csproj` только при необходимости ссылки на DPAPI.
 **Interfaces:** `BridgeConnection(Id, Name, Address, NodeId, Fingerprint, HasKey)`;
 `BridgeStore(root)`; `BridgeIdentity.LoadOrCreateAsync(IPAddress address, CancellationToken ct)`;
 `BridgeKeyRegistry.Create(name)` → `(keyId, secret)`; `Authorize(secret)` → keyId/null;
@@ -138,8 +138,8 @@ keys.Revoke(issued.keyId);
 Check(keys.Authorize(issued.secret) is null, "revoked key accepted");
 ```
 - [ ] Запустить runner `--case identity`, получить FAIL, затем реализовать store
-  в LocalApplicationData/z3nDash/bridge; запись temp+rename.
-  Для нескольких независимых установок предусмотреть `Z3NDASH_BRIDGE_STATE_DIR`:
+  в LocalApplicationData/Cronopus/bridge; запись temp+rename.
+  Для нескольких независимых установок предусмотреть `CRONOPUS_BRIDGE_STATE_DIR`:
   только абсолютный root с теми же ACL/защитой. Fixture задаёт его дочерним процессам
   в temp; в UI показывать фактическое расположение store, без содержимого секретов.
   Сертификат на 2 года с IP SAN; SHA-256 pin от DER сертификата; random key 32 байта,
@@ -152,7 +152,7 @@ Check(keys.Authorize(issued.secret) is null, "revoked key accepted");
 ## Задача 4. HTTPS listener и клиент с закреплением сертификата
 
 **Files:** создать `Controllers/Bridge/BridgeHost.cs`, `BridgeClient.cs`, `BridgeAuth.cs`,
-`BridgeAudit.cs`, `tests/Bridge.Integration/TlsCases.cs`; изменить `z3nDash.csproj`, `Program.cs`.
+`BridgeAudit.cs`, `tests/Bridge.Integration/TlsCases.cs`; изменить `Cronopus.csproj`, `Program.cs`.
 **Interfaces:** `BridgeHost.StartAsync(CancellationToken ct)` → фактический Uri;
 `BridgeHost.StopAsync(ct)`; `BridgeClient.SendAsync(connectionId, HttpMethod method,
 string relativePath, HttpContent? content, CancellationToken ct)` → HttpResponseMessage.
@@ -436,7 +436,7 @@ Check(System.Text.Json.JsonSerializer.SerializeToUtf8Bytes(page).Length <= 26214
 **Files:** создать `tests/Bridge.Integration/EndToEndCases.cs`, `LoadCases.cs`,
 `tests/bridge.browser-smoke.js`, `docs-vault/Navigation/Pages/Remote Tasker.md`,
 `docs-vault-en/Navigation/Pages/Remote Tasker.md`; изменить страницы Tasker/Config
-в обеих docs-vault и `z3nDash.csproj` только для исключения bridge secrets/staging из publish.
+в обеих docs-vault и `Cronopus.csproj` только для исключения bridge secrets/staging из publish.
 **Interfaces:** runner `--case e2e`, `--case load --minutes 15`;
 Browser test принимает `BRIDGE_LOCAL_URL`, `BRIDGE_SERVER_URL` из fixture и не использует default ports.
 
@@ -463,8 +463,8 @@ Check(await f.ServerTaskExistsAsync() && !await f.LocalTaskExistsAsync(), "wrong
 ```powershell
 rtk proxy node --test tests/*.test.js
 rtk dotnet run --project tests/Bridge.Integration/Bridge.Integration.csproj -- --case all
-rtk dotnet build z3nDash.csproj -c Debug -f net10.0 --output C:/Users/l3gi0n/AppData/Local/Temp/z3ndash-bridge-net10
-rtk dotnet build z3nDash.csproj -c Debug -f net10.0-windows --output C:/Users/l3gi0n/AppData/Local/Temp/z3ndash-bridge-windows
+rtk dotnet build Cronopus.csproj -c Debug -f net10.0 --output C:/Users/l3gi0n/AppData/Local/Temp/cronopus-bridge-net10
+rtk dotnet build Cronopus.csproj -c Debug -f net10.0-windows --output C:/Users/l3gi0n/AppData/Local/Temp/cronopus-bridge-windows
 rtk git diff --check
 ```
   Поддержать glob в JS runner через shell/runtime по установленной версии Node;

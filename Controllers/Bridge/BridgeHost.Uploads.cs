@@ -1,6 +1,6 @@
 using System.Text.Json;
 using Microsoft.AspNetCore.Http;
-namespace z3nDash;
+namespace Cronopus;
 
 public sealed partial class BridgeHost
 {

@@ -3,7 +3,7 @@ using System.Net;
 using System.Text.Json;
 using System.Text.RegularExpressions;
 
-namespace z3nDash;
+namespace Cronopus;
 
 public sealed class TaskControlHandler(SchedulerService scheduler) : IScriptHandler
 {

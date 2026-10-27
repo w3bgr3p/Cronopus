@@ -9,7 +9,7 @@ using System.Text;
 using System.Threading.Tasks;
 using Newtonsoft.Json;
 
-namespace z3nDash
+namespace Cronopus
 {
     public enum LogLevel
     {
@@ -78,7 +78,7 @@ namespace z3nDash
         private readonly bool            _fAcc, _fTime, _fCaller, _fWrap, _fForce;
         internal readonly Stopwatch       _stopwatch;
         private readonly Action<string>? _sink;
-        private readonly string _source = "z3nDash";
+        private readonly string _source = "Cronopus";
         #endregion
 
         // ── Constructor ───────────────────────────────────────────────────────
@@ -92,7 +92,7 @@ namespace z3nDash
             string          acc            = "",
             string          taskId         = "",
             string          session        = "",
-            string          project        = "z3nDash",
+            string          project        = "Cronopus",
             string          cfgLog         = "caller,wrap,acc,stopwatch",
             Action<string>? sink           = null)
         {

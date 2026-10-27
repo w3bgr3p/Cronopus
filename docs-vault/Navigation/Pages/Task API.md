@@ -6,11 +6,11 @@
 
 ## Python
 
-Модуль `z3ndash` поставляется с приложением. Планировщик автоматически добавляет
+Модуль `cronopus` поставляется с приложением. Планировщик автоматически добавляет
 его в `PYTHONPATH`, включая запуски в venv. Устанавливать пакет через pip не нужно.
 
 ```python
-from z3ndash import current_task
+from cronopus import current_task
 
 try:
     do_work()
@@ -45,10 +45,10 @@ var state = await current_task.GetAsync();
 
 ## HTTP API
 
-Внешние процессы получают `Z3NDASH_API_URL`, `Z3NDASH_RUN_TOKEN`,
-`Z3NDASH_TASK_ID`, `Z3NDASH_RUN_ID` через окружение. Адрес содержит фактический
+Внешние процессы получают `CRONOPUS_API_URL`, `CRONOPUS_RUN_TOKEN`,
+`CRONOPUS_TASK_ID`, `CRONOPUS_RUN_ID` через окружение. Адрес содержит фактический
 порт работающего приложения. Для `/self` достаточно адреса и токена.
-Каждый запрос передаёт заголовок `Authorization: Bearer <Z3NDASH_RUN_TOKEN>`.
+Каждый запрос передаёт заголовок `Authorization: Bearer <CRONOPUS_RUN_TOKEN>`.
 Токен действует только до завершения запуска. Не выводите его в логи.
 
 | Метод | Путь | Тело |
@@ -70,10 +70,10 @@ var state = await current_task.GetAsync();
 Пример для Node.js:
 
 ```javascript
-const response = await fetch(process.env.Z3NDASH_API_URL + '/api/v1/self/defer', {
+const response = await fetch(process.env.CRONOPUS_API_URL + '/api/v1/self/defer', {
   method: 'POST',
   headers: { 'Content-Type': 'application/json',
-             Authorization: 'Bearer ' + process.env.Z3NDASH_RUN_TOKEN },
+             Authorization: 'Bearer ' + process.env.CRONOPUS_RUN_TOKEN },
   body: JSON.stringify({ delay_seconds: 3600, reason: 'Сервис недоступен' })
 });
 if (!response.ok) throw new Error(await response.text());
@@ -85,7 +85,7 @@ if (!response.ok) throw new Error(await response.text());
 тот же токен своего запуска, что и для `/self`; ID целевой задачи указывается в пути.
 
 ```python
-from z3ndash import task, list_tasks
+from cronopus import task, list_tasks
 
 for state in list_tasks(name="direction_1"):    # точное совпадение имени
     task(state["task_id"]).defer(seconds=1800, reason="watcher: нет новых записей")

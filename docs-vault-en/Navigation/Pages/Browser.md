@@ -13,7 +13,7 @@ The address and token come from the Browsers API section of [[Config]]:
 | ZennoBrowser | `BrowsersApi.ZennoBrowser` | `http://localhost:8160` | `Api-Token` header |
 | ShardX | `BrowsersApi.ShardX` | `http://127.0.0.1:40325` | `Authorization: Bearer <token>` |
 
-The token never reaches the page: the z3nDash server adds it while proxying.
+The token never reaches the page: the Cronopus server adds it while proxying.
 
 ## Profiles
 

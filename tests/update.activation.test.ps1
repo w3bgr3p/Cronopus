@@ -1,5 +1,5 @@
 $ErrorActionPreference = 'Stop'
-$testRoot = Join-Path ([IO.Path]::GetTempPath()) ('z3ndash-activation-test-' + [guid]::NewGuid().ToString('N'))
+$testRoot = Join-Path ([IO.Path]::GetTempPath()) ('cronopus-activation-test-' + [guid]::NewGuid().ToString('N'))
 $helper = [IO.Path]::GetFullPath((Join-Path $PSScriptRoot '../App/Updates/apply-update.ps1'))
 [IO.Directory]::CreateDirectory($testRoot) | Out-Null
 function Assert($condition, $message) { if (!$condition) { throw $message } }

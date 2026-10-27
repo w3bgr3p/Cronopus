@@ -4,9 +4,9 @@
 английском: `Mcp/AGENT.md` и ресурсы MCP. Агенту достаточно схем инструментов;
 справочник загружается по необходимости.
 
-z3nDash предоставляет нативный MCP-сервер через stdio: `z3nDash.exe --mcp`.
+Cronopus предоставляет нативный MCP-сервер через stdio: `Cronopus.exe --mcp`.
 Python, Node.js и отдельный MCP-сервер устанавливать не нужно.
-Обычный экземпляр обновлённого z3nDash должен уже работать.
+Обычный экземпляр обновлённого Cronopus должен уже работать.
 
 ## Подключение
 
@@ -15,8 +15,8 @@ Python, Node.js и отдельный MCP-сервер устанавливат�
 ```json
 {
   "mcpServers": {
-    "z3ndash": {
-      "command": "C:\\Apps\\z3nDash\\z3nDash.exe",
+    "cronopus": {
+      "command": "C:\\Apps\\Cronopus\\Cronopus.exe",
       "args": ["--mcp"]
     }
   }
@@ -42,7 +42,7 @@ Python, Node.js и отдельный MCP-сервер устанавливат�
 передаётся как `node`; по умолчанию используется `local`. Ключи агенту не выдаются.
 MCP управляет Tasker; редакторы БД, терминал и конфигурация с секретами не доступны.
 
-Краткий контракт: `z3ndash://docs/mcp` / `Mcp/AGENT.md`.
+Краткий контракт: `cronopus://docs/mcp` / `Mcp/AGENT.md`.
 Полный справочник и конфигурация TOML: `read_document(topic=setup)`
 или файл `Mcp/README.md` рядом с приложением.
 Документы [[Task API]] и [[Script agent instructions]] доступны через

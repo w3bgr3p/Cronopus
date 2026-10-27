@@ -1,7 +1,7 @@
 using System.Net;
 using System.Net.Sockets;
 using System.Text;
-namespace z3nDash;
+namespace Cronopus;
 
 public static class BridgePublicAddress
 {

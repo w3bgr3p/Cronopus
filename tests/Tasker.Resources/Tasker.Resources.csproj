@@ -1,0 +1,15 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net10.0-windows</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <DefineConstants>$(DefineConstants);WINDOWS</DefineConstants>
+  </PropertyGroup>
+  <ItemGroup>
+    <Compile Include="../../Controllers/SchedulerResources.cs" Link="SchedulerResources.cs" />
+    <Compile Include="../../Controllers/MachineResourceSampler.cs" Link="MachineResourceSampler.cs" />
+    <Compile Include="../../Controllers/TaskProcessLifetime.cs" Link="TaskProcessLifetime.cs" />
+    <PackageReference Include="System.Management" Version="10.0.0-rc.2.25502.107" />
+  </ItemGroup>
+</Project>

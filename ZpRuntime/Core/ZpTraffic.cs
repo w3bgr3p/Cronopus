@@ -2,7 +2,7 @@ using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
 
-namespace z3nDash;
+namespace Cronopus;
 
 /// <summary>
 /// Журнал HTTP-трафика ZpRuntime. Перенесено из z3n7/Server/ZpTraffic.cs —
@@ -40,7 +40,7 @@ public static class ZpTraffic
     public static void Append(string json)
     {
         var path = FilePath();
-        var mutexName = "Local\\z3nDash.Traffic." + Convert.ToHexString(
+        var mutexName = "Local\\Cronopus.Traffic." + Convert.ToHexString(
             SHA256.HashData(Encoding.UTF8.GetBytes(path.ToUpperInvariant())));
 
         using var mutex = new Mutex(false, mutexName);

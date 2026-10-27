@@ -3,7 +3,7 @@ using System.Text.Json;
 using System.Text.RegularExpressions;
 using Npgsql;
 
-namespace z3nDash;
+namespace Cronopus;
 
 internal sealed class PostgresViewerHandler
 {
@@ -51,7 +51,7 @@ internal sealed class PostgresViewerHandler
                 CommandTimeout = 30,
                 IncludeErrorDetail = false,
                 PersistSecurityInfo = false,
-                ApplicationName = "z3nDash SQL viewer"
+                ApplicationName = "Cronopus SQL viewer"
             };
             password = settings.Password;
             await using var conn = new NpgsqlConnection(settings.ConnectionString);
@@ -90,7 +90,7 @@ internal sealed class PostgresViewerHandler
             // Parse protocol. A statement batch cannot end our read-only transaction.
             // The subquery also rejects commands and data-modifying CTEs.
             await using var command = new NpgsqlCommand(
-                $"SELECT * FROM (\n{sql}\n) AS z3ndash_result LIMIT $1", conn, transaction)
+                $"SELECT * FROM (\n{sql}\n) AS cronopus_result LIMIT $1", conn, transaction)
             { AllResultTypesAreUnknown = true };
             command.Parameters.Add(new NpgsqlParameter { Value = MaxRows + 1 });
             var columns = new List<string>();

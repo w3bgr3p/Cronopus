@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>z3nDash | Config</title>
+    <title>Cronopus | Config</title>
     <link rel="stylesheet" href="/css/themes.css">
     <script src="/js/diag.js"></script>
     <script src="/js/theme.js"></script>
@@ -31,7 +31,7 @@
     <div class="cfg-pane" id="cfgPane">
         <section class="cfg-sec" data-sec="about" hidden>
             <section class="card config-card">
-                <div class="card-hdr"><h2>About z3nDash</h2><span class="badge" id="aboutVersion">—</span></div>
+                <div class="card-hdr"><h2>About Cronopus</h2><span class="badge" id="aboutVersion">—</span></div>
                 <p class="page-sub">Task automation, runtime monitoring and developer tools.</p>
                 <div class="status-grid">
                     <div class="stat-item"><span class="stat-label">Installed version</span><span class="stat-value mono" id="updateCurrent">—</span></div>
@@ -40,8 +40,8 @@
                     <div class="stat-item"><span class="stat-label">License</span><span class="stat-value">AGPL-3.0</span></div>
                 </div>
                 <div class="btn-row about-links">
-                    <a class="btn" href="https://github.com/w3bgr3p/z3nDash" target="_blank" rel="noopener noreferrer">Source code</a>
-                    <a class="btn" href="https://github.com/w3bgr3p/z3nDash/releases" target="_blank" rel="noopener noreferrer">Release notes</a>
+                    <a class="btn" href="https://github.com/w3bgr3p/Cronopus" target="_blank" rel="noopener noreferrer">Source code</a>
+                    <a class="btn" href="https://github.com/w3bgr3p/Cronopus/releases" target="_blank" rel="noopener noreferrer">Release notes</a>
                 </div>
             </section>
             <section class="card config-card">
@@ -62,7 +62,7 @@
             <section class="card config-card">
                 <h2>Remote Tasker · Server</h2>
                 <p id="brServerMessage" class="br-action-status" role="status" aria-live="polite"></p>
-                <p class="page-sub">Connect another z3nDash by IP. Open the actual TCP port in the server firewall.</p>
+                <p class="page-sub">Connect another Cronopus by IP. Open the actual TCP port in the server firewall.</p>
                 <div class="br-grid">
                     <label><input id="brEnabled" type="checkbox"> Enable HTTPS server</label>
                     <label>Bind IP<input id="br_bindAddress" value="0.0.0.0"></label>
@@ -75,15 +75,15 @@
                 <button class="btn" id="brRenewCertificate">Renew certificate</button>
                 <div class="br-firewall">
                     <label><input type="checkbox" id="brFirewallOnApply" checked> Open HTTPS port in Windows Firewall when applying</label>
-                    <div class="br-row"><button class="btn" id="brOpenFirewall">Open HTTPS port</button><button class="btn" id="brCloseFirewall">Close z3nDash rule</button><button class="btn" id="brCheckFirewall">Check firewall</button></div>
+                    <div class="br-row"><button class="btn" id="brOpenFirewall">Open HTTPS port</button><button class="btn" id="brCloseFirewall">Close Cronopus rule</button><button class="btn" id="brCheckFirewall">Check firewall</button></div>
                     <p id="brFirewallStatus" role="status">Checking Windows Firewall…</p>
                     <p class="br-ip-hint">Windows may request administrator approval. This manages the firewall on this machine; hosting-provider rules are configured separately.</p>
                 </div>
                 <p class="br-ip-hint" id="brIpStatus" role="status">Use the server's public IP (the one used for RDP). HTTPS uses its own port, default 38473. Bind IP 0.0.0.0 listens on all interfaces.</p>
                 <pre id="brIdentity" class="br-identity"></pre>
                 <div class="br-row"><input id="brKeyName" placeholder="Key name" value="Desktop"><button class="btn" id="brCreateKey">Create access key</button><button class="btn primary" id="brCopyConnection" disabled>Copy connection</button></div>
-                <p class="br-ip-hint">Create a key, then Copy connection. On your other z3nDash: Tasker → New connection → paste the code.</p>
-                <textarea id="brNewKey" readonly placeholder="A new key appears here once. Copy it to your local z3nDash."></textarea>
+                <p class="br-ip-hint">Create a key, then Copy connection. On your other Cronopus: Tasker → New connection → paste the code.</p>
+                <textarea id="brNewKey" readonly placeholder="A new key appears here once. Copy it to your local Cronopus."></textarea>
                 <textarea id="brConnectionCode" readonly hidden aria-label="Connection code" spellcheck="false"></textarea>
                 <p id="brKeyStatus" class="br-action-status" role="status" aria-live="polite"></p>
                 <div id="brKeys"></div>

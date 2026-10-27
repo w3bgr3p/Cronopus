@@ -1,4 +1,4 @@
-namespace z3nDash;
+namespace Cronopus;
 
 /// <summary>
 /// Запрос трафика к ноде z3n7: GET /traffic?tail=N&amp;project=&amp;task_id=

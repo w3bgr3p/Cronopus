@@ -5,11 +5,11 @@ using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
 
-namespace z3nDash;
+namespace Cronopus;
 
 internal sealed class AppUpdateService
 {
-    internal const string RepositoryUrl = "https://github.com/w3bgr3p/z3nDash";
+    internal const string RepositoryUrl = "https://github.com/w3bgr3p/Cronopus";
     private static readonly HttpClient Http = CreateClient();
     private readonly SemaphoreSlim _gate = new(1, 1);
     private readonly SemaphoreSlim _settingsGate = new(1, 1);
@@ -40,7 +40,7 @@ internal sealed class AppUpdateService
         var id = Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(
             Path.GetFullPath(installation).TrimEnd('\\', '/').ToUpperInvariant())))[..16];
         return Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
-            "z3nDash", "updates", id);
+            "Cronopus", "updates", id);
     }
 
     public object Status()
@@ -94,7 +94,7 @@ internal sealed class AppUpdateService
             _error = null;
             _phase = "checking";
             using var timeout = new CancellationTokenSource(TimeSpan.FromSeconds(30));
-            using var response = await Http.GetAsync("https://api.github.com/repos/w3bgr3p/z3nDash/releases/latest", timeout.Token);
+            using var response = await Http.GetAsync("https://api.github.com/repos/w3bgr3p/Cronopus/releases/latest", timeout.Token);
             response.EnsureSuccessStatusCode();
             using var json = JsonDocument.Parse(await response.Content.ReadAsStringAsync(timeout.Token));
             _release = ReadRelease(json.RootElement);
@@ -148,7 +148,7 @@ internal sealed class AppUpdateService
             throw new InvalidDataException("Only stable releases can be installed.");
         var version = Version.Parse(json.GetProperty("tag_name").GetString()!.TrimStart('v', 'V')).ToString();
         var asset = json.GetProperty("assets").EnumerateArray().Single(a =>
-            a.GetProperty("name").GetString() == $"z3nDash_{version}_portable.zip");
+            a.GetProperty("name").GetString() == $"Cronopus_{version}_portable.zip");
         var url = asset.GetProperty("browser_download_url").GetString()!;
         if (!url.StartsWith(RepositoryUrl + "/releases/download/", StringComparison.Ordinal)
             || !Uri.TryCreate(url, UriKind.Absolute, out var uri) || uri.Scheme != "https")
@@ -175,11 +175,11 @@ internal sealed class AppUpdateService
             }
             var payload = Path.GetFullPath(update.Directory);
             if (!payload.StartsWith(Path.GetFullPath(root) + Path.DirectorySeparatorChar, StringComparison.OrdinalIgnoreCase)
-                || !File.Exists(Path.Combine(payload, "z3nDash.exe")))
+                || !File.Exists(Path.Combine(payload, "Cronopus.exe")))
                 throw new InvalidDataException("Pending update payload is missing or invalid.");
             var attempt = Guid.NewGuid().ToString("N");
             var script = Path.Combine(root, "apply-" + attempt + ".ps1");
-            using var resource = typeof(AppUpdateService).Assembly.GetManifestResourceStream("z3nDash.apply-update.ps1")!;
+            using var resource = typeof(AppUpdateService).Assembly.GetManifestResourceStream("Cronopus.apply-update.ps1")!;
             using (var output = File.Create(script)) resource.CopyTo(output);
             var request = Path.Combine(root, "request-" + attempt + ".json");
             File.WriteAllText(request, JsonSerializer.Serialize(new {
@@ -217,7 +217,7 @@ internal sealed class AppUpdateService
     private static HttpClient CreateClient()
     {
         var client = new HttpClient { Timeout = TimeSpan.FromMinutes(20) };
-        client.DefaultRequestHeaders.UserAgent.ParseAdd("z3nDash-Updater/1.0");
+        client.DefaultRequestHeaders.UserAgent.ParseAdd("Cronopus-Updater/1.0");
         return client;
     }
     private sealed record Release(string Version, string Url, string DownloadUrl, string Digest, long Size);

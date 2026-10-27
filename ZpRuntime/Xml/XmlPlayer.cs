@@ -17,7 +17,7 @@
 using ZennoLab.CommandCenter;
 using ZennoLab.InterfacesLibrary.ProjectModel;
 
-namespace z3nDash.Xml;
+namespace Cronopus.Xml;
 
 public sealed record PlayResult(
     bool       Success,

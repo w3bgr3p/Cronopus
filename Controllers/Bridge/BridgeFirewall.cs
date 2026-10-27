@@ -3,12 +3,12 @@ using System.Globalization;
 using System.Runtime.InteropServices;
 using System.Security.Principal;
 using System.Text;
-namespace z3nDash;
+namespace Cronopus;
 
 public sealed record BridgeFirewallStatus(bool Supported,int Port,string RuleName,bool Exists,bool Open,string? Error);
 public sealed class BridgeFirewall(string nodeId)
 {
-    public string RuleName{get;}="z3nDash.RemoteTasker."+Guid.Parse(nodeId).ToString("N");
+    public string RuleName{get;}="Cronopus.RemoteTasker."+Guid.Parse(nodeId).ToString("N");
     public BridgeFirewallStatus Status(int port)
     {
         if(!OperatingSystem.IsWindows())return new(false,port,RuleName,false,false,"Windows Firewall is available on Windows only.");
@@ -35,7 +35,7 @@ public sealed class BridgeFirewall(string nodeId)
             var options=" -Direction Inbound -Action Allow -Protocol TCP -LocalPort "+port+" -Profile Any -Enabled True -Program "+Quote(Environment.ProcessPath??throw new InvalidOperationException("Application path unavailable"));
             // INetFwRules.Item uses DisplayName, whereas NetSecurity uses Name.
             // Keep both identities equal, including when updating older rules.
-            script+="if ("+find+") { Set-NetFirewallRule -Name "+name+" -NewDisplayName "+name+options+" -ErrorAction Stop | Out-Null } else { New-NetFirewallRule -Name "+name+" -DisplayName "+name+" -Group 'z3nDash'"+options+" -ErrorAction Stop | Out-Null }; ";
+            script+="if ("+find+") { Set-NetFirewallRule -Name "+name+" -NewDisplayName "+name+options+" -ErrorAction Stop | Out-Null } else { New-NetFirewallRule -Name "+name+" -DisplayName "+name+" -Group 'Cronopus'"+options+" -ErrorAction Stop | Out-Null }; ";
         }
         return script+"exit 0 } catch { exit 1 }";
     }

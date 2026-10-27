@@ -2,10 +2,10 @@ using System.Text.Json;
 using ModelContextProtocol.Client;
 using ModelContextProtocol.Protocol;
 using ModelContextProtocol;
-using z3nDash;
-using z3nDash.Mcp;
+using Cronopus;
+using Cronopus.Mcp;
 
-var root = Path.Combine(Path.GetTempPath(), "z3ndash-mcp-" + Guid.NewGuid().ToString("N"));
+var root = Path.Combine(Path.GetTempPath(), "cronopus-mcp-" + Guid.NewGuid().ToString("N"));
 Directory.CreateDirectory(root);
 var manifest = Path.Combine(root, "mcp.json");
 var dbs = new DbConnectionService();
@@ -23,7 +23,7 @@ dashboard.RegisterHandler(new BridgeLocalHandler(bridgeStore, bridgeHost));
 dashboard.Start(); runtime.Publish();
 var url = "http://localhost:" + dashboard.Port;
 var exeIndex = Array.IndexOf(args, "--mcp-exe");
-var exe = exeIndex >= 0 ? Path.GetFullPath(args[exeIndex + 1]) : Path.Combine(AppContext.BaseDirectory, "z3nDash.exe");
+var exe = exeIndex >= 0 ? Path.GetFullPath(args[exeIndex + 1]) : Path.Combine(AppContext.BaseDirectory, "Cronopus.exe");
 try
 {
     await using var client = await Connect(["--runtime-file", manifest]);
@@ -42,8 +42,8 @@ try
     Check((await Call(client, "get_status")).GetProperty("dashboard").GetProperty("instance_id").GetString() == runtime.InstanceId, "wrong dashboard");
     Check((await Call(client, "read_document")).GetProperty("text").GetString()!.Contains("stdio"), "guide missing");
     var resources = await client.ListResourcesAsync();
-    Check(resources.Any(r => r.Uri == "z3ndash://docs/mcp"), "guide resource missing");
-    Check((await client.ReadResourceAsync("z3ndash://docs/mcp")).Contents.OfType<TextResourceContents>().Single().Text.Contains("run_task"), "resource content missing");
+    Check(resources.Any(r => r.Uri == "cronopus://docs/mcp"), "guide resource missing");
+    Check((await client.ReadResourceAsync("cronopus://docs/mcp")).Contents.OfType<TextResourceContents>().Single().Text.Contains("run_task"), "resource content missing");
     Console.WriteLine("PASS MCP handshake, catalog, schemas, tools and resources");
 
     // Queue must round-trip in the scheduler's storage format, including clones of get_task output.
@@ -129,7 +129,7 @@ try
     await Call(client, "list_tasks", new { cursor = "malformed" }, "invalid_argument");
     using (var direct = new HttpClient(new HttpClientHandler { UseProxy = false }))
     {
-        direct.DefaultRequestHeaders.Add("X-Z3nDash-Instance", "wrong");
+        direct.DefaultRequestHeaders.Add("X-Cronopus-Instance", "wrong");
         Check((int)(await direct.GetAsync(url + "/mcp/status")).StatusCode == 409, "instance header was not enforced");
     }
     Console.WriteLine("PASS output bounds, pagination and instance request guard");
@@ -172,7 +172,7 @@ finally
 
 async Task<McpClient> Connect(string[] options) => await McpClient.CreateAsync(new StdioClientTransport(new StdioClientTransportOptions
 {
-    Name = "z3nDash integration", Command = exe, Arguments = ["--mcp", .. options]
+    Name = "Cronopus integration", Command = exe, Arguments = ["--mcp", .. options]
 }));
 static async Task<JsonElement> Call(McpClient client, string name, object? args = null, string? error = null)
 {

@@ -3,7 +3,7 @@ using System.Net.Security;
 using System.Security.Cryptography;
 using System.Security.Cryptography.X509Certificates;
 using System.Text.Json;
-namespace z3nDash;
+namespace Cronopus;
 
 public sealed class BridgeClient(BridgeStore store)
 {

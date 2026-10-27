@@ -1,6 +1,6 @@
 using System.Net;
 using System.Text.Json;
-namespace z3nDash;
+namespace Cronopus;
 
 public sealed partial class BridgeLocalHandler
 {

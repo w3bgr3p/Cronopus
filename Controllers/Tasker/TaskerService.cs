@@ -1,9 +1,9 @@
 using System.Net;
 using System.Text;
 using System.Text.Json;
-using z3nDash;
+using Cronopus;
 
-namespace z3nDash;
+namespace Cronopus;
 
 /// <summary>
 /// Маршруты:
@@ -258,7 +258,7 @@ public sealed partial class TaskerService
 
         // Необязательные args на этот залп: уходят в очередь вместо args задачи,
         // сохранённая задача не меняется. Проверка стоит до поиска задачи, чтобы
-        // вызывающий мог узнать, понимает ли этот z3nDash поле, не запуская ничего.
+        // вызывающий мог узнать, понимает ли этот Cronopus поле, не запуская ничего.
         string? args = null;
         if (json.Value.TryGetProperty("args", out var eargs) && eargs.ValueKind != JsonValueKind.Null)
         {

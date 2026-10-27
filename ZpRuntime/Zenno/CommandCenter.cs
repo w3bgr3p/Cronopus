@@ -15,7 +15,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Drawing;
 using System.Linq;
-using z3nDash.Browser;
+using Cronopus.Browser;
 
 namespace ZennoLab.CommandCenter.Classes
 {
@@ -282,12 +282,12 @@ namespace ZennoLab.CommandCenter
                 maxRedirectCount, additionalHeaders, "", false, true, null);
 
         // ── Управление задачами ZP-сервера ────────────────────────────────────
-        // Планировщик здесь свой (z3nDash), очереди ZennoPoster нет. Отказываем
+        // Планировщик здесь свой (Cronopus), очереди ZennoPoster нет. Отказываем
         // явно: тихая заглушка увела бы вызывающий код на неверных данных.
 
         private static Exception NoServer(string member) => new NotSupportedException(
             $"ZennoPoster.{member}: очереди задач ZennoPoster в standalone нет. " +
-            "Управление задачами — на стороне планировщика z3nDash.");
+            "Управление задачами — на стороне планировщика Cronopus.");
 
         public static IEnumerable<string> TasksList => throw NoServer(nameof(TasksList));
         public static int[] AllInstances            => throw NoServer(nameof(AllInstances));

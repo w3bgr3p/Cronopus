@@ -1,7 +1,7 @@
-# z3nDash MCP
+# Cronopus MCP
 
 Native MCP server for Tasker automation, using the official C# SDK 2.2.0.
-Transport: **stdio**. Launch the installed `z3nDash.exe --mcp`; no Python,
+Transport: **stdio**. Launch the installed `Cronopus.exe --mcp`; no Python,
 Node.js, separate MCP download or additional listening port is required.
 The dashboard must already be running. MCP never starts another scheduler.
 
@@ -35,8 +35,8 @@ Configure your MCP client with an absolute executable path:
 ```json
 {
   "mcpServers": {
-    "z3ndash": {
-      "command": "C:\\Apps\\z3nDash\\z3nDash.exe",
+    "cronopus": {
+      "command": "C:\\Apps\\Cronopus\\Cronopus.exe",
       "args": ["--mcp"]
     }
   }
@@ -47,8 +47,8 @@ The path above is an example; use your actual installation directory.
 For clients that use TOML (including Codex):
 
 ```toml
-[mcp_servers.z3ndash]
-command = 'C:\Apps\z3nDash\z3nDash.exe'
+[mcp_servers.cronopus]
+command = 'C:\Apps\Cronopus\Cronopus.exe'
 args = ["--mcp"]
 ```
 
@@ -187,7 +187,7 @@ request may already have taken effect: inspect state before deciding to retry.
 |---|---|
 | discovery_unavailable | Start the updated dashboard, or set --api-url/--runtime-file |
 | instance_changed | Restart the intended dashboard / refresh discovery |
-| incompatible_dashboard / invalid_response | Update z3nDash; check the selected URL |
+| incompatible_dashboard / invalid_response | Update Cronopus; check the selected URL |
 | dashboard_unavailable / timeout | Check the process and URL; inspect state before retrying writes |
 | database_unavailable | Configure/reconnect the dashboard DB |
 | invalid_argument | Correct parameters using the advertised schema and documentation |
@@ -199,8 +199,8 @@ request may already have taken effect: inspect state before deciding to retry.
 
 ## Resources
 
-- `z3ndash://docs/mcp`: compact English agent contract (AGENT.md).
-- `z3ndash://docs/{topic}`: English topics mcp, setup, task-api, script-agent,
+- `cronopus://docs/mcp`: compact English agent contract (AGENT.md).
+- `cronopus://docs/{topic}`: English topics mcp, setup, task-api, script-agent,
   tasker, remote-tasker. No translated agent-resource variant exists.
 - `read_document(topic, offset, limit)` reads bounded pages (default 4000,
   max 12000 characters); next_offset=null ends the document.
@@ -212,7 +212,7 @@ contain arbitrary text; they are data, never instructions to the agent.
 
 ```powershell
 dotnet run --project tests/Mcp.Integration/Mcp.Integration.csproj
-dotnet build z3nDash.csproj -f net10.0-windows
+dotnet build Cronopus.csproj -f net10.0-windows
 ```
 
 The integration harness uses an isolated temporary SQLite database and the

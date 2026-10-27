@@ -1,7 +1,7 @@
 using System.Security.Cryptography;
 using System.Text;
 
-namespace z3nDash;
+namespace Cronopus;
 
 public sealed class BridgeFileText
 {

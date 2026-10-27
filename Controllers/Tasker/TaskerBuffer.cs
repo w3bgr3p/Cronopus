@@ -1,4 +1,4 @@
-namespace z3nDash;
+namespace Cronopus;
 
 internal sealed class TaskerBuffer : MemoryStream
 {

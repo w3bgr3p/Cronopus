@@ -6,12 +6,12 @@ task up by name or read its ID from the database.
 
 ## Python
 
-The `z3ndash` module ships with the application. The scheduler adds it to `PYTHONPATH`
+The `cronopus` module ships with the application. The scheduler adds it to `PYTHONPATH`
 automatically, including runs inside a venv. Installing the package with pip is not
 needed.
 
 ```python
-from z3ndash import current_task
+from cronopus import current_task
 
 try:
     do_work()
@@ -46,10 +46,10 @@ Inside the application's own handlers the same context is available as
 
 ## HTTP API
 
-External processes receive `Z3NDASH_API_URL`, `Z3NDASH_RUN_TOKEN`, `Z3NDASH_TASK_ID`
-and `Z3NDASH_RUN_ID` through the environment. The address carries the actual port of the
+External processes receive `CRONOPUS_API_URL`, `CRONOPUS_RUN_TOKEN`, `CRONOPUS_TASK_ID`
+and `CRONOPUS_RUN_ID` through the environment. The address carries the actual port of the
 running application. For `/self` the address and the token are enough.
-Every request carries the `Authorization: Bearer <Z3NDASH_RUN_TOKEN>` header.
+Every request carries the `Authorization: Bearer <CRONOPUS_RUN_TOKEN>` header.
 The token is valid only until the run ends. Do not print it to logs.
 
 | Method | Path | Body |
@@ -71,10 +71,10 @@ A reason is optional, 2000 characters at most. Errors: 400 — bad parameters,
 A Node.js example:
 
 ```javascript
-const response = await fetch(process.env.Z3NDASH_API_URL + '/api/v1/self/defer', {
+const response = await fetch(process.env.CRONOPUS_API_URL + '/api/v1/self/defer', {
   method: 'POST',
   headers: { 'Content-Type': 'application/json',
-             Authorization: 'Bearer ' + process.env.Z3NDASH_RUN_TOKEN },
+             Authorization: 'Bearer ' + process.env.CRONOPUS_RUN_TOKEN },
   body: JSON.stringify({ delay_seconds: 3600, reason: 'Service unavailable' })
 });
 if (!response.ok) throw new Error(await response.text());
@@ -86,7 +86,7 @@ A watcher script can pause and defer other tasks. It uses the same run token as
 `/self`; the target task's ID goes in the path.
 
 ```python
-from z3ndash import task, list_tasks
+from cronopus import task, list_tasks
 
 for state in list_tasks(name="direction_1"):    # exact name match
     task(state["task_id"]).defer(seconds=1800, reason="watcher: no new records")

@@ -14,7 +14,7 @@ using System.Runtime.InteropServices;
 using System.Text;
 using System.Text.Json;
 
-namespace z3nDash;
+namespace Cronopus;
 
 internal sealed class SystemSnapshotHandler
 {
@@ -315,7 +315,7 @@ internal sealed class SystemSnapshotHandler
         catch (Exception ex) { return (null, $"step={step} | invalid body: {ex.GetType().Name}: {ex.Message}"); }
 
         if (pid <= 4 || pid == Environment.ProcessId)
-            return (null, $"step={step} | refused: pid {pid} is a system process or z3nDash itself");
+            return (null, $"step={step} | refused: pid {pid} is a system process or Cronopus itself");
 
         Process p;
         try { p = Process.GetProcessById(pid); }

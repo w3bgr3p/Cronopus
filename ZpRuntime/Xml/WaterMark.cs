@@ -21,7 +21,7 @@ using System.Drawing.Drawing2D;
 using System.Drawing.Imaging;
 using System.Drawing.Text;
 
-namespace z3nDash.Xml;
+namespace Cronopus.Xml;
 
 /// <summary>Разбор параметров ветки и собственно нанесение надписи.</summary>
 internal static class WaterMark

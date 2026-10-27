@@ -12,7 +12,7 @@ Records can also be added by importing cURL, with no file at all.
 
 The loaded archive is kept in IndexedDB and survives a page reload. `Clear HAR` wipes both the list and the stored copy.
 
-HAR records never reach the z3nDash database.
+HAR records never reach the Cronopus database.
 
 ## List
 

@@ -14,7 +14,7 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-using z3nDash;
+using Cronopus;
 using System.Diagnostics;
 using System.Text;
 
@@ -27,7 +27,7 @@ try { Console.InputEncoding  = new UTF8Encoding(false); } catch { }
 
 // MCP branches before configuration, database access, UI and scheduler startup.
 if (args.Contains("--mcp", StringComparer.OrdinalIgnoreCase))
-    return await z3nDash.Mcp.McpHost.RunAsync(args);
+    return await Cronopus.Mcp.McpHost.RunAsync(args);
 
 // Аналог -SelfTest из clipboard-heget.ps1: проверка преобразования без буфера,
 // без хоткеев и без запуска сервера. Результат дублируется в файл: у WinExe
@@ -54,11 +54,17 @@ if (args.Contains("--clipconv-selftest"))
 }
 
 // Dashboard startup alone activates staged updates; MCP and self-tests never do.
+if (args.Contains("--import-legacy", StringComparer.OrdinalIgnoreCase))
+{
+    try { LegacyDataImport.Run(); return 0; }
+    catch (Exception ex) { Console.Error.WriteLine($"Legacy data import failed: {ex.Message}"); return 1; }
+}
 if (AppUpdateService.TryApplyOnStartup(args)) return 0;
 
 try
 {
 
+    LegacyDataImport.Run();
     Config.Init();
     var logsConfig = Config.IsConfigured ? Config.LogsConfig : new LogsConfig { DashboardPort = "33333" };
 
@@ -81,7 +87,7 @@ try
         dashboardService.RegisterHandler(new ZpOrchestratorHandler(dbConnectionService));
     }
 
-    var schedulerService = new SchedulerService(dbConnectionService, _log);
+    using var schedulerService = new SchedulerService(dbConnectionService, _log);
     schedulerService.ApiBaseUrl = $"http://localhost:{dashboardService.Port}";
     InternalTasks.Load();
 
@@ -92,7 +98,7 @@ try
     dashboardService.RegisterHandler(new ZpOrchestratorHandler(dbConnectionService));
     var taskerService = new TaskerService(dbConnectionService, schedulerService, dashboardService.WwwrootPath);
     dashboardService.RegisterHandler(new SchedulerHandler(taskerService));
-    using var mcpRuntime = new z3nDash.Mcp.McpRuntime(dashboardService.Port, dbConnectionService, taskerService, schedulerService);
+    using var mcpRuntime = new Cronopus.Mcp.McpRuntime(dashboardService.Port, dbConnectionService, taskerService, schedulerService);
     dashboardService.RegisterHandler(mcpRuntime);
     var bridgeStore = new BridgeStore();
     var bridgeHost = new BridgeHost(bridgeStore, taskerService, schedulerService);
@@ -124,6 +130,10 @@ try
         ? $"http://localhost:{port}/?page=tasker"
         : $"http://localhost:{port}/?page=config";
 
+    var exitTcs = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+#if WINDOWS
+    DashboardOverlay.ExitRequested += () => exitTcs.TrySetResult();
+#endif
     var headless=args.Contains("--headless",StringComparer.OrdinalIgnoreCase);
     if(!headless)
     {
@@ -135,13 +145,12 @@ try
     }
     Console.WriteLine("Dashboard: "+startUrl);
 
-    var exitTcs = new TaskCompletionSource();
     Console.CancelKeyPress+=(_,e)=>{e.Cancel=true;exitTcs.TrySetResult();};
 
     if(!headless)_ = Task.Run(() =>
     {
         Console.ReadKey(true);
-        exitTcs.SetResult();
+        exitTcs.TrySetResult();
     });
 
     await exitTcs.Task;
@@ -158,7 +167,7 @@ catch (Exception ex)
 #if WINDOWS
     System.Windows.Forms.MessageBox.Show(
         $"Startup failed:\n{ex.Message}\n\nDetails: {crashLog}",
-        "z3nDash",
+        "Cronopus",
         System.Windows.Forms.MessageBoxButtons.OK,
         System.Windows.Forms.MessageBoxIcon.Error);
 #else

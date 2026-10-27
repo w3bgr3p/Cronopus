@@ -2,18 +2,18 @@ using System.Diagnostics;
 using System.Text;
 using System.Text.Json;
 
-namespace z3nDash;
+namespace Cronopus;
 
 /// <summary>
 /// Параметры командной строки python-скрипта. Скрипт не запускается: его
-/// разбирает sdk/python/_z3n_script_params.py через ast, наружу — JSON как есть.
+/// разбирает sdk/python/_cronopus_script_params.py через ast, наружу — JSON как есть.
 /// </summary>
 public static class ScriptParams
 {
     private const int TimeoutMs = 15_000;
 
     public static string InspectorPath
-        => Path.Combine(AppContext.BaseDirectory, "sdk", "python", "_z3n_script_params.py");
+        => Path.Combine(AppContext.BaseDirectory, "sdk", "python", "_cronopus_script_params.py");
 
     public static async Task<JsonElement> InspectAsync(string scriptPath, bool useVenv)
     {

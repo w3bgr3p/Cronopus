@@ -2,7 +2,7 @@ using System.Globalization;
 using System.Text;
 using System.Text.Json;
 
-namespace z3nDash;
+namespace Cronopus;
 
 /// <summary>
 /// Текстовый отчёт по дампу DiagTrace. Только цифры из дампа, сгруппированные

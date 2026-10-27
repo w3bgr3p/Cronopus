@@ -1,4 +1,4 @@
-﻿namespace z3nDash;
+﻿namespace Cronopus;
 
 /// <summary>
 /// Редиректит Console.Out в log sink на время блока using.

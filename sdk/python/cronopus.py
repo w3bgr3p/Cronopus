@@ -1,4 +1,4 @@
-"""Control z3nDash tasks without hard-coded URLs: the current one, or any other by ID."""
+"""Control Cronopus tasks without hard-coded URLs: the current one, or any other by ID."""
 import json
 import os
 from urllib.error import HTTPError
@@ -7,10 +7,10 @@ from urllib.request import Request, ProxyHandler, build_opener
 
 
 def _request(path, payload=None):
-    url = os.environ.get("Z3NDASH_API_URL")
-    token = os.environ.get("Z3NDASH_RUN_TOKEN")
+    url = os.environ.get("CRONOPUS_API_URL")
+    token = os.environ.get("CRONOPUS_RUN_TOKEN")
     if not url or not token:
-        raise RuntimeError("This script was not started by z3nDash")
+        raise RuntimeError("This script was not started by Cronopus")
     data = None if payload is None else json.dumps(payload, allow_nan=False).encode("utf-8")
     request = Request(url.rstrip("/") + path, data=data,
                       headers={"Authorization": "Bearer " + token,
@@ -21,7 +21,7 @@ def _request(path, payload=None):
             return json.load(response)
     except HTTPError as error:
         message = error.read().decode("utf-8", errors="replace")
-        raise RuntimeError(f"z3nDash API {error.code}: {message}") from error
+        raise RuntimeError(f"Cronopus API {error.code}: {message}") from error
 
 
 def _defer_payload(seconds, reason, until):
@@ -59,7 +59,7 @@ class CurrentTask(_TaskControl):
 
 
 class Task(_TaskControl):
-    """Another task, addressed by its z3nDash ID."""
+    """Another task, addressed by its Cronopus ID."""
 
     def __init__(self, task_id):
         if not task_id:

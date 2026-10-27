@@ -31,7 +31,7 @@ try:
         assert page.locator('#brCloseFirewall').is_disabled()
         page.locator('#brOpenFirewall').click();page.wait_for_function("document.querySelector('#brFirewallStatus').textContent.includes('is open')")
         assert calls[-1]=={'action':'open'}
-        page.locator('#brCloseFirewall').click();page.wait_for_function("document.querySelector('#brFirewallStatus').textContent.includes('No z3nDash')")
+        page.locator('#brCloseFirewall').click();page.wait_for_function("document.querySelector('#brFirewallStatus').textContent.includes('No Cronopus')")
         assert calls[-1]=={'action':'close'}
         page.locator('#brApplyServer').click();page.wait_for_function("document.querySelector('#brServerMessage').textContent==='Server settings applied'")
         assert calls[-1]['openFirewall'] is True

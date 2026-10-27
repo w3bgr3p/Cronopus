@@ -3,7 +3,7 @@
 using Newtonsoft.Json;
 using ZennoLab.InterfacesLibrary.ProjectModel;
 
-namespace z3nDash;
+namespace Cronopus;
 
 public static partial class InternalTasks
 {

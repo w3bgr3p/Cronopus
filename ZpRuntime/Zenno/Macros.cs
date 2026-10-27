@@ -19,7 +19,7 @@
 using System.Text.RegularExpressions;
 using ZennoLab.InterfacesLibrary.ProjectModel;
 
-namespace z3nDash;
+namespace Cronopus;
 
 public static class Macros
 {

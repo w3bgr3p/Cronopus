@@ -16,7 +16,7 @@
 
 using System.Net;
 using System.Text;
-using z3nDash;
+using Cronopus;
 
 public class EmbeddedServer
 {
@@ -250,7 +250,7 @@ public class EmbeddedServer
             string method = request.HttpMethod;
 
             // A discovered MCP client must never mutate a different/restarted instance.
-            if (request.Headers["X-Z3nDash-Instance"] is { } instance && instance != z3nDash.Mcp.McpRuntime.ActiveInstanceId)
+            if (request.Headers["X-Cronopus-Instance"] is { } instance && instance != Cronopus.Mcp.McpRuntime.ActiveInstanceId)
             {
                 response.StatusCode = 409;
                 response.ContentType = "application/json";

@@ -1,5 +1,5 @@
-﻿using z3nDash;        // Macros переехал сюда вместе с ExecuteMacro
-using z3nDash.Xml;
+﻿using Cronopus;        // Macros переехал сюда вместе с ExecuteMacro
+using Cronopus.Xml;
 
 if (args.Length == 0)
 {
@@ -106,11 +106,11 @@ if (args.Contains("--compile"))
     Console.WriteLine("── компиляция ──────────────────────────────────────────");
 
     var proj = new ZennoLab.InterfacesLibrary.ProjectModel.StubProject { Name = tpl.Name };
-    z3nDash.Xml.XmlCodeRunner runner;
+    Cronopus.Xml.XmlCodeRunner runner;
     try
     {
-        runner = new z3nDash.Xml.XmlCodeRunner(
-            new z3nDash.Xml.XmlCodeGlobals { project = proj, instance = new ZennoLab.CommandCenter.Instance() },
+        runner = new Cronopus.Xml.XmlCodeRunner(
+            new Cronopus.Xml.XmlCodeGlobals { project = proj, instance = new ZennoLab.CommandCenter.Instance() },
             Path.GetDirectoryName(Path.GetFullPath(path))!, tpl.OwnCode);
     }
     catch (Exception ex)
@@ -127,7 +127,7 @@ if (args.Contains("--compile"))
         Console.WriteLine($"нет сборок из <References>: {string.Join(", ", runner.Missing)}");
 
     int okCount = 0;
-    var bad = new List<(z3nDash.Xml.Branch b, string err)>();
+    var bad = new List<(Cronopus.Xml.Branch b, string err)>();
 
     foreach (var b in tpl.Steps.Where(x => !dead.Contains(x.Id)).SelectMany(x => x.Branches)
                         .Where(x => x is { Type: "OwnCode", Action: "CSharp" }))
@@ -178,30 +178,30 @@ Console.WriteLine("── запуск ─────────────�
 // SendInfoToLog из веток задваиваются.
 var project = new ZennoLab.InterfacesLibrary.ProjectModel.StubProject { Name = tpl.Name };
 
-z3nDash.Browser.BrowserSession? session = null;
+Cronopus.Browser.BrowserSession? session = null;
 
 if (attachTo is not null)
 {
     Console.WriteLine($"[br] подключаюсь по CDP: {attachTo}");
-    session = await z3nDash.Browser.BrowserSession.AttachAsync(attachTo);
+    session = await Cronopus.Browser.BrowserSession.AttachAsync(attachTo);
 }
 else if (wantLocal)
 {
     // Профиль обязателен: Patchright работает через persistent context.
-    profileDir ??= Path.Combine(Path.GetTempPath(), "z3nDash-xml", "profile-" + tpl.Name);
+    profileDir ??= Path.Combine(Path.GetTempPath(), "Cronopus-xml", "profile-" + tpl.Name);
     Console.WriteLine($"[br] Patchright{(headless ? " (headless)" : "")}, профиль {profileDir}");
     if (headless)
         Console.WriteLine("[br] headless видно по десятку признаков — для живых аккаунтов запускайте без него");
     // Прокси браузера задаётся при запуске и на живом инстансе не меняется,
     // поэтому берём его до старта: из флага, а иначе из переменной шаблона —
     // ветки разбирают ту же строку и потом сверяют её через SetProxy.
-    var launchProxy = z3nDash.Browser.BrowserSession.NormalizeProxy(
+    var launchProxy = Cronopus.Browser.BrowserSession.NormalizeProxy(
         proxy ?? tpl.Variables.GetValueOrDefault("proxy"));
 
     if (launchProxy.Length > 0) Console.WriteLine($"[br] прокси {launchProxy}");
     else Console.WriteLine("[br] без прокси — ветки с ProxySet откажут");
 
-    session = await z3nDash.Browser.BrowserSession.LaunchAsync(
+    session = await Cronopus.Browser.BrowserSession.LaunchAsync(
         profileDir, headless, launchProxy.Length > 0 ? launchProxy : null,
         log: Console.WriteLine);
 }

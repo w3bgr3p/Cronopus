@@ -3,7 +3,7 @@ using System.Diagnostics;
 using System.Management;
 #endif
 
-namespace z3nDash;
+namespace Cronopus;
 
 /// <summary>
 /// Суммарное потребление памяти задачами, запущенными оркестратором:
@@ -68,7 +68,11 @@ public sealed partial class SchedulerService
             })
             .ToList();
 
-        var table = SnapshotProcessTable();
+        // No external roots means there is no process tree to measure. Keep
+        // sampling machine counters below, but avoid a machine-wide WMI query.
+        var table = live.Any(run => run.Pid > 0)
+            ? SnapshotProcessTable()
+            : new ProcessTable(new(), new(), new());
         var now   = DateTime.UtcNow;
 
         // Дельта процессорного времени между двумя снимками. Процесс, которого

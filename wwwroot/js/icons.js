@@ -1,3 +1,63 @@
+// Shared z3n actions: 24x24, 2px outline, offline, colors supplied by theme tokens.
+window.ActionIcons = (function () {
+    var shapes = {
+        run: '<path d="m8 4 12 8-12 8Z"/>',
+        pause: '<path d="M7 4v16M17 4v16"/>',
+        interrupt: '<rect x="5" y="5" width="14" height="14" rx="1"/>',
+        restart: '<path d="M4 10a8 8 0 1 1 1 6M4 4v6h6"/>',
+        resume: '<path d="M4 5v14m5-15 11 8-11 8Z"/>',
+        resetAttempts: '<path class="icon-success" d="M7 4v15m-4-4 4 4 4-4"/><path class="icon-danger" d="M17 4v15m-4-4 4 4 4-4"/>',
+        resetSuccess: '<path d="M12 4v15m-6-6 6 6 6-6M5 22h14"/>',
+        resetFails: '<path d="M12 4v15m-6-6 6 6 6-6M5 22h14"/>',
+        upload: '<path d="M3 3h18M7 21V7m-4 4 4-4 4 4m6 10V7m-4 4 4-4 4 4"/>',
+        duplicate: '<rect x="8" y="8" width="12" height="13" rx="1"/><path d="M16 8V3H3v13h5"/>',
+        delete: '<path d="M3 6h18M9 6V3h6v3M5 6l1 15h12l1-15M10 10v7m4-7v7"/>',
+        script: '<path d="M14 3H5v18h14V8Zm0 0v5h5M9 12l-2 2 2 2m6-4 2 2-2 2"/>',
+        folder: '<path d="M3 8V4h6l3 3h9v13H3Zm0 3h18"/>',
+        terminal: '<rect x="3" y="4" width="18" height="16" rx="1"/><path d="m7 9 3 3-3 3m6 0h4"/>',
+        build: '<path d="m4 20 9-9m-4-5 5-3 7 7-3 5-4-4-3 3-4-4 3-3Z"/>',
+        inputs: '<circle cx="12" cy="4" r="2"/><circle cx="5" cy="19" r="2"/><circle cx="19" cy="19" r="2"/><path d="M12 6v5M5 17v-6h14v6"/>',
+        attempts: '<path d="M5 7h6M8 4v6m5 7h6M4 20 20 4"/>',
+        execution: '<path d="M4 6h16M4 12h16M4 18h16"/><circle cx="9" cy="6" r="2" fill="var(--bg2)"/><circle cx="15" cy="12" r="2" fill="var(--bg2)"/><circle cx="9" cy="18" r="2" fill="var(--bg2)"/>',
+        schedule: '<circle cx="12" cy="12" r="9"/><path d="M12 6v6l4 2"/>',
+        package: '<path d="m12 3 9 5v9l-9 5-9-5V8Zm0 10 9-5M12 13 3 8m9 5v9M7.5 5.5l9 5"/>',
+        install: '<path d="M12 3v12m-4-4 4 4 4-4M4 15v6h16v-6"/>',
+        loading: '<path d="M12 3a9 9 0 1 1-9 9"/>',
+        error: '<path d="m8 3-5 5v8l5 5h8l5-5V8l-5-5ZM12 7v6m0 4h.01"/>'
+    };
+    var tones = { run: 'green', pause: 'yellow', interrupt: 'red', restart: 'yellow',
+        resume: 'green', delete: 'red', resetSuccess: 'green', resetFails: 'red', error: 'red' };
+    function attr(value) {
+        return String(value).replace(/[&<>"']/g, function (c) {
+            return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
+        });
+    }
+    function svg(name) {
+        if (!Object.prototype.hasOwnProperty.call(shapes, name)) throw new Error('Unknown action icon: ' + name);
+        return '<svg class="action-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"'
+            + ' stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">' + shapes[name] + '</svg>';
+    }
+    function button(name, options) {
+        var tone = options.tone || tones[name] || 'neutral';
+        var html = '<button type="button" class="btn z3n-action action-' + attr(tone) + '" data-action="' + attr(name)
+            + '"';
+        var attrs = Object.assign({ title: options.label, 'aria-label': options.label }, options.attrs || {});
+        Object.keys(attrs).forEach(function (key) {
+            html += ' ' + key + '="' + attr(attrs[key]) + '"';
+        });
+        return html + (options.disabled ? ' disabled' : '') + '>' + svg(name) + '</button>';
+    }
+    function set(button, name, label) {
+        button.innerHTML = svg(name);
+        button.title = label;
+        button.setAttribute('aria-label', label);
+        button.setAttribute('aria-busy', name === 'loading' ? 'true' : 'false');
+        button.classList.toggle('action-busy', name === 'loading');
+    }
+    return Object.freeze({ svg: svg, button: button, set: set });
+})();
+
+// Navigation and executor artwork. Action toolbars use ActionIcons above.
 // Inline SVG — no CDN, no font dependency, works offline, consistent cross-OS rendering
 window.ICONS = {
     tasker:  `

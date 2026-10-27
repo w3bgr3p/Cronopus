@@ -1,6 +1,6 @@
 using System.Reflection;
 using System.Text.Json;
-using z3nDash;
+using Cronopus;
 
 if(args.Contains("--config-startup")){await ConfigStartupCases.Run();return;}
 if(args.Contains("--reset-attempts")){await ResetAttemptsCases.Run();return;}
@@ -10,11 +10,11 @@ if(args.Contains("--public-ip")){await PublicAddressCases.Run(true);return;}
 if(!args.Contains("--file-text")){await PublicAddressCases.Run();await FirewallCases.Run();}
 if(args.Length>=2&&args[0]=="--setup-e2e"){PublishedFixture.Setup(args[1]);return;}
 
-var root = Path.Combine(Path.GetTempPath(), "z3ndash-bridge-tests", Guid.NewGuid().ToString("N"));
+var root = Path.Combine(Path.GetTempPath(), "cronopus-bridge-tests", Guid.NewGuid().ToString("N"));
 Directory.CreateDirectory(root);
 try
 {
-    var type = typeof(SchedulerService).Assembly.GetType("z3nDash.TaskerService");
+    var type = typeof(SchedulerService).Assembly.GetType("Cronopus.TaskerService");
     Check(type != null, "TaskerService is missing");
     var dbs = new DbConnectionService();
     dbs.Connect(new DbConfig { Type = "sqlite", SqlitePath = Path.Combine(root, "tasks.db") });
@@ -39,7 +39,7 @@ try
     dynamic conflict = await service.InvokeAsync("POST", "/tasker/save", edit, CancellationToken.None);
     Check(conflict.StatusCode == 409, "stale revision overwrote task");
     Console.WriteLine("PASS revision-conflict");
-    var storeType = typeof(SchedulerService).Assembly.GetType("z3nDash.BridgeStore");
+    var storeType = typeof(SchedulerService).Assembly.GetType("Cronopus.BridgeStore");
     Check(storeType != null, "BridgeStore is missing");
     dynamic store = Activator.CreateInstance(storeType!, Path.Combine(root, "bridge"))!;
     dynamic key = store.CreateKey("desktop");
@@ -49,7 +49,7 @@ try
     dynamic reopened = Activator.CreateInstance(storeType!, Path.Combine(root, "bridge"))!;
     Check((string)reopened.NodeId == (string)store.NodeId, "node identity changed");
     Console.WriteLine("PASS identity");
-    var hostType = typeof(SchedulerService).Assembly.GetType("z3nDash.BridgeHost");
+    var hostType = typeof(SchedulerService).Assembly.GetType("Cronopus.BridgeHost");
     Check(hostType != null, "BridgeHost is missing");
     dynamic host = Activator.CreateInstance(hostType!, reopened, service, scheduler)!;
     reopened.State.Settings.BindAddress = "127.0.0.1";
@@ -83,7 +83,7 @@ try
     Check((await anonymous.PostAsync(new Uri(uri, $"/bridge/v1/uploads/{uploadId}/commit"), new StringContent("{}", System.Text.Encoding.UTF8, "application/json"))).IsSuccessStatusCode, "commit failed");
     Check(File.ReadAllBytes(Path.Combine(uploadDir,"nested","тест.bin")).SequenceEqual(bytes), "published bytes differ");
     Console.WriteLine("PASS uploads");
-    var outputType=typeof(SchedulerService).Assembly.GetType("z3nDash.BridgeOutput");
+    var outputType=typeof(SchedulerService).Assembly.GetType("Cronopus.BridgeOutput");
     Check(outputType!=null,"BridgeOutput is missing");
     dynamic output=Activator.CreateInstance(outputType!,262144,2000)!;
     output.Append("task","run",new ReadOnlyMemory<byte>(new byte[1000000]));

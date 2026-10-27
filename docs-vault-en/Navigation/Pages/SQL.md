@@ -2,7 +2,7 @@
 
 SQL is a separate panel for SQLite files and PostgreSQL connections.
 Choose the database type in the header. The page keeps its existing
-`/?page=sqlite` address and does not change the main z3nDash database.
+`/?page=sqlite` address and does not change the main Cronopus database.
 
 ## SQLite
 

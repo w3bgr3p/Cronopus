@@ -1,6 +1,6 @@
 using System.Runtime.InteropServices;
 
-namespace z3nDash;
+namespace Cronopus;
 
 public sealed record MachineResources(double CpuPct, long MemoryMB, long TotalMemoryMB);
 

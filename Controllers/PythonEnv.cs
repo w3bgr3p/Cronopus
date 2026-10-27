@@ -1,6 +1,6 @@
 using System.Diagnostics;
 
-namespace z3nDash;
+namespace Cronopus;
 
 /// <summary>
 /// Каталог зависимостей рядом со скриптом. Интерпретатор остаётся системным:

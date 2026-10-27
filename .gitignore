@@ -115,6 +115,9 @@ crash.log
 !tests/Mcp.Integration/
 !tests/Mcp.Integration/*.cs
 !tests/Mcp.Integration/*.csproj
+!tests/Tasker.Resources/
+!tests/Tasker.Resources/*.cs
+!tests/Tasker.Resources/*.csproj
 
 # Temporary and OS-generated files
 *.tmp

@@ -1,5 +1,5 @@
 using System.Text.RegularExpressions;
-namespace z3nDash;
+namespace Cronopus;
 
 public sealed partial class TaskerService
 {

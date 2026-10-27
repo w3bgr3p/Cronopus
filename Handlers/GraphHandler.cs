@@ -5,9 +5,9 @@ using System.Runtime.Loader;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
-using z3nDash;
+using Cronopus;
 
-namespace z3nDash;
+namespace Cronopus;
 
 internal sealed class GraphHandler
 {

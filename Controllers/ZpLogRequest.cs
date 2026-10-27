@@ -1,4 +1,4 @@
-namespace z3nDash;
+namespace Cronopus;
 
 public sealed record ZpLogRequest(string Kind, string Process, int Limit, string Project)
 {

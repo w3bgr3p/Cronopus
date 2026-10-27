@@ -1,7 +1,7 @@
 using System.Net;
 using System.Text;
 using System.Text.Json;
-namespace z3nDash;
+namespace Cronopus;
 
 public sealed partial class BridgeTransfers
 {
@@ -18,7 +18,7 @@ public sealed partial class BridgeTransfers
         if(!_running.TryAdd(id,cts))return Public(job);
         _=Task.Run(async()=>{try{await _workers.WaitAsync(cts.Token);try{await Run(job,cts.Token);}finally{_workers.Release();}}
             catch(OperationCanceledException){job.State=job.CancelRequested?"cancelled":"interrupted";job.Error=job.CancelRequested?"":"Transfer interrupted. Resume to continue.";Save(job);}
-            catch(Exception ex){job.State="failed";job.Error=ex is HttpRequestException?"Connection failed. Check the server and resume.":ex.Message;Save(job);}
+            catch(Exception ex){job.State="failed";job.Error=(ex is HttpRequestException?"Connection failed. Check the server and resume."+Environment.NewLine:"")+$"HResult=0x{ex.HResult:X8}"+Environment.NewLine+ex;Save(job);}
             finally{_running.TryRemove(id,out _);cts.Dispose();}});
         return Public(job);
     }

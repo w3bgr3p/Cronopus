@@ -1,4 +1,4 @@
-namespace z3nDash.Bas;
+namespace Cronopus.Bas;
 
 /// <summary>
 /// Строковые литералы для BAS-кода. Движок BAS-скрипта — старый JS: сырой

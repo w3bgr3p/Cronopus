@@ -4,7 +4,7 @@ using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace z3nDash.Browser
+namespace Cronopus.Browser
 {
     /// <summary>
     /// Курсор страницы: где он сейчас и как доходит до цели.

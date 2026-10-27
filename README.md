@@ -1,6 +1,6 @@
-# z3nDash
+# Cronopus
 
-z3nDash is a local Windows control center for automation workflows. It combines
+Cronopus is a local Windows control center for automation workflows. It combines
 task scheduling, ZennoPoster, ZennoBrowser and ShardX operations, logs, HTTP inspection,
 system snapshots, and day-to-day utilities in one embedded dashboard.
 
@@ -33,7 +33,7 @@ dashboard and local API are served by the built-in HTTP server.
 ZennoPoster, ZennoBrowser, and ShardX are required only for the dashboard
 features that integrate with those services.
 
-PostgreSQL stores z3nDash application data. The SQL page is a separate tool for
+PostgreSQL stores Cronopus application data. The SQL page is a separate tool for
 local SQLite files and PostgreSQL connections. Its source selector does not
 change the application's database configuration. PostgreSQL queries are read-only;
 the viewer connection string stays on the current page and is not saved.
@@ -41,21 +41,21 @@ the viewer connection string stays on the current page and is not saved.
 ## Build from source
 
 ```powershell
-git clone https://github.com/w3bgr3p/z3nDash.git
-cd z3nDash
-dotnet restore z3nDash.sln
-dotnet build z3nDash.csproj -c Release -f net10.0-windows
+git clone https://github.com/w3bgr3p/Cronopus.git Cronopus
+cd Cronopus
+dotnet restore Cronopus.sln
+dotnet build Cronopus.csproj -c Release -f net10.0-windows
 ```
 
 To create a self-contained Windows build:
 
 ```powershell
-dotnet publish z3nDash.csproj `
+dotnet publish Cronopus.csproj `
   -c Release `
   -f net10.0-windows `
   -r win-x64 `
   --self-contained true `
-  -o publish/z3nDash
+  -o publish/Cronopus
 ```
 
 Build output and installers are intentionally excluded from Git.
@@ -68,10 +68,10 @@ no URL reservation and no elevation are required.
 Start the application:
 
 ```powershell
-dotnet run --project z3nDash.csproj -f net10.0-windows
+dotnet run --project Cronopus.csproj -f net10.0-windows
 ```
 
-When no valid configuration exists, z3nDash opens:
+When no valid configuration exists, Cronopus opens:
 
 ```text
 http://localhost:33333/?page=config
@@ -88,10 +88,10 @@ In **Config**:
 Example connection string:
 
 ```text
-Host=127.0.0.1;Port=5432;Database=z3nDash;Username=z3nDash;Password=change-me;Search Path=z3nDash
+Host=127.0.0.1;Port=5432;Database=Cronopus;Username=Cronopus;Password=change-me;Search Path=Cronopus
 ```
 
-`Search Path` selects the PostgreSQL schema. If it is omitted, z3nDash uses
+`Search Path` selects the PostgreSQL schema. If it is omitted, Cronopus uses
 `public`.
 
 After configuration, the application connects to PostgreSQL and opens the
@@ -113,7 +113,7 @@ The default dashboard address is `http://localhost:33333`.
 
 ### MCP for agents
 
-Launch `z3nDash.exe --mcp` from an MCP client to control Tasker and saved Remote
+Launch `Cronopus.exe --mcp` from an MCP client to control Tasker and saved Remote
 Tasker connections. The normal dashboard must already be running. The native
 stdio server discovers its actual port and includes typed tools, revision
 protection, bounded pages, read-only mode and offline documentation resources.
@@ -125,7 +125,7 @@ See [MCP setup and tool reference](Mcp/README.md).
 | ZP7 | Manage ZennoPoster workers and jobs |
 | Browser | Manage ZennoBrowser or ShardX profiles: start, stop, proxy, create |
 | allLogs | Combined ZP7 log history from every node (modal on ZP7) |
-| Traffic | Inspect and replay HTTP traffic from the nodes and z3nDash (modal on ZP7) |
+| Traffic | Inspect and replay HTTP traffic from the nodes and Cronopus (modal on ZP7) |
 | HAR | Inspect HAR archives and replay requests from them |
 | zpXml | View, edit, and debug ZennoPoster XML templates as an executable graph |
 | XML | Open, format, search, and inspect XML as a collapsible tree |
@@ -147,7 +147,7 @@ icon or `Ctrl+Alt+Z` to restore it; choose **Exit** in the tray menu to quit.
 
 ## Network safety
 
-Remote Tasker connects z3nDash instances through a separate, optional HTTPS bridge
+Remote Tasker connects Cronopus instances through a separate, optional HTTPS bridge
 (default port `38473`). Enable it in **Config → Remote Tasker**, create an access
 key and use **Copy connection**. On the client, open Tasker → **New connection**,
 paste the connection code and add the node. Connections use pinned certificates
@@ -183,5 +183,5 @@ templates/    dashboard and report templates
 
 ## License
 
-z3nDash is distributed under the
+Cronopus is distributed under the
 [GNU Affero General Public License v3.0](LICENSE).

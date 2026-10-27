@@ -1,9 +1,9 @@
-namespace z3nDash;
+namespace Cronopus;
 
 /// <summary>
 /// Настройки ZpRuntime, которые проставляет хост-приложение при старте.
 /// Нужны, чтобы рантайм не зависел от <see cref="Config"/> — иначе получается
-/// цикл ZpRuntime → z3nDash → ZpRuntime.
+/// цикл ZpRuntime → Cronopus → ZpRuntime.
 /// </summary>
 public static class ZpRuntimeOptions
 {

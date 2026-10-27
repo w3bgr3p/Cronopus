@@ -3,7 +3,7 @@ using System.Text;
 using System.Text.Json;
 using System.Text.RegularExpressions;
 
-namespace z3nDash;
+namespace Cronopus;
 
 internal sealed class DocsGraphHandler
 {

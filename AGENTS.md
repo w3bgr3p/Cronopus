@@ -1,7 +1,7 @@
-# Agent access to z3nDash
+# Agent access to Cronopus
 
 Use the native MCP server for Tasker operations instead of guessing HTTP routes:
-launch the installed `z3nDash.exe --mcp` from an MCP client. The normal dashboard
+launch the installed `Cronopus.exe --mcp` from an MCP client. The normal dashboard
 must already be running. The MCP process does not start another scheduler.
 
 Agent documentation is English. Use tool schemas directly; do not preload guides.

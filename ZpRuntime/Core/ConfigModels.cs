@@ -1,4 +1,4 @@
-﻿namespace z3nDash;
+﻿namespace Cronopus;
 
 public class DbConfig
 {
@@ -7,7 +7,7 @@ public class DbConfig
     public string SqlitePath
     {
         get => string.IsNullOrWhiteSpace(_sqlitePath)
-            ? Path.Combine(AppContext.BaseDirectory, "z3nDash.db")
+            ? Path.Combine(AppContext.BaseDirectory, "Cronopus.db")
             : _sqlitePath;
         set => _sqlitePath = value;
     }

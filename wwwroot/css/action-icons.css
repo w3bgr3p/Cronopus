@@ -1,0 +1,45 @@
+/* Shared z3n toolbar contract. Load after page CSS. */
+.btn.z3n-action {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex: 0 0 36px;
+    width: 36px;
+    min-width: 36px;
+    height: 30px;
+    padding: 0;
+    box-sizing: border-box;
+    line-height: 1;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    background: var(--bg2);
+    color: var(--text);
+    cursor: pointer;
+}
+.btn.z3n-action .action-icon { width: 20px; height: 20px; display: block; flex: none; }
+.btn.z3n-action.action-green { color: var(--green); border-color: var(--green); }
+.btn.z3n-action.action-red { color: var(--red); border-color: var(--red); }
+.btn.z3n-action.action-yellow { color: var(--yellow); border-color: var(--yellow); }
+.btn.z3n-action .icon-success { stroke: var(--green); }
+.btn.z3n-action .icon-danger { stroke: var(--red); }
+.btn.z3n-action:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.btn.z3n-action:disabled { opacity: .4; cursor: default; }
+.action-busy .action-icon { animation: action-spin 1s linear infinite; }
+@keyframes action-spin { to { transform: rotate(360deg); } }
+@media (prefers-reduced-motion: reduce) { .action-busy .action-icon { animation: none; } }
+.detail-actions { align-items: center; }
+.detail-actions .action-group {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: var(--sp-2);
+    padding: var(--sp-2) var(--sp-4);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    background: var(--bg2);
+    max-width: 100%;
+    min-width: 0;
+}
+.detail-actions .action-group:empty { display: none; }
+.detail-actions #runCount { height: 30px; }
+.action-selection { color: var(--text2); font-size: var(--fs-10); white-space: nowrap; }

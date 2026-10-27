@@ -6,10 +6,10 @@ using System.Text;
 using System.Text.Json.Serialization;
 using System.Text.RegularExpressions;
 
-namespace z3nDash;
+namespace Cronopus;
 
 /// <summary>
-/// Что стоит на машине из того, чем z3nDash запускает задачи: python, node, npm,
+/// Что стоит на машине из того, чем Cronopus запускает задачи: python, node, npm,
 /// dotnet, git bash, PowerShell, Postgres, WebView2 и прочее.
 /// Каждая строка — наблюдение: что запустили или где посмотрели и что получили.
 /// Причин «почему нет» здесь не выводим — их читает человек по Detail.
@@ -130,7 +130,7 @@ internal static class EnvironmentCheck
         // "1.0.3.1+<полный хэш>": номер — в колонку, хэш коммита — в подробности.
         var plus   = appVersion.IndexOf('+');
         var commit = plus < 0 ? "" : appVersion[(plus + 1)..];
-        yield return new Item("System", "z3nDash", Info, plus < 0 ? appVersion : appVersion[..plus], AppContext.BaseDirectory,
+        yield return new Item("System", "Cronopus", Info, plus < 0 ? appVersion : appVersion[..plus], AppContext.BaseDirectory,
             RuntimeInformation.FrameworkDescription + (commit.Length > 0 ? $", commit {commit[..Math.Min(12, commit.Length)]}" : ""));
 
         yield return new Item("System", "Run as administrator", Info, IsAdmin(), "", $"user {Environment.UserName}");

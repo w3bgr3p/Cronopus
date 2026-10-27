@@ -1,8 +1,8 @@
 import json,os,shutil,subprocess,time,tempfile,urllib.request
 from pathlib import Path
-root=Path(tempfile.mkdtemp(prefix='z3ndash-published-e2e-'))
-publish=Path(os.environ.get('BRIDGE_PUBLISH_PATH',str(Path.home()/'AppData/Local/Temp/z3ndash-bridge-publish')))
-runner=Path.home()/'AppData/Local/Temp/z3ndash-bridge-runner/Bridge.Integration.exe'
+root=Path(tempfile.mkdtemp(prefix='cronopus-published-e2e-'))
+publish=Path(os.environ.get('BRIDGE_PUBLISH_PATH',str(Path.home()/'AppData/Local/Temp/cronopus-bridge-publish')))
+runner=Path.home()/'AppData/Local/Temp/cronopus-bridge-runner/Bridge.Integration.exe'
 for name in ['local','remote']:
     shutil.copytree(publish,root/name,copy_function=os.link,ignore=shutil.ignore_patterns('appsettings.secrets.json','crash.log'))
 subprocess.run(['rtk','proxy',str(runner),'--setup-e2e',str(root)],check=True)
@@ -14,9 +14,9 @@ def request(base,path,body=None):
     with urllib.request.urlopen(req,timeout=20) as r:return json.load(r)
 try:
     for name in ['remote','local']:
-        env=dict(os.environ,Z3NDASH_BRIDGE_STATE_DIR=str(root/(name+'-state')))
+        env=dict(os.environ,CRONOPUS_BRIDGE_STATE_DIR=str(root/(name+'-state')))
         log=open(root/(name+'.log'),'w',encoding='utf-8')
-        processes.append(subprocess.Popen([str(root/name/'z3nDash.exe'),'--headless'],cwd=root/name,env=env,stdout=log,stderr=log,creationflags=subprocess.CREATE_NO_WINDOW))
+        processes.append(subprocess.Popen([str(root/name/'Cronopus.exe'),'--headless'],cwd=root/name,env=env,stdout=log,stderr=log,creationflags=subprocess.CREATE_NO_WINDOW))
     for attempt in range(90):
         try:
             request(fixture['local_url'],'/bridge-local/connections')
@@ -39,9 +39,9 @@ try:
         request(fixture['local_url'],base+'tasker/'+action,dict(id='remote-only'))
     assert [t['name'] for t in request(fixture['local_url'],'/tasker/list')]==['LOCAL SENTINEL']
     processes[0].terminate();processes[0].wait(timeout=20)
-    env=dict(os.environ,Z3NDASH_BRIDGE_STATE_DIR=str(root/'remote-state'))
+    env=dict(os.environ,CRONOPUS_BRIDGE_STATE_DIR=str(root/'remote-state'))
     log=open(root/'remote-restarted.log','w',encoding='utf-8')
-    processes[0]=subprocess.Popen([str(root/'remote'/'z3nDash.exe'),'--headless'],cwd=root/'remote',env=env,stdout=log,stderr=log,creationflags=subprocess.CREATE_NO_WINDOW)
+    processes[0]=subprocess.Popen([str(root/'remote'/'Cronopus.exe'),'--headless'],cwd=root/'remote',env=env,stdout=log,stderr=log,creationflags=subprocess.CREATE_NO_WINDOW)
     for attempt in range(30):
         try:
             rows=request(fixture['local_url'],base+'tasks')['items'];assert rows[0]['id']=='remote-only';break

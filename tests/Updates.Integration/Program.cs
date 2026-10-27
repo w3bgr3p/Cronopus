@@ -1,8 +1,8 @@
 using System.IO.Compression;
 using System.Security.Cryptography;
-using z3nDash;
+using Cronopus;
 
-var root = Path.Combine(Path.GetTempPath(), "z3ndash-update-test-" + Guid.NewGuid().ToString("N"));
+var root = Path.Combine(Path.GetTempPath(), "cronopus-update-test-" + Guid.NewGuid().ToString("N"));
 Directory.CreateDirectory(root);
 try
 {
@@ -23,7 +23,7 @@ try
         catch (InvalidDataException) { return; }
         throw new Exception("Unsafe package was accepted");
     }
-    Package(("z3nDash.exe", "new exe"), ("z3nDash.dll", "new dll"),
+    Package(("Cronopus.exe", "new exe"), ("Cronopus.dll", "new dll"),
         ("wwwroot/config.html", "new UI"), ("appsettings.secrets.json", "must not ship"),
         ("ui-state.json", "must not overwrite"), ("logs/current.jsonl", "must not overwrite"),
         (".playwright/node/win32_x64/node.exe", "required browser driver"));
@@ -41,7 +41,7 @@ try
     await Reject(() => UpdatePackage.StageAsync(zip, Path.Combine(root, "bad-hash"), "sha256:" + new string('0', 64)));
     Console.WriteLine("PASS corrupt download rejected before extraction");
     File.Delete(zip);
-    Package(("z3nDash.exe", "new exe"), ("../escape.txt", "escape"));
+    Package(("Cronopus.exe", "new exe"), ("../escape.txt", "escape"));
     await Reject(() => UpdatePackage.StageAsync(zip, Path.Combine(root, "traversal"), Digest()));
     if (File.Exists(Path.Combine(root, "escape.txt"))) throw new Exception("ZIP escaped destination");
     Console.WriteLine("PASS archive traversal rejected");

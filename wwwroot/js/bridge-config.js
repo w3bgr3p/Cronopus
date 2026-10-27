@@ -10,8 +10,8 @@
     }
     async function send(method, path, body) {
         var response = await fetch(path, {method:method, headers:{'Content-Type':'application/json','X-Bridge-Local':'1'}, body:body === undefined ? undefined : JSON.stringify(body)});
-        if(response.status===404||response.status===405)throw new Error('This operation is missing in the running z3nDash backend. Restart the updated application; refreshing the page alone is not enough.');
-        var data;try{data=await response.json();}catch(e){throw new Error('Invalid response from z3nDash (HTTP '+response.status+'). Check that the updated application is running.');}
+        if(response.status===404||response.status===405)throw new Error('This operation is missing in the running Cronopus backend. Restart the updated application; refreshing the page alone is not enough.');
+        var data;try{data=await response.json();}catch(e){throw new Error('Invalid response from Cronopus (HTTP '+response.status+'). Check that the updated application is running.');}
         if (!response.ok) throw new Error(data.error || 'Request failed (' + response.status + ')'); return data;
     }
     function esc(value) { return String(value == null ? '' : value).replace(/[&<>"']/g, function(c) {return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];}); }
@@ -19,10 +19,10 @@
     function message(text,scope) { var el=document.getElementById(scope==='connection'?'brMessage':'brServerMessage')||document.getElementById('brMessage');if(el)el.textContent = text; }
     function keyMessage(text){var el=document.getElementById('brKeyStatus');if(el)el.textContent=text;else message(text);}
     function firewallStatus(value){
-        if(!value){document.getElementById('brFirewallStatus').textContent='The running backend does not support Firewall controls. Restart the updated z3nDash application.';
+        if(!value){document.getElementById('brFirewallStatus').textContent='The running backend does not support Firewall controls. Restart the updated Cronopus application.';
             ['brOpenFirewall','brCloseFirewall','brCheckFirewall','brFirewallOnApply'].forEach(function(id){document.getElementById(id).disabled=true;});document.getElementById('brFirewallOnApply').checked=false;return;}
         document.getElementById('brCheckFirewall').disabled=false;
-        document.getElementById('brFirewallStatus').textContent=value.error||('TCP '+value.port+' · '+(value.open?'z3nDash inbound rule is open':value.exists?'z3nDash rule needs updating for the current port/application':'No z3nDash inbound rule'));
+        document.getElementById('brFirewallStatus').textContent=value.error||('TCP '+value.port+' · '+(value.open?'Cronopus inbound rule is open':value.exists?'Cronopus rule needs updating for the current port/application':'No Cronopus inbound rule'));
         ['brOpenFirewall','brCloseFirewall','brFirewallOnApply'].forEach(function(id){document.getElementById(id).disabled=!value.supported;});
         if(!value.supported)document.getElementById('brFirewallOnApply').checked=false;
         document.getElementById('brCloseFirewall').disabled=!value.supported||!value.exists;
@@ -49,9 +49,9 @@
         if(!s.keys.some(function(k){return k.id===exportKey.id&&!k.revoked;}))throw new Error('This key is no longer active. Create a new key.');
         var code=root.BridgeConnectionCode.encode({name:new URL(s.actualUrl).hostname,address:s.actualUrl,nodeId:s.nodeId,fingerprint:s.fingerprint,secret:exportKey.secret});
         var field=document.getElementById('brConnectionCode');field.value=code;
-        try{await navigator.clipboard.writeText(code);keyMessage('Connection copied. Paste it into New connection on your other z3nDash.');}
+        try{await navigator.clipboard.writeText(code);keyMessage('Connection copied. Paste it into New connection on your other Cronopus.');}
         catch(e){field.hidden=false;field.focus();field.select();var copied=false;try{copied=document.execCommand('copy');}catch(ignored){}
-            keyMessage(copied?'Connection copied. Paste it into New connection on your other z3nDash.':'Select this complete connection code and press Ctrl+C.');}
+            keyMessage(copied?'Connection copied. Paste it into New connection on your other Cronopus.':'Select this complete connection code and press Ctrl+C.');}
     }
     async function detectIp(){
         var request=++ipRequest,edits=ipEdits,version=configLoad,button=document.getElementById('brDetectIp'),field=document.getElementById('br_advertisedAddress'),info=document.getElementById('brIpStatus');

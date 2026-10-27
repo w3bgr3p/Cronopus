@@ -4,7 +4,7 @@ ZP7 shows task state taken directly from the registered ZP node services.
 
 ## Data source
 
-z3nDash stores only the node addresses and their tokens, in the `zp_nodes` table. Task state is requested from each node:
+Cronopus stores only the node addresses and their tokens, in the `zp_nodes` table. Task state is requested from each node:
 
 ```text
 GET http://HOST:PORT/state
@@ -12,7 +12,7 @@ Authorization: Bearer <token>
 ```
 
 The token comes from the node registration line (see [[02. Adding a ZennoPoster worker on the LAN]])
-and is attached on the z3nDash side: it never reaches the browser. A node that
+and is attached on the Cronopus side: it never reaches the browser. A node that
 answers `401` is marked **Unauthorized** in the list — paste the registration line
 again.
 
@@ -66,7 +66,7 @@ Apply/update settings and set threads come from the Limits panel.
 - Task Detail — parameters and actions of the selected task;
 - Logs — logs of the selected task from its node (`GET /zp/log`);
 - allLogs — a modal window with the [[Logs|shared history]] from every node, with filters and sorting;
-- traffic — a modal window with [[Traffic|HTTP traffic]] from every node and from z3nDash itself;
+- traffic — a modal window with [[Traffic|HTTP traffic]] from every node and from Cronopus itself;
 - HTTP — traffic of the selected task: `GET /zp/traffic?machine=...&task_id=...`, polled every 3 seconds;
 - Projects heatmap — project data from the report API.
 

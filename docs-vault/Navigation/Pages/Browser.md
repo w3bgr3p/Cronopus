@@ -13,7 +13,7 @@ Browser управляет профилями антидетект-браузе�
 | ZennoBrowser | `BrowsersApi.ZennoBrowser` | `http://localhost:8160` | заголовок `Api-Token` |
 | ShardX | `BrowsersApi.ShardX` | `http://127.0.0.1:40325` | `Authorization: Bearer <token>` |
 
-Токен на страницу не попадает: его подставляет сервер z3nDash при проксировании.
+Токен на страницу не попадает: его подставляет сервер Cronopus при проксировании.
 
 ## Profiles
 

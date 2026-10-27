@@ -1,7 +1,7 @@
 using System.ComponentModel;
 using System.Runtime.InteropServices;
 using Microsoft.Win32.SafeHandles;
-namespace z3nDash;
+namespace Cronopus;
 
 public static class BridgeUploadPaths
 {

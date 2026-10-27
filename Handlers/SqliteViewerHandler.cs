@@ -2,7 +2,7 @@
 using System.Text.Json;
 using Microsoft.Data.Sqlite;
 
-namespace z3nDash;
+namespace Cronopus;
 
 internal sealed class SqliteViewerHandler
 {

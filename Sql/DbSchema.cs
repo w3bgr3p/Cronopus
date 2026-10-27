@@ -1,4 +1,4 @@
-﻿namespace z3nDash
+﻿namespace Cronopus
 {
     
     public class TableSchema
@@ -8,7 +8,7 @@
     }
     
     /// <summary>
-    /// Централизованное хранилище схем таблиц, которые z3nDash использует напрямую.
+    /// Централизованное хранилище схем таблиц, которые Cronopus использует напрямую.
     /// </summary>
     public static class DbSchema
     {

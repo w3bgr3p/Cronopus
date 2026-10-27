@@ -12,7 +12,7 @@ public class HTTP
         var networkHandler = new HttpClientHandler();
 
         // Оборачиваем его в твой логгер
-        var debugHandler = new z3nDash.HttpDebugHandler(projectName: "SUK")
+        var debugHandler = new Cronopus.HttpDebugHandler(projectName: "SUK")
         { 
             InnerHandler = networkHandler 
         };

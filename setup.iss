@@ -1,9 +1,9 @@
 [Setup]
-AppName=z3nDash
-AppVersion=1.1.3.0
+AppName=Cronopus
+AppVersion=1.1.3.1
 ; По умолчанию предлагаем локальную папку, но даем ВЫБОР
-DefaultDirName={localappdata}\z3nDash
-DefaultGroupName=z3nDash
+DefaultDirName={localappdata}\Cronopus
+DefaultGroupName=Cronopus
 ; Установка только для текущего пользователя (не нужен админ)
 PrivilegesRequired=lowest
 
@@ -15,11 +15,11 @@ DisableProgramGroupPage=no
 AlwaysShowDirOnReadyPage=yes
 
 OutputDir=installer_output
-OutputBaseFilename=z3nDash_Setup
+OutputBaseFilename=Cronopus_Setup
 Compression=lzma2
 SolidCompression=yes
 SetupIconFile=icon.ico
-UninstallDisplayIcon={app}\z3nDash.exe
+UninstallDisplayIcon={app}\Cronopus.exe
 ArchitecturesAllowed=x64compatible
 ArchitecturesInstallIn64BitMode=x64compatible
 
@@ -35,8 +35,23 @@ Source: "zpServer.zp"; DestDir: "{app}"; Flags: ignoreversion
 
 
 [Icons]
-Name: "{group}\z3nDash"; Filename: "{app}\z3nDash.exe"
-Name: "{autodesktop}\z3nDash"; Filename: "{app}\z3nDash.exe"
+Name: "{group}\Cronopus"; Filename: "{app}\Cronopus.exe"
+Name: "{autodesktop}\Cronopus"; Filename: "{app}\Cronopus.exe"
 
 [Run]
-Filename: "{app}\z3nDash.exe"; Description: "Запустить z3nDash"; WorkingDir: "{app}"; Flags: postinstall shellexec nowait skipifsilent
+Filename: "{app}\Cronopus.exe"; Description: "Запустить Cronopus"; WorkingDir: "{app}"; Flags: postinstall shellexec nowait skipifsilent
+
+[Code]
+procedure CurStepChanged(CurStep: TSetupStep);
+var
+  ResultCode: Integer;
+begin
+  if CurStep = ssPostInstall then
+  begin
+    if not Exec(ExpandConstant('{app}\Cronopus.exe'), '--import-legacy',
+      ExpandConstant('{app}'), SW_HIDE, ewWaitUntilTerminated, ResultCode) then
+      RaiseException('Could not start z3nDash data import.');
+    if ResultCode <> 0 then
+      RaiseException('z3nDash data import failed. Original data was retained.');
+  end;
+end;

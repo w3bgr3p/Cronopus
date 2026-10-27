@@ -2,7 +2,7 @@ using System.Data.Common;
 using System.Text.Json;
 using Microsoft.Data.Sqlite;
 using Npgsql;
-namespace z3nDash;
+namespace Cronopus;
 
 public sealed partial class TaskerService
 {

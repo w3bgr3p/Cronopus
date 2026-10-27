@@ -1,6 +1,6 @@
 using System.Text.RegularExpressions;
 
-namespace z3nDash;
+namespace Cronopus;
 
 public enum HeAction { Get = 1, Click = 2, Set = 3 }
 

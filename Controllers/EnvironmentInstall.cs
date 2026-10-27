@@ -1,6 +1,6 @@
 using System.Diagnostics;
 
-namespace z3nDash;
+namespace Cronopus;
 
 /// <summary>
 /// Установка того, чего не нашла EnvironmentCheck. Команды фиксированные, по ключу:
@@ -54,7 +54,7 @@ internal static class EnvironmentInstall
         [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
         $ProgressPreference = 'SilentlyContinue'
         $arch = if ($env:PROCESSOR_ARCHITECTURE -eq 'ARM64') { 'arm64' } else { 'x64' }
-        $dir  = Join-Path $env:TEMP 'z3nDash-winget'
+        $dir  = Join-Path $env:TEMP 'Cronopus-winget'
         New-Item -ItemType Directory -Force $dir | Out-Null
         try {
             $release = Invoke-RestMethod 'https://api.github.com/repos/microsoft/winget-cli/releases/latest'
@@ -89,7 +89,7 @@ internal static class EnvironmentInstall
                 if ($LASTEXITCODE -ne 0 -or !($version -match '^v?\d+\.\d+')) { throw 'winget --version failed after license repair.' }
             }
             Write-Host $version
-            Write-Host 'Done. Press Check in z3nDash.'
+            Write-Host 'Done. Press Check in Cronopus.'
         } catch {
             Write-Host ("FAILED: " + $_.Exception.GetType().Name + ": " + $_.Exception.Message) -ForegroundColor Red
             throw
@@ -120,10 +120,10 @@ internal static class EnvironmentInstall
 
         if (recipe.Kind == "powershell")
         {
-            var script = Path.Combine(Path.GetTempPath(), "z3nDash-install.ps1");
+            var script = Path.Combine(Path.GetTempPath(), "Cronopus-install.ps1");
             File.WriteAllText(script, recipe.Command);
             Process.Start(new ProcessStartInfo("cmd.exe",
-                $"/s /k \"title z3nDash install: {recipe.Title} & powershell -NoProfile -ExecutionPolicy Bypass -File \"{script}\"\"")
+                $"/s /k \"title Cronopus install: {recipe.Title} & powershell -NoProfile -ExecutionPolicy Bypass -File \"{script}\"\"")
             {
                 UseShellExecute = true,
             });
@@ -132,7 +132,7 @@ internal static class EnvironmentInstall
 
         // /s снимает только первую и последнюю кавычку — внутренние кавычки команды целы.
         // /k оставляет окно открытым: итог установки должен быть виден.
-        Process.Start(new ProcessStartInfo("cmd.exe", $"/s /k \"title z3nDash install: {recipe.Title} & {recipe.Command}\"")
+        Process.Start(new ProcessStartInfo("cmd.exe", $"/s /k \"title Cronopus install: {recipe.Title} & {recipe.Command}\"")
         {
             UseShellExecute = true,
         });

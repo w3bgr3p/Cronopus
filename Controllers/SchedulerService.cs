@@ -3,15 +3,18 @@ using System.Diagnostics;
 using System.Text;
 using System.Text.Json;
 using Cronos;
-using z3nDash;
+using Cronopus;
 using ZennoLab.InterfacesLibrary.ProjectModel;
 
-namespace z3nDash;
+namespace Cronopus;
 
 public sealed partial class SchedulerService : IDisposable
 {
     private readonly DbConnectionService _dbService;
     private readonly System.Threading.Timer _timer;
+    private readonly TaskProcessLifetime _processLifetime = new();
+    private int _stopping;
+    private bool Stopping => Volatile.Read(ref _stopping) != 0;
     internal readonly ConcurrentDictionary<string, RunningProcess> _running = new();
     private readonly Logger? _log;
 
@@ -143,6 +146,7 @@ public sealed partial class SchedulerService : IDisposable
 
     private void Tick(object? _)
     {
+        if (Stopping) return;
         if (!_dbService.TryGetDb(out var db) || db == null) return;
 
         var columns = RowColumns(db);
@@ -328,6 +332,7 @@ public sealed partial class SchedulerService : IDisposable
 
     private void DrainQueueForCore(Db db, string scheduleId, bool allowScheduled)
     {
+        if (Stopping) return;
         var schedCols = RowColumns(db);
         if (schedCols.Count == 0) return;
 
@@ -345,7 +350,7 @@ public sealed partial class SchedulerService : IDisposable
         var originFilter = allowScheduled ? "" : $" AND \"origin\" = '{OriginManual}'";
 
         var stagger = TimeSpan.Zero;
-        while (CountActiveInstances(scheduleId) < maxThreads)
+        while (!Stopping && CountActiveInstances(scheduleId) < maxThreads)
         {
             var raw = db.Query($"SELECT {colsSql} FROM \"{QueueTable}\" WHERE \"status\" = 'pending' AND \"schedule_id\" = '{scheduleId}'{originFilter} ORDER BY \"priority\" ASC, \"queued_at\" ASC LIMIT 1");
             if (string.IsNullOrWhiteSpace(raw)) return;
@@ -374,6 +379,7 @@ public sealed partial class SchedulerService : IDisposable
     /// </summary>
     private void TopUp(Db db, string scheduleId)
     {
+        if (Stopping) return;
         DrainQueueFor(db, scheduleId);
 
         var schedCols = RowColumns(db);
@@ -411,6 +417,7 @@ public sealed partial class SchedulerService : IDisposable
     /// </summary>
     private void StartInstance(Db db, Dictionary<string, string> record, DateTime firedAt, string? queueUuid = null, TimeSpan delay = default, bool automatic = true)
     {
+        if (Stopping) return;
         var id   = record.GetValueOrDefault("id", "");
         var slot = Reserve(id);
         _lastLaunch[id] = DateTime.UtcNow;
@@ -430,6 +437,7 @@ public sealed partial class SchedulerService : IDisposable
 
                 using (DiagTrace.Gate(_controlGate, "controlGate"))
                 {
+                    if (Stopping) return;
                     if (automatic && !AutomaticLaunchAllowed(db, id))
                     {
                         if (queueUuid != null)
@@ -572,7 +580,7 @@ public sealed partial class SchedulerService : IDisposable
             Console.WriteLine($"[LIVE] xml started id={id} name={name} run={runId} template={Path.GetFileName(scriptPath)}");
             Console.ResetColor();
 
-            z3nDash.Browser.BrowserSession? session = null;
+            Cronopus.Browser.BrowserSession? session = null;
             // Профиль антика, который мы обязаны закрыть за собой; null — не наш.
             string? externalProfile = null;
             // Аккаунт — эксклюзивный ресурс: ссылка живёт снаружи try, иначе
@@ -594,7 +602,7 @@ public sealed partial class SchedulerService : IDisposable
                 };
                 project.Variables["dbSource"].Value = db.Source;
 
-                var tpl = z3nDash.Xml.XmlTemplate.Load(scriptPath);
+                var tpl = Cronopus.Xml.XmlTemplate.Load(scriptPath);
 
                 // Прокси задаётся при запуске браузера и на живом инстансе не
                 // меняется, поэтому берём его до старта — из поля задачи, а иначе
@@ -680,7 +688,7 @@ public sealed partial class SchedulerService : IDisposable
                     "none"     => "",
                     _          => payload.GetValueOrDefault("proxy", ""),
                 };
-                var proxy = z3nDash.Browser.BrowserSession.NormalizeProxy(rawProxy);
+                var proxy = Cronopus.Browser.BrowserSession.NormalizeProxy(rawProxy);
 
                 // Чем поднимать браузер — настройка задачи; какой именно профиль
                 // открывать — данные запуска, поэтому payload перекрывает настройку.
@@ -701,7 +709,7 @@ public sealed partial class SchedulerService : IDisposable
                         Config.BrowsersApi.ZennoBrowser.Token,
                         Config.BrowsersApi.ZennoBrowser.Host).RunProfile(profile);
                     if (!string.IsNullOrWhiteSpace(ws))
-                        session = await z3nDash.Browser.BrowserSession.AttachAsync(ws);
+                        session = await Cronopus.Browser.BrowserSession.AttachAsync(ws);
                     else
                         rp.AddLine($"[br] ZennoBrowser не отдал эндпоинт для профиля {profile}");
                 }
@@ -712,7 +720,7 @@ public sealed partial class SchedulerService : IDisposable
                     else
                     {
                         rp.AddLine($"[br] подключаюсь к {brConfig.Cdp}");
-                        session = await z3nDash.Browser.BrowserSession.AttachAsync(brConfig.Cdp);
+                        session = await Cronopus.Browser.BrowserSession.AttachAsync(brConfig.Cdp);
                     }
                 }
                 else if (BrowserProvider.UsesProviderApi(mode))
@@ -720,7 +728,7 @@ public sealed partial class SchedulerService : IDisposable
                     var ws = await BrowserProvider.StartAsync(brConfig, profile, rp.AddLine);
                     if (!string.IsNullOrWhiteSpace(ws))
                     {
-                        session = await z3nDash.Browser.BrowserSession.AttachAsync(ws);
+                        session = await Cronopus.Browser.BrowserSession.AttachAsync(ws);
                         externalProfile = brConfig.CloseAfterRun ? profile : null;
                     }
                 }
@@ -748,19 +756,19 @@ public sealed partial class SchedulerService : IDisposable
                     var slot = acc.Length > 0 ? acc : runId;
                     var safe = string.Concat((name + "-" + slot).Select(
                         c => Path.GetInvalidFileNameChars().Contains(c) ? '_' : c));
-                    var profileDir = Path.Combine(Path.GetTempPath(), "z3nDash-xml", "profile-" + safe);
+                    var profileDir = Path.Combine(Path.GetTempPath(), "Cronopus-xml", "profile-" + safe);
                     rp.AddLine($"[br] Patchright{(brConfig.Headless ? " (без окна)" : " (с окном)")}, профиль {profileDir}"
                                + (proxy.Length > 0
                                     ? $", прокси {proxy} (из {brConfig.ProxySource})"
                                     : brConfig.ProxySource == "none"
                                         ? ", без прокси — ставит шаблон"
                                         : $", без прокси ({brConfig.ProxySource} пуст)"));
-                    session = await z3nDash.Browser.BrowserSession.LaunchAsync(
+                    session = await Cronopus.Browser.BrowserSession.LaunchAsync(
                         profileDir, headless: brConfig.Headless, proxy: proxy.Length > 0 ? proxy : null,
                         log: rp.AddLine);
                 }
 
-                var player = new z3nDash.Xml.XmlPlayer(project, session.Instance, rp.AddLine);
+                var player = new Cronopus.Xml.XmlPlayer(project, session.Instance, rp.AddLine);
                 var res    = player.Play(tpl, Path.GetDirectoryName(Path.GetFullPath(scriptPath))!, cts.Token);
 
                 SseHub.BroadcastOutput(JsonSerializer.Serialize(new { done = true, run = runId }), id);
@@ -875,7 +883,7 @@ public sealed partial class SchedulerService : IDisposable
 
         try
         {
-            process.Start();
+            _processLifetime.Start(process);
 
             _running[instanceKey] = rp2;
             threadSlot?.Dispose();
@@ -1390,7 +1398,9 @@ public sealed partial class SchedulerService : IDisposable
 
     public void Dispose()
     {
+        if (Interlocked.Exchange(ref _stopping, 1) != 0) return;
         _timer.Dispose();
+        _processLifetime.Dispose();
         foreach (var rp in _running.Values)
             rp.Kill();
     }
@@ -1406,7 +1416,7 @@ public sealed partial class SchedulerService : IDisposable
     /// xml_example/simroute_test.xml: acc0 там объявлена, а во всём файле
     /// встречается ровно один раз — в самом объявлении.
     /// </summary>
-    private static bool TemplateUsesAccount(z3nDash.Xml.XmlTemplate tpl, string templatePath)
+    private static bool TemplateUsesAccount(Cronopus.Xml.XmlTemplate tpl, string templatePath)
     {
         if (!tpl.Variables.ContainsKey("acc0")) return false;
 

@@ -8,6 +8,6 @@
     <RuntimeIdentifier>win-x64</RuntimeIdentifier>
   </PropertyGroup>
   <ItemGroup>
-    <ProjectReference Include="../../z3nDash.csproj" />
+    <ProjectReference Include="../../Cronopus.csproj" />
   </ItemGroup>
 </Project>

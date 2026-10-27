@@ -3,7 +3,7 @@ using System.Text.Json;
 using ModelContextProtocol.Protocol;
 using ModelContextProtocol.Server;
 
-namespace z3nDash.Mcp;
+namespace Cronopus.Mcp;
 
 [McpServerToolType]
 public sealed class McpWriteTools(McpConnection connection)

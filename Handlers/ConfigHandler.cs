@@ -3,7 +3,7 @@ using System.Text;
 using System.Text.Json;
 using Newtonsoft.Json.Linq;
 
-namespace z3nDash;
+namespace Cronopus;
 
 internal sealed class ConfigHandler
 {

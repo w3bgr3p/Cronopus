@@ -1,4 +1,4 @@
-namespace z3nDash;
+namespace Cronopus;
 
 public sealed class BridgeUploadFile
 {

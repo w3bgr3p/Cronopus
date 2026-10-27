@@ -14,7 +14,7 @@
 using ZennoLab.CommandCenter;
 using ZennoLab.InterfacesLibrary.ProjectModel;
 
-namespace z3nDash.Xml;
+namespace Cronopus.Xml;
 
 /// <summary>Чем закончился шаг.</summary>
 public enum StepOutcome

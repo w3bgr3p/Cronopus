@@ -12,7 +12,7 @@ The window polls two kinds of source at once and merges the records into one lis
 
 | Source | Written by | File | Read through |
 |---|---|---|---|
-| z3nDash | ZpRuntime (`Rqst`, `HttpDebugHandler`) | `<logsFolder>/trafficLog.jsonl` | `GET /traffic` |
+| Cronopus | ZpRuntime (`Rqst`, `HttpDebugHandler`) | `<logsFolder>/trafficLog.jsonl` | `GET /traffic` |
 | ZP node | z3n7 (`Rqst`) | `<ZennoPoster log folder>/trafficLog.jsonl` | `GET /zp/traffic?machine=...` |
 
 Node addresses come from `GET /zp/nodes?probe=false`. An unreachable node does not get
@@ -80,7 +80,7 @@ the same code.
 
 ## API
 
-- `GET /traffic?tail=N&project=&task_id=` — the local z3nDash file;
+- `GET /traffic?tail=N&project=&task_id=` — the local Cronopus file;
 - `GET /zp/traffic?machine=&tail=N&project=&task_id=` — forwarded to a node;
 - `GET /zp/nodes?probe=false` — the node list;
 - `POST /http-replay` — replaying a request (dashboard port + 1).

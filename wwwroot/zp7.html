@@ -7,6 +7,7 @@
 <script src="/js/diag.js"></script>
 <script src="/js/logline.js"></script>
 <script src="/js/theme.js"></script>
+<script src="/js/icons.js"></script>
 <script src="/js/nav.js"></script>
 <script src="/js/zp-settings.js"></script>
 <script src="/js/zp-thread-filter.js"></script>
@@ -15,6 +16,7 @@
 
     <link rel="stylesheet" href="/css/zp7.css">
     <link rel="stylesheet" href="/css/overview.css">
+    <link rel="stylesheet" href="/css/action-icons.css">
 
 </head>
 <body>
@@ -1136,35 +1138,25 @@
         }
     }
 
-    // Иконки панели действий. Подписи ушли в title: десять текстовых кнопок
-    // занимали две строки над карточкой задачи.
-    const ACTION_ICONS = {
-        play:   `<svg viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path d="M5 3.4l7.2 4.6L5 12.6z"/></svg>`,
-        pause:  `<svg viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><rect x="3.8" y="2.8" width="3.4" height="10.4" rx="1"/><rect x="8.8" y="2.8" width="3.4" height="10.4" rx="1"/></svg>`,
-        clock:  `<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.9" aria-hidden="true"><circle cx="8" cy="8" r="6.2"/><path d="M8 4.4V8l2.6 1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>`,
-        cross:  `<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" aria-hidden="true"><path d="M4 4l8 8M12 4l-8 8"/></svg>`,
-        check:  `<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 8.4l3.4 3.4 6.2-7"/></svg>`,
-        // Терминал: рамка окна и приглашение ">_". Цветное эмодзи 🖥 рядом
-        // с монохромными иконками выбивалось из ряда.
-        term:   `<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><rect x="1" y="2.2" width="14" height="11.6" rx="1.2"/><path d="M4 6l2.6 2.4L4 10.8M8.4 11h3.6" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>`,
-        // Приближение к иконке Input settings в ZennoPoster: узел и две ветки.
-        inputs: `<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.9" aria-hidden="true"><circle cx="8" cy="3" r="2"/><circle cx="3.4" cy="13" r="2"/><circle cx="12.6" cy="13" r="2"/><path d="M8 5v2.4M3.4 11V7.4h9.2V11" stroke-linecap="round" stroke-linejoin="round"/></svg>`,
-    };
-
     function renderDetailActions(t) {
-        const name = escHtml(t.Name);
-        return `
-                <button class="btn btn-start btn-icon" title="Start" aria-label="Start" onclick="sendCommand('${t.Id}','start')">${ACTION_ICONS.play}</button>
-                <button class="btn btn-pause btn-icon" title="Pause (stop)" aria-label="Pause" onclick="sendCommand('${t.Id}','stop')">${ACTION_ICONS.pause}</button>
-                <button class="btn btn-danger btn-icon" title="Interrupt" aria-label="Interrupt" onclick="sendCommand('${t.Id}','interrupt')">${ACTION_ICONS.cross}</button>
-                <button class="btn btn-icon btn-neutral" title="Input settings" aria-label="Input settings" onclick="openInputSettingsModal('${t.Id}','${name}')">${ACTION_ICONS.inputs}</button>
-                <button class="btn btn-icon btn-neutral" title="Tries" aria-label="Tries" onclick="openTriesModal('${t.Id}','${name}')">&plusmn;</button>
-                <span class="action-label">Clear</span>
-                <button class="btn btn-ok btn-icon" title="Clear done" aria-label="Clear done" onclick="sendCommand('${t.Id}','clear_success')">${ACTION_ICONS.check}</button>
-                <button class="btn btn-fail btn-icon" title="Clear fails" aria-label="Clear fails" onclick="sendCommand('${t.Id}','clear_fails')">${ACTION_ICONS.cross}</button>
-                <button class="btn btn-icon btn-exec" title="Execution settings" aria-label="Execution settings" onclick="openExecModal('${t.Id}','${name}')">${ACTION_ICONS.term}</button>
-                <button class="btn btn-icon btn-sched" title="Scheduler settings" aria-label="Scheduler settings" onclick="openSchedulerModal('${t.Id}','${name}')">${ACTION_ICONS.clock}</button>
-        `;
+        const id = JSON.stringify(t.Id), name = JSON.stringify(t.Name || '');
+        function action(icon, label, handler) {
+            return window.ActionIcons.button(icon, {label: label, attrs: {onclick: handler}});
+        }
+        return '<div class="action-group">'
+            + action('run', 'Start', `sendCommand(${id},'start')`)
+            + action('pause', 'Pause (stop)', `sendCommand(${id},'stop')`)
+            + action('interrupt', 'Interrupt', `sendCommand(${id},'interrupt')`)
+            + '</div><div class="action-group">'
+            + action('inputs', 'Input settings', `openInputSettingsModal(${id},${name})`)
+            + action('attempts', 'Tries', `openTriesModal(${id},${name})`)
+            + '</div><div class="action-group">'
+            + action('resetSuccess', 'Clear done', `sendCommand(${id},'clear_success')`)
+            + action('resetFails', 'Clear fails', `sendCommand(${id},'clear_fails')`)
+            + '</div><div class="action-group">'
+            + action('execution', 'Execution settings', `openExecModal(${id},${name})`)
+            + action('schedule', 'Scheduler settings', `openSchedulerModal(${id},${name})`)
+            + '</div>';
     }
 
     // Панели детали живут отдельно от renderDetail: их можно перерисовать

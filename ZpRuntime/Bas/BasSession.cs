@@ -8,7 +8,7 @@
 // Команда в полёте одна: плеер исполняет ветки последовательно.
 // ══════════════════════════════════════════════════════════════════════════════
 
-namespace z3nDash.Bas;
+namespace Cronopus.Bas;
 
 public sealed class BasSessionOptions
 {

@@ -1,6 +1,6 @@
 ﻿// Перенесено из z3n7/Db/Db.cs. Копия дословная.
 //
-// Не заменяет z3nDash.Db из ZpRuntime/Data/Db.cs: тот приложенческий (DbConfig,
+// Не заменяет Cronopus.Db из ZpRuntime/Data/Db.cs: тот приложенческий (DbConfig,
 // схемы, DbConnectionService), этот — проектный, привязан к
 // IZennoPosterProjectModel через DbZenno.cs. Namespace разные, оба сосуществуют,
 // как два Logger. Ловушка: в файле с обоими using имя Db станет неоднозначным —

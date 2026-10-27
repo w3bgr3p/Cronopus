@@ -2,7 +2,7 @@
 
 HTTPS-мост между экземплярами: раздел **Remote Tasker**, инструкция [[Remote Tasker]].
 
-Страница `/config.html` управляет локальной конфигурацией z3nDash.
+Страница `/config.html` управляет локальной конфигурацией Cronopus.
 
 Разделы Overview, Database, Logs & Server, Browsers API, Services,
 Remote Tasker, Security, Maintenance и Interface переключаются в боковой панели. Последний открытый раздел

@@ -3,7 +3,7 @@ using System.Text;
 using System.Text.Json;
 using Newtonsoft.Json;
 
-namespace z3nDash;
+namespace Cronopus;
 
 public sealed class ImportHandler : IScriptHandler
 {

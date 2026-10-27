@@ -1,7 +1,7 @@
 using System.Collections.Concurrent;
 using System.Net;
 using System.Text.Json;
-namespace z3nDash;
+namespace Cronopus;
 
 public sealed partial class BridgeTransfers(BridgeStore store,BridgeClient client)
 {

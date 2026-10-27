@@ -1,6 +1,6 @@
 ﻿using Microsoft.Extensions.Configuration;
 
-namespace z3nDash;
+namespace Cronopus;
 
 public class Config
 {

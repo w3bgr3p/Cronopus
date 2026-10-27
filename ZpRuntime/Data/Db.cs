@@ -4,7 +4,7 @@ using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using Npgsql;
 
-namespace z3nDash
+namespace Cronopus
 {
     
     public enum dbMode

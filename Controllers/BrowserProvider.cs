@@ -1,7 +1,7 @@
 ﻿using System.Text;
 using System.Text.Json;
 
-namespace z3nDash;
+namespace Cronopus;
 
 /// <summary>
 /// Откуда брать браузер для xml-шаблона. Patchright поднимает свой, остальные

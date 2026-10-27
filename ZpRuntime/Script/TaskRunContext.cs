@@ -2,7 +2,7 @@ using System.Net.Http.Headers;
 using System.Net.Http.Json;
 using System.Text.Json.Serialization;
 
-namespace z3nDash;
+namespace Cronopus;
 
 public sealed record TaskControlState(
     [property: JsonPropertyName("task_id")] string TaskId,
@@ -21,7 +21,7 @@ public sealed class TaskRunContext(string apiBaseUrl, string taskId, string runI
     private static readonly HttpClient Http = new(new HttpClientHandler { UseProxy = false })
         { Timeout = TimeSpan.FromSeconds(15) };
     public static TaskRunContext Current => Ambient.Value
-        ?? throw new InvalidOperationException("This code is not running as a z3nDash task");
+        ?? throw new InvalidOperationException("This code is not running as a Cronopus task");
     public string ApiBaseUrl { get; } = apiBaseUrl;
     public string TaskId { get; } = taskId;
     public string RunId { get; } = runId;
@@ -62,16 +62,16 @@ public sealed class TaskRunContext(string apiBaseUrl, string taskId, string runI
         if (body != null) request.Content = JsonContent.Create(body);
         using var response = await Http.SendAsync(request, ct);
         if (!response.IsSuccessStatusCode)
-            throw new HttpRequestException($"z3nDash API {(int)response.StatusCode}: {await response.Content.ReadAsStringAsync(ct)}");
+            throw new HttpRequestException($"Cronopus API {(int)response.StatusCode}: {await response.Content.ReadAsStringAsync(ct)}");
         return await response.Content.ReadFromJsonAsync<TaskControlState>(cancellationToken: ct)
-            ?? throw new HttpRequestException("z3nDash API returned no state");
+            ?? throw new HttpRequestException("Cronopus API returned no state");
     }
 
     public void ApplyEnvironment(IDictionary<string, string?> environment)
     {
-        environment["Z3NDASH_API_URL"] = ApiBaseUrl;
-        environment["Z3NDASH_RUN_TOKEN"] = Token;
-        environment["Z3NDASH_TASK_ID"] = TaskId;
-        environment["Z3NDASH_RUN_ID"] = RunId;
+        environment["CRONOPUS_API_URL"] = ApiBaseUrl;
+        environment["CRONOPUS_RUN_TOKEN"] = Token;
+        environment["CRONOPUS_TASK_ID"] = TaskId;
+        environment["CRONOPUS_RUN_ID"] = RunId;
     }
 }

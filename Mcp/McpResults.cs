@@ -5,7 +5,7 @@ using ModelContextProtocol.Protocol;
 using ModelContextProtocol;
 using ModelContextProtocol.Server;
 
-namespace z3nDash.Mcp;
+namespace Cronopus.Mcp;
 
 public sealed record McpError(string code, string message,
     [property: JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)] int? http_status = null,

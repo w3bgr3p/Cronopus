@@ -44,7 +44,7 @@ using System.Net;
 using System.Net.Sockets;
 using System.Text;
 
-namespace z3nDash.Browser;
+namespace Cronopus.Browser;
 
 public sealed class ProxyRelay : IDisposable
 {

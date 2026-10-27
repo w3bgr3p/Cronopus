@@ -1,5 +1,5 @@
 using System.Text.Json;
-namespace z3nDash;
+namespace Cronopus;
 
 public sealed partial class BridgeUploads
 {
@@ -32,7 +32,7 @@ public sealed partial class BridgeUploads
             if(count>=1000||total+reserved>store.State.Settings.UploadQuotaBytes)throw new ArgumentException("Upload quota exceeded");
             var drive=new DriveInfo(Path.GetPathRoot(session.Destination)!);
             if(total>drive.AvailableFreeSpace)throw new IOException("Not enough free disk space");
-            session.Stage=BridgeUploadPaths.Resolve(session.Destination,".z3ndash-upload-"+session.Id);
+            session.Stage=BridgeUploadPaths.Resolve(session.Destination,".cronopus-upload-"+session.Id);
             using(var lease=BridgeUploadPaths.LockParents(session.Stage))Directory.CreateDirectory(session.Stage);
             Save(session);return Public(session);
         }finally{_gate.Release();}

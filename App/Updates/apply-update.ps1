@@ -17,14 +17,14 @@ try {
     $parent = Get-Process -Id $requestData.ParentId -ErrorAction SilentlyContinue
     if ($parent -and !$parent.WaitForExit(30000)) { throw 'Previous startup process did not exit. Update postponed.' }
     # Never stop processes. A second dashboard or an MCP client postpones activation.
-    foreach ($process in @(Get-Process -Name z3nDash -ErrorAction SilentlyContinue)) {
+    foreach ($process in @(Get-Process -Name Cronopus -ErrorAction SilentlyContinue)) {
         if ($process.Path -and [IO.Path]::GetFullPath($process.Path).StartsWith($targetRoot, [StringComparison]::OrdinalIgnoreCase)) {
             $installationBusy = $true
             $command = (Get-CimInstance Win32_Process -Filter ('ProcessId = ' + $process.Id) -ErrorAction SilentlyContinue).CommandLine
             if (!$command -or $command -notmatch '(?i)(^|\s)"?--mcp"?(\s|$)') { $dashboardRunning = $true }
         }
     }
-    if ($installationBusy) { throw 'Another z3nDash or MCP client is using this installation. Update postponed; close it before your next manual start.' }
+    if ($installationBusy) { throw 'Another Cronopus or MCP client is using this installation. Update postponed; close it before your next manual start.' }
     $files = @(Get-ChildItem -LiteralPath $payloadRoot -File -Recurse -Force)
     if (!$files.Count) { throw 'Update payload is empty.' }
     # Probe every existing target before changing the installation.
@@ -84,6 +84,6 @@ if (!$rollbackFailed -and !$dashboardRunning) {
     [Diagnostics.Process]::Start($launch) | Out-Null
 } elseif ($rollbackFailed) {
     Add-Type -AssemblyName System.Windows.Forms
-    [Windows.Forms.MessageBox]::Show('Update rollback failed. Your backup is in ' + $backupRoot + '. See ' + (Join-Path $updateRoot 'apply-error.txt'), 'z3nDash update') | Out-Null
+    [Windows.Forms.MessageBox]::Show('Update rollback failed. Your backup is in ' + $backupRoot + '. See ' + (Join-Path $updateRoot 'apply-error.txt'), 'Cronopus update') | Out-Null
 }
 $activation.Dispose()

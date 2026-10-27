@@ -2,7 +2,7 @@ using Microsoft.Data.Sqlite;
 using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
-namespace z3nDash;
+namespace Cronopus;
 
 public sealed class BridgeOperations
 {

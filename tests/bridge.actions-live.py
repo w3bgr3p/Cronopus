@@ -42,7 +42,7 @@ try:
                 page.locator('#brCheckFirewall').click()
                 page.wait_for_function("document.querySelector('#brFirewallStatus').textContent.includes('Checked') && document.querySelector('#brFirewallStatus').textContent.includes('is open')")
                 page.locator('#brCloseFirewall').click()
-                page.wait_for_function("document.querySelector('#brFirewallStatus').textContent.includes('No z3nDash')",timeout=90000)
+                page.wait_for_function("document.querySelector('#brFirewallStatus').textContent.includes('No Cronopus')",timeout=90000)
                 page.locator('#brOpenFirewall').click()
                 page.wait_for_function("document.querySelector('#brFirewallStatus').textContent.includes('is open')",timeout=90000)
                 assert state(base)['firewall']['open']

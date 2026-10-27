@@ -1,7 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.Drawing;
 
-namespace z3nDash.Browser
+namespace Cronopus.Browser
 {
     public interface IBrowserInstance
     {

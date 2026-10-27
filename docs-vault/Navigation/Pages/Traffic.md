@@ -12,7 +12,7 @@ Traffic — модальное окно HTTP-трафика. Открывает�
 
 | Источник | Кто пишет | Файл | Чтение |
 |---|---|---|---|
-| z3nDash | ZpRuntime (`Rqst`, `HttpDebugHandler`) | `<logsFolder>/trafficLog.jsonl` | `GET /traffic` |
+| Cronopus | ZpRuntime (`Rqst`, `HttpDebugHandler`) | `<logsFolder>/trafficLog.jsonl` | `GET /traffic` |
 | ZP-узел | z3n7 (`Rqst`) | `<каталог логов ZennoPoster>/trafficLog.jsonl` | `GET /zp/traffic?machine=...` |
 
 Адреса узлов берутся из `GET /zp/nodes?probe=false`. Недоступный узел не мешает
@@ -80,7 +80,7 @@ TypeScript, cURL. `API Skeleton` и `API Example` сводят все показ
 
 ## API
 
-- `GET /traffic?tail=N&project=&task_id=` — локальный файл z3nDash;
+- `GET /traffic?tail=N&project=&task_id=` — локальный файл Cronopus;
 - `GET /zp/traffic?machine=&tail=N&project=&task_id=` — проброс к узлу;
 - `GET /zp/nodes?probe=false` — список узлов;
 - `POST /http-replay` — повтор запроса (порт панели + 1).

@@ -60,8 +60,8 @@ the browser smoke does not automate a Windows native file dialog.
 
 The user authorized integration and master was fast-forwarded to `3c97b8b`.
 Post-merge JavaScript suite: 58 passed. Windows build succeeded at
-`bin/remote-tasker/z3nDash.exe` (0 errors, 9 existing warnings). The normal Debug
-output is locked by the user's running z3nDash; that process was left running.
+`bin/remote-tasker/Cronopus.exe` (0 errors, 9 existing warnings). The normal Debug
+output is locked by the user's running Cronopus; that process was left running.
 No push, PR, installer release or production deployment occurred.
 
 ## Follow-up: integrated firewall and failed-node isolation
@@ -108,5 +108,5 @@ No push, PR, installer release or production deployment occurred.
 - Real Edge + C# backend: `bridge.actions-live.py --firewall-live` passed Apply,
   Check, Close, Open and final rule cleanup. No bridge API mocks in this run.
 - The earlier WhatIf-only validation did not prove rule visibility or creation.
-- UI keeps failed Open reasons beside the buttons; bridge labels use z3nDash.
+- UI keeps failed Open reasons beside the buttons; bridge labels use Cronopus.
 - Prepared Windows build: bin/remote-tasker. Installed running app is not replaced.

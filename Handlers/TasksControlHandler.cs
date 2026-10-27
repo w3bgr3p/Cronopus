@@ -1,6 +1,6 @@
 using System.Net;
 
-namespace z3nDash;
+namespace Cronopus;
 
 /// <summary>
 /// Control of any task by ID from a running script (e.g. a watcher pausing other tasks):

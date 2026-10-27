@@ -1,6 +1,6 @@
-# z3nDash agent contract
+# Cronopus agent contract
 
-Native stdio MCP for an already running z3nDash.
+Native stdio MCP for an already running Cronopus.
 
 Use tool schemas directly. Read a documentation topic only when needed.
 All MCP descriptions, instructions and documentation are English.
@@ -34,5 +34,5 @@ Follow `next_offset` for another page. English topics:
 | tasker | Configuring executors, payload or complex schedules |
 | remote-tasker | Configuring an existing remote connection |
 
-Resources: `z3ndash://docs/mcp` and `z3ndash://docs/{topic}`.
+Resources: `cronopus://docs/mcp` and `cronopus://docs/{topic}`.
 Docs work offline. Normal tool calls do not require loading any guide.

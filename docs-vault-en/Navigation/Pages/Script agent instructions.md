@@ -1,6 +1,6 @@
-# Instructions for an agent writing z3nDash scripts
+# Instructions for an agent writing Cronopus scripts
 
-You are writing a script run by the z3nDash scheduler. Use the built-in API to control
+You are writing a script run by the Cronopus scheduler. Use the built-in API to control
 the schedule of your own task. Implement the user's business logic and add a deferral
 only where the situation calls for one.
 
@@ -10,12 +10,12 @@ only where the situation calls for one.
 - Do not look the task up by name, script path or task list. One file can be run by
   several tasks at once. Do not read or edit the scheduler database.
 - Do not ask the user to supply an ID, a token or a port by hand. Do not hardcode them.
-- External processes get the environment variables `Z3NDASH_API_URL`,
-  `Z3NDASH_RUN_TOKEN`, `Z3NDASH_TASK_ID`, `Z3NDASH_RUN_ID`.
+- External processes get the environment variables `CRONOPUS_API_URL`,
+  `CRONOPUS_RUN_TOKEN`, `CRONOPUS_TASK_ID`, `CRONOPUS_RUN_ID`.
 - To control yourself use `/api/v1/self`: no ID is needed in the request.
 - The token belongs to a single run and stops working once that run ends.
   Do not keep it for later runs and do not print it to logs.
-- Outside a z3nDash run there is no context. Say so plainly; do not invent values and do
+- Outside a Cronopus run there is no context. Say so plainly; do not invent values and do
   not claim that schedule control worked.
 
 ## What the commands mean
@@ -38,12 +38,12 @@ only where the situation calls for one.
 
 ## Python
 
-Use the module that ships with the application. z3nDash adds it to `PYTHONPATH`,
+Use the module that ships with the application. Cronopus adds it to `PYTHONPATH`,
 venv included. Do not install a like-named package from PyPI and do not create your own
-`z3ndash.py`.
+`cronopus.py`.
 
 ```python
-from z3ndash import current_task
+from cronopus import current_task
 
 state = current_task.get()
 state = current_task.defer(seconds=3600, reason="Service temporarily unavailable")
@@ -59,7 +59,7 @@ your script: replace them with fitting names, do not leave the placeholders.
 
 ```python
 import logging
-from z3ndash import current_task
+from cronopus import current_task
 
 try:
     perform_work()
@@ -68,7 +68,7 @@ except TemporaryServiceError:
         state = current_task.defer(seconds=3600, reason="Service temporarily unavailable")
         logging.warning("Next runs deferred until %s", state["deferred_until"])
     except Exception:
-        logging.exception("Could not confirm the deferral with z3nDash")
+        logging.exception("Could not confirm the deferral with Cronopus")
     raise  # Keep the original error and do not report success.
 ```
 
@@ -77,7 +77,7 @@ expected absence of data must be handled as that particular script requires.
 
 ## C# / CSX / XML OwnCode
 
-In `csx-internal` and XML OwnCode executed by z3nDash itself, the `current_task` object
+In `csx-internal` and XML OwnCode executed by Cronopus itself, the `current_task` object
 is provided by the environment. Do not construct it yourself.
 
 ```csharp
@@ -95,8 +95,8 @@ For a separate C# process use HTTP and the environment variables, as in other la
 
 ## HTTP for Node.js, PowerShell and other languages
 
-Base address: the value of `Z3NDASH_API_URL` without a trailing `/`.
-Header on every request: `Authorization: Bearer <value of Z3NDASH_RUN_TOKEN>`.
+Base address: the value of `CRONOPUS_API_URL` without a trailing `/`.
+Header on every request: `Authorization: Bearer <value of CRONOPUS_RUN_TOKEN>`.
 POST sends JSON with `Content-Type: application/json`.
 
 | Method | Path | Body |
@@ -133,7 +133,7 @@ timeout.
 - No false claim that a pause was set when the request failed.
 - No automatic `resume`, no long wait instead of a deferral, no stopping other threads.
 - Resources are released, the original error is not lost, the token stays out of the output.
-- State whether the script was verified by a real run through z3nDash. An ordinary run
+- State whether the script was verified by a real run through Cronopus. An ordinary run
   from a terminal, without the context, does not confirm the integration works.
 
 The application API reference: [[Task API]]. Do not invent SDK methods or endpoints. For

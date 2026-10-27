@@ -25,7 +25,7 @@ internal static class AgentCases
         if (templates.Any(t => t.UriTemplate.Contains("language"))) throw new Exception("Agent resource templates expose translated docs");
         foreach (var topic in new[] { "setup", "task-api", "script-agent", "tasker", "remote-tasker" })
         {
-            var resource = await client.ReadResourceAsync("z3ndash://docs/" + topic);
+            var resource = await client.ReadResourceAsync("cronopus://docs/" + topic);
             if (Regex.IsMatch(resource.Contents.OfType<TextResourceContents>().Single().Text, "[А-Яа-яЁё]"))
                 throw new Exception("Non-English agent documentation: " + topic);
         }

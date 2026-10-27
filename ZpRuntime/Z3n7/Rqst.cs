@@ -610,7 +610,7 @@ namespace z3n7
                     source = req.Source
                 };
 
-                z3nDash.ZpTraffic.Append(JsonConvert.SerializeObject(httpLog, Formatting.None));
+                Cronopus.ZpTraffic.Append(JsonConvert.SerializeObject(httpLog, Formatting.None));
             }
             catch (Exception ex)
             {

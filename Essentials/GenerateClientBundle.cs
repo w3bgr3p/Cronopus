@@ -6,7 +6,7 @@
 using Newtonsoft.Json;
 using z3n7;   // FromBase64 — перенесённое из эталона расширение
 
-namespace z3nDash;
+namespace Cronopus;
 
 public static partial class InternalTasks
 {

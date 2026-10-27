@@ -1,9 +1,9 @@
 using System.Net;
 
-namespace z3nDash;
+namespace Cronopus;
 
 /// <summary>
-/// Локальный трафик самого z3nDash: хвост &lt;logsFolder&gt;/trafficLog.jsonl,
+/// Локальный трафик самого Cronopus: хвост &lt;logsFolder&gt;/trafficLog.jsonl,
 /// который пишет ZpRuntime. Формат ответа тот же, что у ноды z3n7 на /traffic,
 /// поэтому фронт разбирает оба источника одним кодом.
 ///

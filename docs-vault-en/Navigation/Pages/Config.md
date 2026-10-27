@@ -2,7 +2,7 @@
 
 HTTPS bridge between instances: **Remote Tasker** section, see [[Remote Tasker]].
 
-The `/config.html` page manages the local z3nDash configuration.
+The `/config.html` page manages the local Cronopus configuration.
 
 The side rail switches between Overview, Database, Logs & Server, Browsers API,
 Services, Remote Tasker, Security, Maintenance, Interface and About. The last open section is restored
@@ -20,7 +20,7 @@ It extracts the new version into a separate directory. The running application,
 Tasker instances and MCP clients continue working. Once ready, About displays:
 **Restart the program when convenient to apply the update.** There is no automatic restart.
 
-Exit z3nDash yourself after your tasks finish, then start it again. Before the
+Exit Cronopus yourself after your tasks finish, then start it again. Before the
 scheduler starts, a separate helper applies the prepared files and launches the
 new version. If another dashboard, MCP client or locked file prevents activation,
 the update stays pending. Close the conflicting process before your next manual
@@ -28,7 +28,7 @@ start. Copy failures restore the previous files from a backup; configuration,
 databases, logs and interface state are preserved.
 
 Prepared packages, backups and activation errors are stored per installation in
-`%LOCALAPPDATA%/z3nDash/updates/`. Older releases without an updater need one
+`%LOCALAPPDATA%/Cronopus/updates/`. Older releases without an updater need one
 manual installation of a version that includes this feature.
 
 ## Server Status

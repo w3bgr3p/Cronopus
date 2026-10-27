@@ -1,8 +1,8 @@
 ﻿using System.Net;
 using System.Text.Json;
-using static z3nDash.HttpHelpers;
+using static Cronopus.HttpHelpers;
 
-namespace z3nDash;
+namespace Cronopus;
 
 /// <summary>
 /// Пульт отладки шаблона.

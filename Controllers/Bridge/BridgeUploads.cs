@@ -1,6 +1,6 @@
 using System.Security.Cryptography;
 using System.Text.Json;
-namespace z3nDash;
+namespace Cronopus;
 
 public sealed partial class BridgeUploads(BridgeStore store)
 {

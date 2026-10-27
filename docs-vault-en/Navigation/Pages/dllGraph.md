@@ -19,7 +19,7 @@ When reading sources, the `bin` and `obj` folders are skipped.
 
 The generated HTML is held in process memory. `GET /dllGraph` returns the last graph built.
 
-After a z3nDash restart the graph has to be built again.
+After a Cronopus restart the graph has to be built again.
 
 ## API
 

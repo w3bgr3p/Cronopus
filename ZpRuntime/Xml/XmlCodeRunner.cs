@@ -18,7 +18,7 @@ using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Scripting;
 using Microsoft.CodeAnalysis.Scripting;
 
-namespace z3nDash.Xml;
+namespace Cronopus.Xml;
 
 /// <summary>
 /// Globals для кода веток. Имена совпадают с ZennoPoster: там в OwnCode доступны
@@ -224,14 +224,14 @@ public sealed class XmlCodeRunner
 
         // Имя сборки завязано на хеш исходника. Раньше оно было одно на все
         // шаблоны — "TemplateCommonCode", — и второй шаблон в том же процессе
-        // падал с «Assembly with same name is already loaded»: у z3nDash
+        // падал с «Assembly with same name is already loaded»: у Cronopus
         // планировщик долгоживущий, там за сессию проходит не один шаблон.
         var hash = Convert.ToHexString(
             System.Security.Cryptography.SHA256.HashData(
                 System.Text.Encoding.UTF8.GetBytes(_context.CommonCode)))[..16];
         var asmName = $"TemplateCommonCode_{hash}";
 
-        var dir = System.IO.Path.Combine(System.IO.Path.GetTempPath(), "z3nDash-xml");
+        var dir = System.IO.Path.Combine(System.IO.Path.GetTempPath(), "Cronopus-xml");
         System.IO.Directory.CreateDirectory(dir);
         var dll = System.IO.Path.Combine(dir, $"{asmName}.dll");
 

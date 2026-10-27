@@ -5,7 +5,7 @@ using System.Security.Cryptography.X509Certificates;
 using System.Security.Principal;
 using System.Text.Json;
 
-namespace z3nDash;
+namespace Cronopus;
 
 public sealed class BridgeStore
 {
@@ -21,8 +21,8 @@ public sealed class BridgeStore
     public T ReadPrivate<T>(string name)=>JsonSerializer.Deserialize<T>(Unprotect(File.ReadAllBytes(Path.Combine(Root,name))))!;
     public BridgeStore(string? root = null)
     {
-        Root = root ?? Environment.GetEnvironmentVariable("Z3NDASH_BRIDGE_STATE_DIR")
-            ?? Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "z3nDash", "bridge");
+        Root = root ?? Environment.GetEnvironmentVariable("CRONOPUS_BRIDGE_STATE_DIR")
+            ?? Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "Cronopus", "bridge");
         if (!Path.IsPathFullyQualified(Root)) throw new ArgumentException("Bridge state path must be absolute");
         Directory.CreateDirectory(Root);
         if (OperatingSystem.IsWindows())
@@ -106,7 +106,7 @@ public sealed class BridgeStore
             if (regenerate || State.Certificate.Length == 0)
             {
                 using var rsa = RSA.Create(3072);
-                var request = new CertificateRequest("CN=z3nDash " + NodeId, rsa, HashAlgorithmName.SHA256, RSASignaturePadding.Pkcs1);
+                var request = new CertificateRequest("CN=Cronopus " + NodeId, rsa, HashAlgorithmName.SHA256, RSASignaturePadding.Pkcs1);
                 var san = new SubjectAlternativeNameBuilder();
                 san.AddIpAddress(IPAddress.Parse(State.Settings.AdvertisedAddress));
                 request.CertificateExtensions.Add(san.Build());

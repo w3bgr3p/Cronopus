@@ -1,7 +1,7 @@
 using System.Net.Http.Json;
 using System.Text.Json;
 
-namespace z3nDash.Mcp;
+namespace Cronopus.Mcp;
 
 public sealed class McpConnection(McpOptions options) : IDisposable
 {
@@ -29,10 +29,10 @@ public sealed class McpConnection(McpOptions options) : IDisposable
         }
         var origin = McpOptions.ValidateUrl(url ?? "");
         var status = await Send(origin, "GET", "/mcp/status", null, null, ct);
-        if (status.ValueKind != JsonValueKind.Object || !status.TryGetProperty("application", out var app) || app.GetString() != "z3nDash" ||
+        if (status.ValueKind != JsonValueKind.Object || !status.TryGetProperty("application", out var app) || app.GetString() != "Cronopus" ||
             !status.TryGetProperty("contract_version", out var version) || version.GetInt32() != 1 ||
             !status.TryGetProperty("instance_id", out var instance) || string.IsNullOrEmpty(instance.GetString()))
-            throw new McpBackendException(new("incompatible_dashboard", "Endpoint is not a compatible z3nDash. Update the dashboard."));
+            throw new McpBackendException(new("incompatible_dashboard", "Endpoint is not a compatible Cronopus. Update the dashboard."));
         if (expected != null && expected != instance.GetString())
             throw new McpBackendException(new("instance_changed", "Runtime file is stale or belongs to another dashboard. Restart the intended dashboard."));
         return (origin, instance.GetString()!, status);
@@ -58,7 +58,7 @@ public sealed class McpConnection(McpOptions options) : IDisposable
             using var request = new HttpRequestMessage(new HttpMethod(method), new Uri(origin, path));
             request.Headers.Add("X-Bridge-Local", "1");
             request.Headers.Add("X-Request-ID", Guid.NewGuid().ToString("N"));
-            if (instance != null) request.Headers.Add("X-Z3nDash-Instance", instance);
+            if (instance != null) request.Headers.Add("X-Cronopus-Instance", instance);
             if (body != null) request.Content = JsonContent.Create(body);
             using var response = await _http.SendAsync(request, HttpCompletionOption.ResponseHeadersRead, timeout.Token);
             await using var stream = await response.Content.ReadAsStreamAsync(timeout.Token);
@@ -88,9 +88,9 @@ public sealed class McpConnection(McpOptions options) : IDisposable
         catch (OperationCanceledException) when (!ct.IsCancellationRequested)
         { throw new McpBackendException(new("timeout", "Dashboard timed out. Check state before retrying a mutation.", null, mutation)); }
         catch (HttpRequestException)
-        { throw new McpBackendException(new("dashboard_unavailable", "Cannot reach the dashboard. Start z3nDash and check the selected URL.", null, mutation)); }
+        { throw new McpBackendException(new("dashboard_unavailable", "Cannot reach the dashboard. Start Cronopus and check the selected URL.", null, mutation)); }
         catch (JsonException)
-        { throw new McpBackendException(new("invalid_response", "Expected JSON from an updated z3nDash dashboard.", null, mutation)); }
+        { throw new McpBackendException(new("invalid_response", "Expected JSON from an updated Cronopus dashboard.", null, mutation)); }
     }
     public void Dispose() => _http.Dispose();
 }

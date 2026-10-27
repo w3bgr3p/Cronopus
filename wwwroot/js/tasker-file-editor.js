@@ -20,7 +20,7 @@
         function state(){save.disabled=busy||blocked||!revision||!dirty();field.disabled=busy||!revision;reopen.disabled=busy;closeButton.disabled=busy;}
         async function request(method,body){
             var response=await fetch('/bridge-local/'+encodeURIComponent(connection.id)+'/api/files/text'+(method==='GET'?'?path='+encodeURIComponent(options.path):''),{method:method,headers:{'X-Bridge-Local':'1','Content-Type':'application/json'},body:body?JSON.stringify(body):undefined});
-            if(response.status===404)throw new Error('File unavailable, or this server needs a z3nDash update to support text editing.');
+            if(response.status===404)throw new Error('File unavailable, or this server needs a Cronopus update to support text editing.');
             var data=await response.json();if(!response.ok)throw new Error(data.error||'Server file request failed');return data;
         }
         function unloading(e){if(dirty()){e.preventDefault();e.returnValue='';}}

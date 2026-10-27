@@ -1,7 +1,7 @@
 using System.Net;
 using System.Text.Json;
 
-namespace z3nDash.Mcp;
+namespace Cronopus.Mcp;
 
 public sealed class McpRuntime(int port, DbConnectionService database, TaskerService tasker, SchedulerService scheduler, string? runtimeFile = null) : IScriptHandler, IDisposable
 {
@@ -10,7 +10,7 @@ public sealed class McpRuntime(int port, DbConnectionService database, TaskerSer
     public string RuntimeFile { get; } = runtimeFile ?? Path.Combine(AppContext.BaseDirectory, ".runtime", "mcp.json");
     public static string? ActiveInstanceId { get; private set; }
     public void Init() => ActiveInstanceId = InstanceId;
-    private object Status() => new { application = "z3nDash", contract_version = 1, instance_id = InstanceId,
+    private object Status() => new { application = "Cronopus", contract_version = 1, instance_id = InstanceId,
         api_url = $"http://localhost:{port}", version = typeof(McpRuntime).Assembly.GetName().Version!.ToString(),
         process_id = Environment.ProcessId, database_connected = database.IsConnected };
 

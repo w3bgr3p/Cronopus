@@ -9,7 +9,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 
-namespace z3nDash;
+namespace Cronopus;
 
 public sealed partial class BridgeHost(BridgeStore store, TaskerService tasker, SchedulerService scheduler)
 {

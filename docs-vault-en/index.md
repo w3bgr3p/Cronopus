@@ -1,12 +1,12 @@
-# z3nDash
+# Cronopus
 
 For external agents: [[MCP]] — connection setup, tools and bundled documentation.
 
-z3nDash is a dashboard for schedules, ZennoPoster nodes, logs, HTTP traffic and a set of supporting tools.
+Cronopus is a dashboard for schedules, ZennoPoster nodes, logs, HTTP traffic and a set of supporting tools.
 
 The dashboard itself runs on the machine that started it: the embedded server listens on `localhost` only. The nodes it drives can be anywhere on the network.
 
-[[Remote Tasker]] connects other z3nDash instances through a separate, optional
+[[Remote Tasker]] connects other Cronopus instances through a separate, optional
 HTTPS server. Configure it in [[Config]], then select a node in [[Tasker]].
 
 The windowed build targets Windows. The `net10.0` target builds without WinForms: there is no window, the dashboard address is printed to the console and opened in the system browser. Off Windows only [[System Snapshot]] is unavailable — it reads Windows counters and services.
@@ -14,7 +14,7 @@ The windowed build targets Windows. The `net10.0` target builds without WinForms
 ## Start-up
 
 1. The application loads `appsettings.secrets.json`.
-2. If a database is configured, z3nDash connects to it and opens Tasker.
+2. If a database is configured, Cronopus connects to it and opens Tasker.
 3. If there is no configuration, Config opens instead.
 4. The embedded HTTP server listens on port `33333` by default.
 
@@ -41,7 +41,7 @@ The windowed build targets Windows. The `net10.0` target builds without WinForms
 
 ## Storage
 
-z3nDash supports:
+Cronopus supports:
 
 - PostgreSQL through a single connection string;
 - SQLite through a path to a file.

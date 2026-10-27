@@ -1,6 +1,6 @@
 # MCP for agents
 
-z3nDash includes a native stdio MCP server: `z3nDash.exe --mcp`.
+Cronopus includes a native stdio MCP server: `Cronopus.exe --mcp`.
 No Python, Node.js or separate MCP package is needed. Start the updated
 dashboard normally before using tools that access it.
 
@@ -11,8 +11,8 @@ Configure an MCP client using the absolute path to the installed executable:
 ```json
 {
   "mcpServers": {
-    "z3ndash": {
-      "command": "C:\\Apps\\z3nDash\\z3nDash.exe",
+    "cronopus": {
+      "command": "C:\\Apps\\Cronopus\\Cronopus.exe",
       "args": ["--mcp"]
     }
   }
@@ -35,7 +35,7 @@ as `node`; the default is `local`. Credentials remain in the bridge store.
 MCP exposes Tasker; terminal, database editors and secret configuration are
 outside this tool catalog.
 
-The compact English contract is `z3ndash://docs/mcp` / `Mcp/AGENT.md`.
+The compact English contract is `cronopus://docs/mcp` / `Mcp/AGENT.md`.
 Setup, TOML configuration and full reference: `read_document(topic=setup)`
 or `Mcp/README.md` alongside the application.
 [[Task API]] and [[Script agent instructions]] are available through

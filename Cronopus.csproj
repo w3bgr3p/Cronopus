@@ -9,7 +9,7 @@
 
         <ApplicationIcon Condition="'$(TargetFramework)' == 'net10.0-windows'">icon.ico</ApplicationIcon>
 
-        <RootNamespace>z3nDash</RootNamespace>
+        <RootNamespace>Cronopus</RootNamespace>
         <!-- Публикуемся папкой, а не одним файлом.
              Проверено на отдельном стенде: в single-file у упакованных сборок
              Assembly.Location пуст, а Roslyn без него не строит ссылки —
@@ -28,7 +28,9 @@
     </PropertyGroup>
 
     <ItemGroup>
-        <EmbeddedResource Include="App/Updates/apply-update.ps1" LogicalName="z3nDash.apply-update.ps1" />
+        <EmbeddedResource Include="App/Updates/apply-update.ps1" LogicalName="Cronopus.apply-update.ps1" />
+        <None Update="tools/cleanup-orphan-tasks.bat" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
+        <None Update="tools/cleanup-orphan-tasks.md" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
         <None Update="sdk\python\*.py" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" ExcludeFromSingleFile="true" />
     </ItemGroup>
 
@@ -91,9 +93,9 @@
         <None Update="wwwroot\static\fonts\JetBrainsMonoNerdFont-Regular.ttf">
             <CopyToOutputDirectory>Always</CopyToOutputDirectory>
         </None>
-        <None Remove="media\z3nDash__.mp4" />
-        <None Remove="media\z3nDash_done.mp4" />
-        <None Remove="media\z3nDashlogo.mp4" />
+        <None Remove="media\Cronopus__.mp4" />
+        <None Remove="media\Cronopus_done.mp4" />
+        <None Remove="media\Cronopuslogo.mp4" />
         <None Remove="media\**" />
   
     </ItemGroup>

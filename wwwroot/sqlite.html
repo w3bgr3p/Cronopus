@@ -2,7 +2,7 @@
 <html>
     <head>
         <meta charset="UTF-8" />
-        <title>z3nDash | SQL</title>
+        <title>Cronopus | SQL</title>
         <link rel="stylesheet" href="/css/themes.css" />
         <script src="/js/diag.js"></script>
         <script src="/js/theme.js"></script>
@@ -150,7 +150,7 @@
 
             async function sqliteFileState(mode, file) {
                 const db = await new Promise((resolve, reject) => {
-                    const request = indexedDB.open("z3nDashSqlite", 1);
+                    const request = indexedDB.open("CronopusSqlite", 1);
                     request.onupgradeneeded = () => request.result.createObjectStore("state");
                     request.onsuccess = () => resolve(request.result);
                     request.onerror = () => reject(request.error);

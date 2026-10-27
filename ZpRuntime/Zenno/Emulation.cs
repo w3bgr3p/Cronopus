@@ -14,7 +14,7 @@
 
 using System;
 using System.Windows.Forms;
-using z3nDash.Browser;
+using Cronopus.Browser;
 
 namespace ZennoLab.Emulation
 {

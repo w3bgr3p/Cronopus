@@ -8,7 +8,7 @@ catch { playwright = require(path.join(require('node:os').homedir(), '.cache/cod
 const { chromium } = playwright;
 const build = path.resolve(__dirname, '../artifacts/update-build');
 const base = 'http://localhost:39467';
-const headers = { 'Content-Type': 'application/json', 'X-z3nDash-Update': '1' };
+const headers = { 'Content-Type': 'application/json', 'X-Cronopus-Update': '1' };
 const secretPath = path.join(build, 'appsettings.secrets.json');
 fs.writeFileSync(secretPath, JSON.stringify({
     DbConfig: { Type: 'sqlite', SqlitePath: path.join(build, 'update-test.sqlite') },
@@ -16,8 +16,8 @@ fs.writeFileSync(secretPath, JSON.stringify({
         TempFolder: path.join(build, 'temp'), ReportsFolder: path.join(build, 'reports') },
     WatchdogConfig: { Enabled: false }, ClipboardConfig: { Enabled: false }
 }));
-const app = spawn(path.join(build, 'z3nDash.exe'), ['--headless'], {
-    cwd: build, windowsHide: true, env: { ...process.env, Z3NDASH_BRIDGE_STATE_DIR: path.join(build, 'test-bridge') }
+const app = spawn(path.join(build, 'Cronopus.exe'), ['--headless'], {
+    cwd: build, windowsHide: true, env: { ...process.env, CRONOPUS_BRIDGE_STATE_DIR: path.join(build, 'test-bridge') }
 });
 let output = '';
 app.stdout.on('data', data => { output += data; });
@@ -79,26 +79,26 @@ let activatedPid;
     await browser.close(); browser = null;
     const crypto = require('node:crypto');
     const installId = crypto.createHash('sha256').update(build.replace(/[\\/]+$/, '').toUpperCase()).digest('hex').toUpperCase().slice(0, 16);
-    const updates = path.join(process.env.LOCALAPPDATA, 'z3nDash/updates', installId);
+    const updates = path.join(process.env.LOCALAPPDATA, 'Cronopus/updates', installId);
     const payload = path.join(updates, 'startup-test/payload');
     fs.mkdirSync(payload, { recursive: true });
-    for (const file of ['z3nDash.exe', 'z3nDash.dll']) fs.copyFileSync(path.join(build, file), path.join(payload, file));
+    for (const file of ['Cronopus.exe', 'Cronopus.dll']) fs.copyFileSync(path.join(build, file), path.join(payload, file));
     fs.writeFileSync(path.join(payload, 'activation-proof.txt'), 'prepared version applied');
     fs.writeFileSync(path.join(updates, 'pending.json'), JSON.stringify({ Version: '99.0.0', Directory: payload }));
-    const extra = spawn(path.join(build, 'z3nDash.exe'), ['--headless'], {
-        cwd: build, windowsHide: true, stdio: 'ignore', env: { ...process.env, Z3NDASH_BRIDGE_STATE_DIR: path.join(build, 'test-bridge') }
+    const extra = spawn(path.join(build, 'Cronopus.exe'), ['--headless'], {
+        cwd: build, windowsHide: true, stdio: 'ignore', env: { ...process.env, CRONOPUS_BRIDGE_STATE_DIR: path.join(build, 'test-bridge') }
     });
     for (let i = 0; i < 150 && !fs.existsSync(path.join(updates, 'apply-error.txt')); i++)
         await new Promise(resolve => setTimeout(resolve, 100));
     assert.equal(app.exitCode, null);
     assert.equal(fs.existsSync(path.join(build, 'activation-proof.txt')), false);
-    assert.match(fs.readFileSync(path.join(updates, 'apply-error.txt'), 'utf8'), /Another z3nDash or MCP client/);
+    assert.match(fs.readFileSync(path.join(updates, 'apply-error.txt'), 'utf8'), /Another Cronopus or MCP client/);
     assert.equal((await (await fetch(base + '/mcp/status')).json()).process_id, app.pid);
     assert.ok(extra.exitCode !== null, 'Extra startup should exit before scheduling');
     console.log('PASS startup while dashboard is active postpones update without interrupting it or starting another scheduler');
     await new Promise(resolve => { app.once('exit', resolve); app.kill(); });
-    spawn(path.join(build, 'z3nDash.exe'), ['--headless'], {
-        cwd: build, windowsHide: true, stdio: 'ignore', env: { ...process.env, Z3NDASH_BRIDGE_STATE_DIR: path.join(build, 'test-bridge') }
+    spawn(path.join(build, 'Cronopus.exe'), ['--headless'], {
+        cwd: build, windowsHide: true, stdio: 'ignore', env: { ...process.env, CRONOPUS_BRIDGE_STATE_DIR: path.join(build, 'test-bridge') }
     }).unref();
     for (let i = 0; i < 200; i++) {
         try {

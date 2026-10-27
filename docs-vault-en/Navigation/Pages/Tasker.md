@@ -50,7 +50,7 @@ selected task or the whole selection after confirmation.
 
 RAM and CPU appear per task and in the header total. On Windows, each instance
 includes its child processes, including browsers. CPU is shown as a share of the
-whole machine after the second sample. z3nDash's own memory is separate;
+whole machine after the second sample. Cronopus's own memory is separate;
 in-process XML runs are marked instead of receiving an individual memory figure.
 Each active instance shows the memory of its entire process tree and its process
 count. Instance figures, task totals and header RAM use one snapshot; a task's

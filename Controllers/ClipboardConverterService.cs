@@ -4,7 +4,7 @@ using System.Runtime.InteropServices;
 using System.Windows.Forms;
 #endif
 
-namespace z3nDash;
+namespace Cronopus;
 
 /// <summary>
 /// Преобразование селектора в буфере обмена по Alt+G / Alt+C / Alt+S.

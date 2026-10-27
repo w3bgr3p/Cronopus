@@ -2,7 +2,7 @@ using System.ComponentModel;
 using ModelContextProtocol.Protocol;
 using ModelContextProtocol.Server;
 
-namespace z3nDash.Mcp;
+namespace Cronopus.Mcp;
 
 [McpServerToolType]
 public sealed class McpReadTools(McpConnection connection, McpDocuments documents)

@@ -7,7 +7,7 @@
 // (проверено probe v2), поэтому канал один и в нём JSON.
 // ══════════════════════════════════════════════════════════════════════════════
 
-namespace z3nDash.Bas;
+namespace Cronopus.Bas;
 
 /// <summary>Команда хоста. Op: "exec" | "idle" | "done".</summary>
 public sealed record BasCommand(string Op, long Id = 0, string Code = "", int TimeoutMs = 0,

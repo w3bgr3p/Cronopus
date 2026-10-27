@@ -164,7 +164,7 @@ window.ZpTraffic = (() => {
             // источник, как нода. Машину он сообщает в самих записях, поэтому
             // фильтр по машине применяется уже к строкам, а не к списку целей.
             const targets = [
-                { label: 'z3nDash', url: '/traffic?' + query },
+                { label: 'Cronopus', url: '/traffic?' + query },
                 ...nodes.map(node => {
                     const params = new URLSearchParams(query);
                     params.set('machine', node.machine);

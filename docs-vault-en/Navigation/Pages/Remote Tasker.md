@@ -1,6 +1,6 @@
 # Remote Tasker
 
-Control another z3nDash Tasker over HTTPS using its IP address. Tasks keep running
+Control another Cronopus Tasker over HTTPS using its IP address. Tasks keep running
 on the server when the client disconnects.
 
 ## Connect
@@ -70,7 +70,7 @@ for seven days. Build/install operations expose bounded progress.
 Renew certificate creates a replacement certificate; update all client pins.
 Windows state uses current-user DPAPI encryption and cannot simply be moved to
 another Windows account. Redirects and mismatching certificates are rejected.
-Run `z3nDash.exe --headless` to start without opening the panel; this does not
+Run `Cronopus.exe --headless` to start without opening the panel; this does not
 install a Windows service. Check the actual URL, firewall, IP, expiry and key
 when a connection fails.
 

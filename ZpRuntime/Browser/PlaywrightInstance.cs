@@ -6,9 +6,9 @@ using System.IO;
 using System.Linq;
 using System.Text.RegularExpressions;
 using System.Threading;
-using z3nDash.Browser;
+using Cronopus.Browser;
 
-namespace z3nDash.Browser
+namespace Cronopus.Browser
 {
     public sealed partial class PlaywrightInstance : IBrowserInstance
     {

@@ -547,7 +547,7 @@ csproj исключены из сборки.
 
 **Чем проверено.** `dotnet build` обоих TFM библиотеки и приложения под
 `net10.0` — 0 ошибок. Под `net10.0-windows` сборка приложения встала на
-копировании `ZpRuntime.dll`: файл держало запущенное `z3nDash`. Это не
+копировании `ZpRuntime.dll`: файл держало запущенное `Cronopus`. Это не
 компиляция. Поведение на живой капче не проверялось вообще.
 
 ### 2026-08-26 — «в таблице нет колонки», а мы писали в чужой файл
@@ -565,7 +565,7 @@ string pathToDb = _project.Path + dbName + ".sql";
 В ZP `project.Path` оканчивается разделителем, у нас — нет. Поэтому вместо
 `…\CURRENT_JOBS\simroute\simroute.sql` открывалось
 `…\CURRENT_JOBS\simroutesimroute.sql`. Файл нашёлся на диске, вместе со вторым
-таким же — `W:\code_hard\.net\z3nDashsimroute.sql`, оставшимся от запусков,
+таким же — `W:\code_hard\.net\Cronopussimroute.sql`, оставшимся от запусков,
 где `Path` был текущим каталогом. В них лежала таблица от прежних прогонов, без
 `proxy_iso`, и `CREATE TABLE IF NOT EXISTS` её не трогал.
 
@@ -1211,7 +1211,7 @@ return string.IsNullOrWhiteSpace(level) || level == "Current" ? _instance.Emulat
 et10.0-windows\win-x64\ZpRuntime.dll  13:54:48
 свежая        ZpRuntimein\Debug
 et10.0-windows\ZpRuntime.dll 14:06:21
-z3nDash запущен, стартовал 13:54:56; правка песочницы — 13:57:55
+Cronopus запущен, стартовал 13:54:56; правка песочницы — 13:57:55
 ```
 
 Приложение держит `ZpRuntime.dll` открытым, копирование падает с MSB3021, и
@@ -1448,13 +1448,13 @@ WaitDownloading вернулся за 21087 мс, без исключения
 
 ### 2026-08-22 — сломал сборку приложения и не заметил
 
-`z3nDash.csproj` перестал собираться: NU1605, package downgrade. Я добавил в
+`Cronopus.csproj` перестал собираться: NU1605, package downgrade. Я добавил в
 библиотеку `System.ServiceProcess.ServiceController` 9.0, а приложение ссылается
 на 6.0.0 — библиотека тянула приложение вверх. Ещё `Svg` 2.4.3 (версия эталона)
 не имеет сборок под .NET Core, и NuGet подкладывал .NET Framework через режим
 совместимости — NU1701.
 
-**Почему не увидел.** `z3nDash.exe` держал `ZpRuntime.dll`, гасить чужой процесс
+**Почему не увидел.** `Cronopus.exe` держал `ZpRuntime.dll`, гасить чужой процесс
 я не стал и ограничился сборкой одной `ZpRuntime.csproj`. Она собиралась чисто —
 и я на этом остановился, написав «собирается чисто на обеих целях». Конфликт
 версий пакетов виден только при сборке потребителя: у библиотеки одной её нет.
@@ -1463,11 +1463,11 @@ WaitDownloading вернулся за 21087 мс, без исключения
 проекта.** Если приложение занято — это не повод считать проверку сделанной, это
 повод сказать, что она не сделана.
 
-Исправлено: обе службы Windows на 6.0.0, ровно как в `z3nDash.csproj`; `Svg`
+Исправлено: обе службы Windows на 6.0.0, ровно как в `Cronopus.csproj`; `Svg`
 поднят до 3.4.8. Версия пакета — не поведение копии, дословность от этого не
 страдает.
 
-**Чем проверено.** `dotnet build z3nDash.sln` — 0 ошибок. `Img.DrawSvgAsBase64`
+**Чем проверено.** `dotnet build Cronopus.sln` — 0 ошибок. `Img.DrawSvgAsBase64`
 вернул настоящий PNG (сигнатура на месте), `Img.ImgFromSvg` записал файл 40×20,
 `SystemSnapshot.Collect()` на 6.0.0 собрал отчёт на 122 637 символов.
 
@@ -1499,7 +1499,7 @@ Master заранее сказал, что оставшийся куст — ч�
 | `Browser/BrowserScan` | ходит на browserscan.net нашим `Instance`, читает результат со страницы, пишет в наши таблицы | одного `HtmlElement.GetChildren` в подложке |
 | `Browser/GpuSpoof` | генератор строк GPU из `pci.ids` — сам по себе чистый | решения, чем подменять WebGL: у ZP это `WebGLPreference`, у нас CDP |
 | `Accounts/AccountRunner` | `ChooseAccountByCondition` — выборка аккаунта из БД, это наше; `ChooseAndRunByCondition` — уже запуск браузера циклом ZP | разделения: половина файла переносима, половина нет |
-| `Reports/Accountant`, `Reports/JsonReportGenerator` | отчёты по данным из БД, HTML и JSON | решения, нужны ли отчёты ZP в z3nDash |
+| `Reports/Accountant`, `Reports/JsonReportGenerator` | отчёты по данным из БД, HTML и JSON | решения, нужны ли отчёты ZP в Cronopus |
 | `Tools/Git` | клиент GitHub API, ZP не касается вовсе | решения, нужен ли он здесь |
 
 ### 2026-08-22 — пять переносов откачены: критерий был не тот
@@ -1560,7 +1560,7 @@ ZennoPoster компилируется прекрасно — работать �
 - `SAFU` в `Init`, WMI в `ProcessManager`.
 
 Это контракты жизненного цикла инстанса ZP, а у нас он устроен иначе: браузер
-поднимает `BrowserSession`, задачами заведует планировщик z3nDash. Тащить их
+поднимает `BrowserSession`, задачами заведует планировщик Cronopus. Тащить их
 как есть — значит тащить чужой жизненный цикл, о чём и предупреждает шапка
 нашего среза `InstanceManager.cs`. Решение за Master.
 
@@ -1602,7 +1602,7 @@ ZennoPoster компилируется прекрасно — работать �
 **Чем проверено.** Страница из файла с QR-картинкой и списком:
 
 ```
-DecodeQr                 — hello-from-z3nDash (QR прочитан с элемента)
+DecodeQr                 — hello-from-Cronopus (QR прочитан с элемента)
 FindChildrenByTags("li") — 3 из 4 детей: a,b,c
       ("li;span")        — 4 в порядке документа: a,b,x,c
 GetXPath 2-го li         — //*/body/ul[@id='list']/li[2]
@@ -1712,7 +1712,7 @@ using (var db = dbMode == "pgSQL" ? new Sql(dbSource) : new Sql(sqLitePath, null
 Проверено прямо:
 
 ```
-dbSource = …/z3nDash-dbsource-check.sqlite
+dbSource = …/Cronopus-dbsource-check.sqlite
 CREATE TABLE probe → ошибки нет
 INSERT           → ошибки нет
 SELECT id FROM probe → [] и «no such table: probe»

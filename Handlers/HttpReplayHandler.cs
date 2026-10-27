@@ -2,7 +2,7 @@ using System.Net;
 using System.Net.Http;
 using System.Text.Json;
 
-namespace z3nDash;
+namespace Cronopus;
 
 internal sealed class HttpReplayHandler
 {

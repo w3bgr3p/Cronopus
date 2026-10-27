@@ -1,6 +1,6 @@
 using System.Text.Json;
 
-namespace z3nDash;
+namespace Cronopus;
 
 public sealed record ZpNodeRegistration(
     string Machine,

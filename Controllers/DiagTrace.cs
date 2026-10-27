@@ -3,7 +3,7 @@ using System.Diagnostics;
 using System.Text;
 using System.Text.Json;
 
-namespace z3nDash;
+namespace Cronopus;
 
 /// <summary>
 /// Диагностический режим: куда уходит время между действием в интерфейсе и

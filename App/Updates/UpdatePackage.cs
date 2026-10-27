@@ -1,7 +1,7 @@
 using System.IO.Compression;
 using System.Security.Cryptography;
 
-namespace z3nDash;
+namespace Cronopus;
 
 internal static class UpdatePackage
 {
@@ -48,7 +48,7 @@ internal static class UpdatePackage
             if (total > 2L * 1024 * 1024 * 1024)
                 throw new InvalidDataException("Update archive is too large.");
         }
-        if (!files.Contains("z3nDash.exe") || !files.Contains("z3nDash.dll")
+        if (!files.Contains("Cronopus.exe") || !files.Contains("Cronopus.dll")
             || !files.Contains("wwwroot/config.html"))
             throw new InvalidDataException("Incomplete portable update package.");
         foreach (var entry in archive.Entries.Where(e => e.Name.Length != 0 && IsApplicationFile(e.FullName)))

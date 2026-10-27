@@ -3,12 +3,12 @@ import assert from 'node:assert/strict';
 import { buildMessages, destination, sendMessages } from './telegram-release.mjs';
 
 const release = {
-  name: 'z3nDash v1.2.0', tag_name: 'v1.2.0',
+  name: 'Cronopus v1.2.0', tag_name: 'v1.2.0',
   html_url: 'https://github.com/example/dash/releases/tag/v1.2.0',
-  body: '# z3nDash 1.2.0\n\nShort introduction.\n\n## Added\n- **Remote** control.\n\n## Fixed\n- Keep `a_b` intact.',
+  body: '# Cronopus 1.2.0\n\nShort introduction.\n\n## Added\n- **Remote** control.\n\n## Fixed\n- Keep `a_b` intact.',
   assets: [
-    { name: 'z3nDash_Setup_1.2.0.exe', browser_download_url: 'https://example.com/setup.exe' },
-    { name: 'z3nDash_1.2.0_portable.zip', browser_download_url: 'https://example.com/portable.zip' },
+    { name: 'Cronopus_Setup_1.2.0.exe', browser_download_url: 'https://example.com/setup.exe' },
+    { name: 'Cronopus_1.2.0_portable.zip', browser_download_url: 'https://example.com/portable.zip' },
   ],
 };
 
@@ -20,7 +20,7 @@ test('test is the default; prod is explicit and unknown modes fail closed', () =
 
 test('release introduction and complete sections stay visible with working download URLs', () => {
   const [message] = buildMessages(release);
-  assert.match(message.rich_message.markdown, /^# z3nDash v1\.2\.0\n\nShort introduction\./);
+  assert.match(message.rich_message.markdown, /^# Cronopus v1\.2\.0\n\nShort introduction\./);
   assert.match(message.rich_message.markdown, /## Added\n\n- \*\*Remote\*\* control\./);
   assert.doesNotMatch(message.rich_message.markdown, /<details>|<summary>/);
   assert.match(message.rich_message.markdown, /Keep `a_b` intact/);
@@ -29,8 +29,8 @@ test('release introduction and complete sections stay visible with working downl
 });
 
 test('a flat changelog stays visible and missing files do not produce download buttons', () => {
-  const [message] = buildMessages({ ...release, body: '# z3nDash 1.2.0\n\n- First\n- Second', assets: [] });
-  assert.match(message.rich_message.markdown, /^# z3nDash v1\.2\.0\n\n- First\n- Second$/);
+  const [message] = buildMessages({ ...release, body: '# Cronopus 1.2.0\n\n- First\n- Second', assets: [] });
+  assert.match(message.rich_message.markdown, /^# Cronopus v1\.2\.0\n\n- First\n- Second$/);
   assert.match(message.rich_message.markdown, /- First\n- Second/);
   assert.equal(message.reply_markup.inline_keyboard.flat().length, 2);
 });

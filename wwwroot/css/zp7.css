@@ -243,47 +243,7 @@ body {
 
 .detail-actions { display: flex; gap: var(--sp-6); margin-bottom: var(--sp-12); flex-wrap: wrap; align-items: center; }
 
-/* Иконочная панель действий: подпись только в tooltip, иначе строка
-   кнопок занимает больше места, чем сама карточка задачи.
-
-   Цвета через !important: тема hyper перекрывает .btn-update цветом
-   --text2 с !important, и без этого иконки уходили в серый #888. */
-/* .btn идёт ниже по файлу и при равной специфичности перебивал
-   этот padding: 0. Иконка получала 36-24-2 = 10px вместо 23px,
-   а в просторной теме 36-32-2 = 2px. Отсюда .btn.btn-icon. */
-.btn.btn-icon {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    width: 36px;
-    height: 30px;
-    padding: 0;
-    font-size: var(--fs-18);
-    font-weight: var(--fw-bold);
-    line-height: var(--lh-tight);
-    color: var(--text-hi) !important;
-}
-.btn.btn-icon svg { width: 23px; height: 23px; display: block; flex: none; }
-/* Фон задаётся явно: у этих кнопок нет .btn-update, а без правила фона
-   браузер рисует кнопку светлой. */
-/* Иконочные кнопки не носят .btn-update: тема перекрывает его через
-   [data-theme=...] .btn-update, что специфичнее любого класса здесь,
-   и жёлтый с фиолетовым до кнопок не доезжали. */
-.btn-pause, .btn-danger, .btn-ok, .btn-fail, .btn-neutral, .btn-exec, .btn-sched { background: var(--bg2); }
-.btn-neutral { border-color: var(--border); }
-.btn-pause  { border-color: var(--yellow) !important; color: var(--yellow) !important; }
-.btn-danger { border-color: var(--red) !important;    color: var(--red) !important; }
-.btn-ok     { color: var(--green) !important; }
-.btn-fail   { color: var(--red) !important; }
-.btn-exec   { border-color: var(--yellow) !important; color: var(--yellow) !important; }
-.btn-sched  { border-color: var(--steel) !important; color: var(--steel) !important; }
-.action-label {
-    font-size: var(--fs-9);
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-    color: var(--text2);
-    margin-left: var(--sp-4);
-}
+/* Toolbar SVGs and button geometry are shared in action-icons.css. */
 .tries-row { display: flex; gap: var(--sp-6); align-items: center; }
 .tries-row .field-select { width: 84px; }
 .tries-row .field-input { flex: 1; }

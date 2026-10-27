@@ -35,7 +35,7 @@ const AboutUpdates = (() => {
     }
     async function request(path, body) {
         const response = await fetch('/app-update/' + path, body === undefined ? {} : {
-            method: 'POST', headers: { 'Content-Type': 'application/json', 'X-z3nDash-Update': '1' },
+            method: 'POST', headers: { 'Content-Type': 'application/json', 'X-Cronopus-Update': '1' },
             body: JSON.stringify(body)
         });
         const data = await response.json();

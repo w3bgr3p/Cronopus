@@ -88,11 +88,11 @@ function keyboard(release) {
 
 export function buildMessages(release) {
   if (release.draft) throw new Error('Cannot announce a draft release');
-  const title = release.name || `z3nDash ${release.tag_name}`;
+  const title = release.name || `Cronopus ${release.tag_name}`;
   let parsed = sections(release.body || '');
   // Strip only a redundant opening product/version heading, preserving its text.
   const first = parsed.findIndex(s => s.title);
-  if (first >= 0 && !parsed[0].text && /^z3nDash\s+v?\d/i.test(parsed[first].title)) {
+  if (first >= 0 && !parsed[0].text && /^Cronopus\s+v?\d/i.test(parsed[first].title)) {
     parsed[first].title = '';
     parsed = parsed.slice(first);
   }

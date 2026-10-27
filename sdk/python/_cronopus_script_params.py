@@ -1,6 +1,6 @@
 """Reads the command-line parameters a Python script declares, without running it.
 
-z3nDash calls this as `python -I _z3n_script_params.py <script>` and reads one
+Cronopus calls this as `python -I _cronopus_script_params.py <script>` and reads one
 JSON object from stdout. The script is only parsed with `ast`, never imported or
 executed, so a script with side effects at the top level is safe to inspect.
 
@@ -162,7 +162,7 @@ def inspect(path):
 
 def main():
     if len(sys.argv) != 2:
-        result = {"ok": False, "step": "args", "error": "usage: _z3n_script_params.py <script.py>"}
+        result = {"ok": False, "step": "args", "error": "usage: _cronopus_script_params.py <script.py>"}
     else:
         try:
             result = inspect(sys.argv[1])

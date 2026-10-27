@@ -1,7 +1,7 @@
 using System.Drawing;
 using System.Runtime.InteropServices;
 
-namespace z3nDash;
+namespace Cronopus;
 
 internal static class WindowMaximizeGeometry
 {

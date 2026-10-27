@@ -1,6 +1,6 @@
 using System.Text.Json;
 
-namespace z3nDash;
+namespace Cronopus;
 
 /// <summary>
 /// Диапазон «точное число или случайное из интервала» — в планировщике

@@ -1,7 +1,7 @@
 using System.Text;
 using System.Text.Json;
 
-namespace z3nDash.Mcp;
+namespace Cronopus.Mcp;
 
 internal static class McpOutput
 {

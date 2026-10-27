@@ -4,7 +4,7 @@ using System.Reflection;
 using System.Text;
 using System.Text.Json;
 using Microsoft.Data.Sqlite;
-using z3nDash;
+using Cronopus;
 
 static class LoadCases
 {
@@ -20,7 +20,7 @@ static class LoadCases
     }
     public static async Task Run(int minutes)
     {
-        var root=Path.Combine(Path.GetTempPath(),"z3ndash-bridge-load-"+Guid.NewGuid().ToString("N"));Directory.CreateDirectory(root);
+        var root=Path.Combine(Path.GetTempPath(),"cronopus-bridge-load-"+Guid.NewGuid().ToString("N"));Directory.CreateDirectory(root);
         var db=new DbConnectionService();db.Connect(new DbConfig{Type="sqlite",SqlitePath=Path.Combine(root,"tasks.db")});SchedulerService.PrepareTables(db.GetDb());
         using var fakeCancellation=new CancellationTokenSource();using var scheduler=new SchedulerService(db);
         using(var connection=new SqliteConnection(new SqliteConnectionStringBuilder{DataSource=db.GetDb().Source}.ToString())){
@@ -50,7 +50,7 @@ static class LoadCases
         await host.StopAsync(CancellationToken.None);
         latencies.Sort();var p95=latencies[(int)((latencies.Count-1)*.95)];
         var report=new{minutes,tasks=1000,lines,errors,p95Ms=p95,samples};
-        var reportPath=Path.Combine(Path.GetTempPath(),"z3ndash-bridge-load-result.json");
+        var reportPath=Path.Combine(Path.GetTempPath(),"cronopus-bridge-load-result.json");
         await File.WriteAllTextAsync(reportPath,JsonSerializer.Serialize(report,new JsonSerializerOptions{WriteIndented=true}));
         Console.WriteLine("LOAD REPORT "+reportPath+" p95="+p95+" errors="+errors);
         if(errors!=0||p95>1000)throw new Exception("Load acceptance failed");

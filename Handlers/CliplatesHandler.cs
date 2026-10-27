@@ -2,7 +2,7 @@
 using System.Text;
 using System.Text.Json;
 
-namespace z3nDash;
+namespace Cronopus;
 
 public class CliplatesHandler : IScriptHandler
 {

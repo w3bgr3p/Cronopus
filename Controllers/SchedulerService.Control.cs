@@ -2,7 +2,7 @@ using System.Collections.Concurrent;
 using System.Globalization;
 using System.Security.Cryptography;
 
-namespace z3nDash;
+namespace Cronopus;
 
 public sealed partial class SchedulerService
 {

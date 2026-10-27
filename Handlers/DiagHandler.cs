@@ -1,7 +1,7 @@
 using System.Net;
 using System.Text;
 
-namespace z3nDash;
+namespace Cronopus;
 
 /// <summary>
 /// Маршруты диагностического режима:

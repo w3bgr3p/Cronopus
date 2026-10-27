@@ -1,6 +1,6 @@
 using System.Text.Json;
 
-namespace z3nDash.Mcp;
+namespace Cronopus.Mcp;
 
 internal static class McpViews
 {

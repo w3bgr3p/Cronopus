@@ -1,5 +1,5 @@
 using System.Net;
-namespace z3nDash;
+namespace Cronopus;
 public sealed class SchedulerHandler : IScriptHandler
 {
     public string PathPrefix => "/tasker";

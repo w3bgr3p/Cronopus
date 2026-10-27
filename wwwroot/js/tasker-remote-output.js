@@ -42,10 +42,11 @@
    var items=event.detail.text.split('\n').filter(function(s){return s.startsWith('data: ');}).map(function(s){try{return JSON.parse(s.slice(6));}catch(e){return null;}}).filter(function(x){return x&&x.line;});
    render({items:items,gap:false,next_cursor:cursor},false);
   }
-  button.disabled=true;button.textContent='Installing…';root.addEventListener('bridge-operation-progress',progress);
+  var label=button.getAttribute('aria-label');
+  button.disabled=true;root.ActionIcons.set(button,'loading','Installing dependencies…');root.addEventListener('bridge-operation-progress',progress);
   try{var response=await root.TaskerBridge.api(path,{method:'POST',headers:{'Content-Type':'application/json'},body:'{}'});var text=await response.text();
    if(!response.ok)throw new Error(text);progress({detail:{path:path,text:text}});
-  }catch(e){root.TaskerBridge.status(e.message);}finally{root.removeEventListener('bridge-operation-progress',progress);button.disabled=false;button.textContent='Install dependencies';}
+  }catch(e){root.TaskerBridge.status(e.message);}finally{root.removeEventListener('bridge-operation-progress',progress);button.disabled=false;root.ActionIcons.set(button,'install',label);}
  }
  root.RemoteOutput={load:load,toggle:toggle,stop:stop,setTask:setTask,install:install};
 })(typeof window!=='undefined'?window:globalThis);

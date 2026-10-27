@@ -1,4 +1,4 @@
-namespace z3nDash.Mcp;
+namespace Cronopus.Mcp;
 
 public sealed record McpOptions(string? ApiUrl, string RuntimeFile, bool ReadOnly, int TimeoutSeconds)
 {

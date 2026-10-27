@@ -35,10 +35,11 @@ using System.Windows.Forms;
 using Microsoft.Web.WebView2.Core;
 using Microsoft.Web.WebView2.WinForms;
 
-namespace z3nDash;
+namespace Cronopus;
 
 public class DashboardOverlay : Form
 {
+    public static event Action? ExitRequested;
     // ── Win32 API ──────────────────────────────────────────────────────────────
 
     [DllImport("user32.dll")]
@@ -89,7 +90,7 @@ public class DashboardOverlay : Form
 
     private static readonly (string Label, string Match, Func<string, string> Url)[] Tabs =
     [
-        ("⏻ z3nDash",  "page=tasker", b => b + "/?page=tasker"),
+        ("⏻ Cronopus",  "page=tasker", b => b + "/?page=tasker"),
         ("߷ ZP7",    "page=zp7",       b => b + "/?page=zp7"),
         ("🌍 ZB",    "page=zb",        b => b + "/?page=zb"),
         ("☰ Logs",   "page=logs",      b => b + "/?page=logs"),
@@ -155,7 +156,7 @@ public class DashboardOverlay : Form
         BackColor       = Color.FromArgb(13, 15, 20);
         Opacity         = _opacity;
         ShowInTaskbar   = true;
-        Text            = "z3nDash";
+        Text            = "Cronopus";
         DoubleBuffered  = true;
         MinimumSize     = new Size(400, 300);
 
@@ -177,7 +178,7 @@ public class DashboardOverlay : Form
         if (!ok && Marshal.GetLastWin32Error() != 1409)
             MessageBox.Show(
                 $"Hotkey Ctrl+Alt+Z already in use (err {Marshal.GetLastWin32Error()})",
-                "z3nDash", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                "Cronopus", MessageBoxButtons.OK, MessageBoxIcon.Warning);
 
         Application.AddMessageFilter(new GlobalMouseFilter(this));
     }
@@ -198,7 +199,7 @@ public class DashboardOverlay : Form
 
     private void InitTray()
     {
-        _trayIcon = new NotifyIcon { Text = "z3nDash", Visible = false };
+        _trayIcon = new NotifyIcon { Text = "Cronopus", Visible = false };
 
         try
         {
@@ -210,7 +211,11 @@ public class DashboardOverlay : Form
         var menu = new ContextMenuStrip();
         menu.Items.Add("Show  (Ctrl+Alt+Z)", null, (_, _) => ShowFromTray());
         menu.Items.Add(new ToolStripSeparator());
-        menu.Items.Add("Exit", null, (_, _) => Environment.Exit(0));
+        menu.Items.Add("Exit", null, (_, _) =>
+        {
+            ExitRequested?.Invoke();
+            Application.Exit();
+        });
         _trayIcon.ContextMenuStrip = menu;
         _trayIcon.DoubleClick += (_, _) => ShowFromTray();
     }
@@ -263,7 +268,7 @@ public class DashboardOverlay : Form
         try
         {
             var env = await CoreWebView2Environment.CreateAsync(null,
-                System.IO.Path.GetTempPath() + "\\z3n_webview2_cache");
+                System.IO.Path.GetTempPath() + "\\cronopus_webview2_cache");
             await _wv.EnsureCoreWebView2Async(env);
 
             await _wv.CoreWebView2.Profile.ClearBrowsingDataAsync();
@@ -295,7 +300,7 @@ public class DashboardOverlay : Form
         {
             MessageBox.Show(
                 $"WebView2 init failed:\n{ex.Message}\n\nInstall WebView2 Runtime.",
-                "z3nDash", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                "Cronopus", MessageBoxButtons.OK, MessageBoxIcon.Warning);
         }
     }
 
@@ -331,7 +336,7 @@ public class DashboardOverlay : Form
 
         var title = new Label
         {
-            Text      = "z3nDash",
+            Text      = "Cronopus",
             ForeColor = Color.FromArgb(255, 255, 255),
             BackColor = Color.Transparent,
             Font      = new Font(family, 10f, FontStyle.Regular),

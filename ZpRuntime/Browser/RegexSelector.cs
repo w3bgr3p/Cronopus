@@ -19,7 +19,7 @@
 
 using Microsoft.Playwright;
 
-namespace z3nDash.Browser;
+namespace Cronopus.Browser;
 
 internal static class RegexSelector
 {

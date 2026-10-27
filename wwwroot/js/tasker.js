@@ -145,6 +145,7 @@ function resetTaskerNode() {
     var output=_getOutputBox();if(output)output.textContent='';
     var search=document.getElementById('searchInput');if(search)search.value='';
     renderList();updateHeaderStats();
+    if (!selectedId && document.getElementById('taskOverview')) renderGlobalStats();
 }
 async function loadList() {
     var res = await taskerFetch('/tasker/list');
@@ -198,7 +199,7 @@ function updateHeaderStats() {
         (errors ? '<div class="stat-item">Errors: <span class="stat-val stat-error">' + errors + '</span></div>' : '') +
         '<div class="stat-item" title="Total usage of the selected machine: all processes and the operating system. CPU is averaged between resource samples; — means unavailable or warming up.">Machine CPU: <span class="stat-val' + (machine && machine.CpuPct >= 90 ? ' stat-error' : '') + '">' + machineCpu + '</span> RAM: <span class="stat-val">' + machineRam + '</span></div>' +
         (res && res.Instances > 0
-            ? '<div class="stat-item" title="Memory of all running task processes (with child processes), without z3nDash itself ('
+            ? '<div class="stat-item" title="Memory of all running task processes (with child processes), without Cronopus itself ('
                 + fmtMB(res.MasterMB) + ')' + (res.InProcessRuns ? '; ' + res.InProcessRuns + ' in-process run(s) not counted' : '') + '">'
                 + 'Tasker RAM: <span class="stat-val">' + fmtMB(res.MemoryMB) + '</span>'
                 + (res.CpuPct >= 0 ? ' CPU: <span class="stat-val">' + res.CpuPct.toFixed(1) + '%</span>' : '')
@@ -241,7 +242,11 @@ function loadResources() {
             var tot = document.getElementById('procTotalMem');
             if (tot) tot.textContent = taskMemText(selectedId) || '—';
             updateInstanceResources(selectedId);
-        }).catch(function() { if (_taskerCurrent(context)) { _resources = null; updateHeaderStats(); } });
+            if (!selectedId && document.getElementById('taskOverview')) updateTaskOverview();
+        }).catch(function() { if (_taskerCurrent(context)) {
+            _resources = null; updateHeaderStats();
+            if (!selectedId && document.getElementById('taskOverview')) updateTaskOverview();
+        } });
 }
 
 function updateInstanceResources(id, fallback) {
@@ -257,14 +262,14 @@ function updateInstanceResources(id, fallback) {
     list = list.slice().sort(function(a, b) { return b.UptimeSec - a.UptimeSec; });
     var mem = document.getElementById('procMem');
     if (mem) mem.textContent = list.length === 1
-        ? (list[0].InProcess ? 'in-process (shared z3nDash memory)' : fmtMB(list[0].MemoryMB)) : '—';
+        ? (list[0].InProcess ? 'in-process (shared Cronopus memory)' : fmtMB(list[0].MemoryMB)) : '—';
     var el = document.getElementById('instancesList');
     if (!el) return;
     var count = document.getElementById('instancesCount');
     var cnt = list.length ? String(list.length) : '';
     if (count) count.textContent = cnt;
     var html = !list.length ? '(none)' : list.map(function(inst) {
-        var usage = inst.InProcess ? 'in-process (shared z3nDash memory)'
+        var usage = inst.InProcess ? 'in-process (shared Cronopus memory)'
             : fmtMB(inst.MemoryMB) + ' · ' + (inst.Processes == null ? '—' : inst.Processes) + ' proc';
         return '<div class="inst-row">'
             + '<span class="inst-id">' + escHtml(inst.RunId) + '</span>'
@@ -540,10 +545,10 @@ function _lastOutputLine(s) {
 
 function renderGlobalStats() {
     var NAV_PAGES = [
-        { icon: (typeof ICONS !== 'undefined' ? ICONS.scheduler : ''), title: 'z3nDash',      desc: 'Runs .py, .js, .exe, .bat on cron or intervals (you are here)', url: '/tasker.html', color: 'var(--yellow-lo)' },
+        { icon: (typeof ICONS !== 'undefined' ? ICONS.scheduler : ''), title: 'Cronopus',      desc: 'Runs .py, .js, .exe, .bat on cron or intervals (you are here)', url: '/tasker.html', color: 'var(--yellow-lo)' },
         { icon: (typeof ICONS !== 'undefined' ? ICONS.zp7       : ''), title: 'ZP7',        desc: 'ZennoPoster node and task control',                                                      url: '/?page=zp7',      color: 'var(--accent)' },
         { icon: (typeof ICONS !== 'undefined' ? ICONS.logs       : ''), title: 'allLogs',    desc: 'Log history from every ZP7 node, filtered by level, machine, project and thread.', url: '/?page=zp7#allLogs',     color: 'var(--green)' },
-        { icon: (typeof ICONS !== 'undefined' ? ICONS.http       : ''), title: 'Traffic',    desc: 'HTTP traffic from the nodes and z3nDash, with details and replay.',   url: '/?page=zp7#traffic',     color: 'var(--yellow)' },
+        { icon: (typeof ICONS !== 'undefined' ? ICONS.http       : ''), title: 'Traffic',    desc: 'HTTP traffic from the nodes and Cronopus, with details and replay.',   url: '/?page=zp7#traffic',     color: 'var(--yellow)' },
         { icon: (typeof ICONS !== 'undefined' ? ICONS.json       : ''), title: 'JSON',       desc: 'Interactive JSON tree with auth/captcha detection and replay.',       url: '/json',           color: 'var(--accent)' },
         { icon: (typeof ICONS !== 'undefined' ? ICONS.clips      : ''), title: 'Clips',      desc: 'Copy-paste snippets organised into a tree.',                       url: '/?page=clips',    color: 'var(--yellow-lo)' },
         { icon: (typeof ICONS !== 'undefined' ? ICONS.text       : ''), title: 'Text Tools', desc: 'URL encode/decode, C# escaper, Base64, JSON escape.',                 url: '/text.html',      color: 'var(--steel)' },
@@ -575,39 +580,11 @@ function renderGlobalStats() {
         + '<div class="ov-stat"><span class="ov-stat-num muted">' + off + '</span><span class="ov-stat-label">Disabled</span></div>'
         + '</div>';
 
-    var ovOrder = { running: 0, fail: 1, planned: 2, newbie: 3, done: 4, paused: 5 };
-    var sorted = schedules.slice().sort(function(a, b) {
-        var sa = getTaskStatus(a), sb = getTaskStatus(b);
-        var oa = (sa in ovOrder) ? ovOrder[sa] : 9;
-        var ob = (sb in ovOrder) ? ovOrder[sb] : 9;
-        if (oa !== ob) return oa - ob;
-        return (a.name || '').localeCompare(b.name || '');
-    });
-
-    var rows = sorted.map(function(s) {
-        var st       = getTaskStatus(s);
-        var trigger  = triggerLabel(s);
-        var lastRun  = s.last_run ? s.last_run.slice(5, 16) : '—';
-        var doneN    = parseInt(s.runs_success) || 0;
-        var totalN   = parseInt(s.runs_total)   || 0;
-        var out      = _lastOutputLine(s);
-        var isErr    = /\[ERROR\]|\[ERR\]/i.test(out);
-        var disabled = (s.schedule_mode || 'off') !== 'off' && s.enabled === 'false';
-        var dotCls   = st === 'running' ? ' run' : st === 'fail' ? ' fail' : disabled ? ' off' : '';
-        return '<div class="ov-row' + (disabled ? ' off' : '') + '" onclick="selectRow(\'' + s.id + '\')">'
-            + '<span class="ov-dot' + dotCls + '"></span>'
-            + '<span class="ov-name" title="' + escHtml(s.name || '') + '">' + escHtml(s.name || '(unnamed)') + '</span>'
-            + '<span><span class="task-status ' + st + '">' + st + '</span></span>'
-            + '<span class="ov-cell" title="' + escHtml(trigger) + '">' + escHtml(trigger) + '</span>'
-            + '<span class="ov-cell">' + escHtml(lastRun) + '</span>'
-            + '<span class="ov-cell"><span class="row-done">' + doneN + '</span> / ' + totalN + '</span>'
-            + (out
-                ? '<span class="ov-out' + (isErr ? ' err' : '') + '" title="' + escHtml(out) + '">' + escHtml(out) + '</span>'
-                : '<span class="ov-out empty">(no output)</span>')
-            + '</div>';
-    }).join('');
-
-    var head = '<div class="ov-head"><span></span><span>Task</span><span>Status</span><span>Schedule</span><span>Last run</span><span>Done</span><span>Last output</span></div>';
+    if (document.getElementById('taskOverview')) {
+        body.querySelector('.ov-summary').outerHTML = statTiles;
+        updateTaskOverview();
+        return;
+    }
 
     var links = NAV_PAGES.map(function(p) {
         return '<a class="ov-link" href="' + p.url + '" style="--card-color:' + p.color + '">' + p.title + '</a>';
@@ -616,9 +593,7 @@ function renderGlobalStats() {
     body.innerHTML =
         '<div class="ov-wrap">'
         + statTiles
-        + '<div class="ov-table">' + head
-        + (rows || '<div style="padding:16px;color:var(--text2);text-align:center;font-size:11px">No tasks yet</div>')
-        + '</div>'
+        + '<section id="taskOverview" aria-label="Task overview">' + renderTaskOverview() + '</section>'
         + '<div class="ov-links">' + links + '</div>'
         + '</div>';
     body.scrollTop = prevScroll;
@@ -672,41 +647,45 @@ function renderDetailActions(s) {
     var schedSel   = sel.filter(function(x) { return (x.schedule_mode || 'off') !== 'off'; });
     var scheduled  = schedSel.length > 0;
     var anyOn      = schedSel.some(function(x) { return x.enabled !== 'false'; });
-    var pauseLabel = anyOn ? '⏸' : '▶';
     var held       = sel.some(scheduleHeld);
-    var runLabel   = _isJs(s.executor) && !many ? '▶ npm run' : '▶ Run';
-    var suffix     = many ? ' (' + n + ')' : '';
     var onTitle    = many ? ' — ' + n + ' selected tasks' : '';
     var prevCount  = document.getElementById('runCount');
     var countVal   = prevCount && prevCount.value ? prevCount.value : '1';
+    var arg        = JSON.stringify(id);
+    function action(icon, label, handler, attrs, disabled) {
+        return window.ActionIcons.button(icon, { label: label, disabled: disabled,
+            attrs: Object.assign({ onclick: handler }, attrs || {}) });
+    }
 
     document.getElementById('detailActions').innerHTML =
-        '<div class="action-group">'
+        (many ? '<span class="action-selection" role="status">' + n + ' selected</span>' : '')
+        + '<div class="action-group">'
         + '<input type="number" class="form-input" id="runCount" value="' + escHtml(countVal) + '" min="1" max="' + MAX_BURST + '"'
-        +   ' title="How many runs to queue. They start as threads free up." style="width:54px;text-align:center;padding:2px 4px">'
-        + '<button class="btn primary sm" title="Run' + onTitle + '" onclick="' + (many ? 'runSelected()' : 'runNow(\'' + id + '\')') + '">' + runLabel + suffix + '</button>'
-        + (scheduled ? '<button id="scheduleToggle" class="btn sm"' + (_scheduleAction && _scheduleAction.busy && _taskerCurrent(_scheduleAction.context) ? ' disabled' : '') + ' title="' + (anyOn ? 'Pause schedule (running instances continue; use Interrupt to stop them)' : 'Enable schedule') + (many ? ' — ' + schedSel.length + ' scheduled of ' + n + ' selected' : '') + '"'
-            + ' onclick="' + (many ? 'toggleEnabledSelected()' : 'toggleEnabled(\'' + id + '\',\'' + (s.enabled || 'true') + '\')') + '">' + pauseLabel + '</button>' : '')
-        + (held ? '<button class="btn sm" title="Clear script pause and deferral' + onTitle + '" onclick="' + (many ? 'resumeSelected()' : 'resumeSchedule(\'' + id + '\')') + '">Resume schedule</button>' : '')
-        + '<button class="btn sm" title="Restart' + onTitle + '" onclick="' + (many ? 'restartSelected()' : 'restartNow(\'' + id + '\')') + '" style="border-color:var(--yellow);color:var(--yellow);">↺</button>'
-        + '<button class="btn stop sm" title="Interrupt' + onTitle + '" onclick="' + (many ? 'stopSelected()' : 'stopNow(\'' + id + '\')') + '">■' + suffix + '</button>'
-        + '<button class="btn sm" title="Reset successful and failed attempt counters' + onTitle + '" onclick="resetAttempts()">Reset attempts' + suffix + '</button>'
-        + '<button class="btn danger sm" title="Eliminate' + onTitle + '" onclick="' + (many ? 'deleteSelected()' : 'deleteSchedule(\'' + id + '\',\'' + escHtml(s.name || '') + '\')') + '">🗑' + suffix + '</button>'
-        + '<button class="btn sm" onclick="duplicateSchedule(\'' + id + '\')" style="border-color:var(--yellow);color:var(--yellow);">📋📋</button>'
-        + (!(window.TaskerBridge && window.TaskerBridge.remote()) ? '<button class="btn sm" title="Upload task to a connected server" onclick="uploadSchedule(\'' + id + '\')">↑ Upload</button>' : '')
+        +   ' aria-label="Runs to queue" title="How many runs to queue. They start as threads free up." style="width:54px;text-align:center;padding:2px 4px">'
+        + action('run', (_isJs(s.executor) && !many ? 'Run npm script' : 'Run') + onTitle, many ? 'runSelected()' : 'runNow(' + arg + ')')
+        + (scheduled ? action(anyOn ? 'pause' : 'run',
+            (anyOn ? 'Pause schedule (running instances continue; use Interrupt to stop them)' : 'Enable schedule')
+                + (many ? ' — ' + schedSel.length + ' scheduled of ' + n + ' selected' : ''),
+            many ? 'toggleEnabledSelected()' : 'toggleEnabled(' + arg + ',' + JSON.stringify(s.enabled || 'true') + ')',
+            { id: 'scheduleToggle' }, !!(_scheduleAction && _scheduleAction.busy && _taskerCurrent(_scheduleAction.context))) : '')
+        + (held ? action('resume', 'Clear script pause and deferral' + onTitle, many ? 'resumeSelected()' : 'resumeSchedule(' + arg + ')') : '')
+        + action('restart', 'Restart' + onTitle, many ? 'restartSelected()' : 'restartNow(' + arg + ')')
+        + action('interrupt', 'Interrupt' + onTitle, many ? 'stopSelected()' : 'stopNow(' + arg + ')')
+        + action('resetAttempts', 'Reset attempts' + onTitle, 'resetAttempts()', { title: 'Reset successful and failed attempt counters' + onTitle })
+        + action('delete', 'Eliminate' + onTitle, many ? 'deleteSelected()' : 'deleteSchedule(' + arg + ',' + JSON.stringify(s.name || '') + ')')
+        + action('duplicate', 'Duplicate task', 'duplicateSchedule(' + arg + ')')
+        + (!(window.TaskerBridge && window.TaskerBridge.remote()) ? action('upload', 'Upload task to a connected server', 'uploadSchedule(' + arg + ')') : '')
         + '</div>'
         + '<div class="action-group">'
-        
-        + (s.script_path ? '<button class="btn sm" data-fp="' + escHtml(s.script_path) + '" onclick="openScriptFile(this.dataset.fp)" style="border-color:var(--green);color:var(--green);">📄</button>' : '')
-        + (s.script_path ? '<button class="btn sm" data-fp="' + escHtml(s.script_path) + '" onclick="openScriptFolder(this.dataset.fp)" style="border-color:var(--green);color:var(--green);">📁</button>' : '')
-
+        + (s.script_path ? action('script', 'Open script file', 'openScriptFile(this.dataset.fp)', { 'data-fp': s.script_path }) : '')
+        + (s.script_path ? action('folder', 'Open script folder', 'openScriptFolder(this.dataset.fp)', { 'data-fp': s.script_path }) : '')
         + '</div>'
         + '<div class="action-group">'
-        + (s.script_path ? '<button class="btn sm" onclick="openInTerminal(\'' + escHtml(s.id) + '\')" style="border-color:var(--steel);color:var(--steel);">⌨ Terminal</button>' : '')
-        + (s.executor === 'csx' ? '<button class="btn sm" onclick="buildCsx(\'' + id + '\')" style="border-color:var(--steel);color:var(--steel);">🔨 Build csx</button>' : '')
+        + (s.script_path ? action('terminal', 'Open terminal', 'openInTerminal(' + arg + ')') : '')
+        + (s.executor === 'csx' ? action('build', 'Build csx', 'buildCsx(' + arg + ')') : '')
         + '</div>';
 
-    // async: добавить кнопки config/install если нужно
+    // Discover npm scripts and dependency installation actions asynchronously.
     var seq = ++_extActionsSeq;
     if (_needsConfig(s.executor)) extendDetailActions(s, seq);
 }
@@ -714,7 +693,7 @@ function renderDetailActions(s) {
 // Each render bumps the counter; a slower earlier extendDetailActions sees it is stale and drops its group.
 var _extActionsSeq = 0;
 
-// ── Config / Install buttons (async, добавляются после scan-folder) ───────────
+// ── Package / Install actions (discovered through scan-folder) ──────────────
 
 async function extendDetailActions(s, seq) {
     var res, info;
@@ -733,6 +712,7 @@ async function extendDetailActions(s, seq) {
         try {
             var pkgRes   = await taskerFetch('/tasker/package-scripts?id=' + encodeURIComponent(s.id));
             var pkgData  = await pkgRes.json();
+            if (seq !== _extActionsSeq) return;
             var scripts  = pkgData.scripts || {};
             var names    = Object.keys(scripts);
             if (names.length > 0) {
@@ -740,6 +720,7 @@ async function extendDetailActions(s, seq) {
                 sel.id  = 'npmScriptSelect';
                 sel.style.cssText = 'background:var(--bg);border:1px solid var(--accent);border-radius:3px;padding:2px 5px;color:var(--accent);font-size:10px;cursor:pointer;';
                 sel.title = 'Select npm script to run';
+                sel.setAttribute('aria-label', 'npm script');
 
                 // detect currently selected from args
                 var currentArgs = s.args || '';
@@ -764,52 +745,39 @@ async function extendDetailActions(s, seq) {
 
                 sel.addEventListener('change', function() {
                     _saveNpmScript(s.id, sel.value);
-                    // update run button label
-                    var runBtn = document.querySelector('#detailActions .btn.primary.sm');
-                    if (runBtn) runBtn.textContent = '▶ npm run ' + sel.value;
+                    updateRunLabel();
                 });
 
                 group.appendChild(sel);
 
-                // update run button to show selected script
-                var runBtn = document.querySelector('#detailActions .btn.primary.sm');
-                if (runBtn) runBtn.textContent = '▶ npm run ' + sel.value;
+                function updateRunLabel() {
+                    var runBtn = document.querySelector('#detailActions [data-action="run"]');
+                    if (runBtn && _bulkCount() <= 1 && seq === _extActionsSeq)
+                        window.ActionIcons.set(runBtn, 'run', 'Run npm script: ' + sel.value);
+                }
+                updateRunLabel();
             }
         } catch(e) {}
     }
 
-    var cfgLabel = _isJs(s.executor) ? 'config.json' : 'config.py';
-    var cfgBtn   = document.createElement('button');
-    cfgBtn.className = 'btn sm';
-    cfgBtn.style.cssText = 'border-color:var(--accent);color:var(--accent);';
-    cfgBtn.textContent = (info.has_config ? '⚙ ' : '+ ') + cfgLabel;
-    cfgBtn.onclick = function() { openCmModal(s, 'config'); };
-    group.appendChild(cfgBtn);
-
     if (_isJs(s.executor)) {
-        var pkgBtn = document.createElement('button');
-        pkgBtn.className = 'btn sm';
-        pkgBtn.style.cssText = 'border-color:var(--accent);color:var(--accent);';
-        pkgBtn.textContent = (info.has_package_json ? '📦 package.json' : '+ package.json');
-        pkgBtn.onclick = function() { openCmModal(s, 'package'); };
-        group.appendChild(pkgBtn);
+        group.insertAdjacentHTML('beforeend', window.ActionIcons.button('package', {
+            label: (info.has_package_json ? 'Edit' : 'Create') + ' package.json' }));
+        group.lastElementChild.onclick = function() { openCmModal(s, 'package'); };
     }
 
     var canInstall = _isJs(s.executor) || info.has_requirements;
     if (canInstall) {
-        var instLabel = _isJs(s.executor) ? '📦 npm install' : '📦 pip install';
-        var instBtn   = document.createElement('button');
-        instBtn.className = 'btn sm';
-        instBtn.style.cssText = 'border-color:var(--green);color:var(--green);';
-        instBtn.textContent = instLabel;
+        var instLabel = _isJs(s.executor) ? 'npm install' : 'pip install';
+        group.insertAdjacentHTML('beforeend', window.ActionIcons.button('install', { label: instLabel }));
+        var instBtn = group.lastElementChild;
         instBtn.onclick = function() { runInstall(s, instBtn); };
-        group.appendChild(instBtn);
     }
 
     // The npm-scripts fetch above is a second await; re-check before touching the DOM.
     if (seq !== _extActionsSeq) return;
     var actionsEl = document.getElementById('detailActions');
-    if (actionsEl) actionsEl.appendChild(group);
+    if (actionsEl && group.childElementCount) actionsEl.appendChild(group);
 }
 
 async function _saveNpmScript(scheduleId, scriptName) {
@@ -832,7 +800,7 @@ async function _saveNpmScript(scheduleId, scriptName) {
 function runInstall(s, btn) {
     if (window.TaskerBridge && window.TaskerBridge.remote()) { window.RemoteOutput.install(s.id,btn); return; }
     btn.disabled    = true;
-    btn.textContent = '⏳ installing...';
+    window.ActionIcons.set(btn, 'loading', 'Installing dependencies…');
     switchTab('output');
 
     var box = _getOutputBox();
@@ -856,16 +824,16 @@ function runInstall(s, btn) {
         src.close();
         startLiveWatch(selectedId);
         btn.disabled    = false;
-        btn.textContent = _isJs(s.executor) ? '📦 npm install' : '📦 pip install';
+        window.ActionIcons.set(btn, 'install', _isJs(s.executor) ? 'npm install' : 'pip install');
     });
 
     src.onerror = function() {
         src.close();
         startLiveWatch(selectedId);
         btn.disabled    = false;
-        btn.textContent = '❌ failed';
+        window.ActionIcons.set(btn, 'error', 'Dependency installation failed');
         setTimeout(function() {
-            btn.textContent = _isJs(s.executor) ? '📦 npm install' : '📦 pip install';
+            window.ActionIcons.set(btn, 'install', _isJs(s.executor) ? 'npm install' : 'pip install');
         }, 3000);
     };
 }

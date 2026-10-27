@@ -1,6 +1,6 @@
 using System.Net;
 
-namespace z3nDash;
+namespace Cronopus;
 
 public interface IScriptHandler
 {

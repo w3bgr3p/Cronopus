@@ -5,7 +5,7 @@ using System.Diagnostics;
 using Newtonsoft.Json;
 
 
-namespace z3nDash
+namespace Cronopus
 {
     public class HttpCallDiagnostics
     {
@@ -102,7 +102,7 @@ namespace z3nDash
         private readonly bool _fallbackToStackTrace;
         private readonly string _taskId;
         private readonly string _account;
-        private readonly string _source = "z3nDash";
+        private readonly string _source = "Cronopus";
         public HttpDebugHandler(string projectName, 
             string proxy = "",
             string taskId = "",

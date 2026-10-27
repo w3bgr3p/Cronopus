@@ -1,4 +1,4 @@
-namespace z3nDash;
+namespace Cronopus;
 
 public sealed partial class BridgeUploads
 {
@@ -26,7 +26,9 @@ public sealed partial class BridgeUploads
                     var currentHash=File.Exists(target)?await HashFileAsync(target,ct):null;
                     if(currentHash!=file.OriginalHash)throw new IOException("Destination changed since confirmation. Start a new transfer.");
                     ct.ThrowIfCancellationRequested();File.Move(staged,target,currentHash!=null);file.State="published";
-                }catch(Exception ex)when(ex is IOException or UnauthorizedAccessException or System.ComponentModel.Win32Exception){file.Error=ex.Message;}
+                }catch(Exception ex)when(ex is IOException or UnauthorizedAccessException or System.ComponentModel.Win32Exception){
+                    file.Error=$"HResult=0x{ex.HResult:X8}"+(ex is System.ComponentModel.Win32Exception win32?$", NativeErrorCode={win32.NativeErrorCode}":"")+Environment.NewLine+ex;
+                }
                 Save(s);
             }
             if(s.Files.All(f=>f.State is "published" or "skipped"))CleanupStage(s);
@@ -35,7 +37,7 @@ public sealed partial class BridgeUploads
     }
     private static void CleanupStage(BridgeUploadSession session)
     {
-        var expected=BridgeUploadPaths.Resolve(session.Destination,".z3ndash-upload-"+session.Id);
+        var expected=BridgeUploadPaths.Resolve(session.Destination,".cronopus-upload-"+session.Id);
         if(session.Stage!=expected)throw new UnauthorizedAccessException("Invalid staging directory");
         if(Directory.Exists(expected)){using var lease=BridgeUploadPaths.LockParents(expected);Directory.Delete(expected,true);}
     }

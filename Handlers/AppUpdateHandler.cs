@@ -1,7 +1,7 @@
 using System.Net;
 using System.Text.Json;
 
-namespace z3nDash;
+namespace Cronopus;
 
 internal sealed class AppUpdateHandler(AppUpdateService updates) : IScriptHandler
 {
@@ -22,7 +22,7 @@ internal sealed class AppUpdateHandler(AppUpdateService updates) : IScriptHandle
         if (request.HttpMethod != "POST") { response.StatusCode = 405; return true; }
         // The dashboard is loopback-only, but browsers can still send cross-origin requests.
         var origin = request.Headers["Origin"];
-        if (request.Headers["X-z3nDash-Update"] != "1" || !request.IsLocal
+        if (request.Headers["X-Cronopus-Update"] != "1" || !request.IsLocal
             || (origin != null && origin != request.Url.GetLeftPart(UriPartial.Authority)))
         {
             response.StatusCode = 403;

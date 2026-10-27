@@ -45,7 +45,7 @@ These are bound in `nav.js` rather than in the item list, and they open nothing:
 
 ## Also in the dock
 
-Minimizing the window keeps z3nDash on the taskbar. Closing the main window hides
+Minimizing the window keeps Cronopus on the taskbar. Closing the main window hides
 it to the tray. `Ctrl+Alt+Z` hides a visible window or restores a hidden/minimized
 one. Double-clicking the tray icon also restores the window; `Exit` in the tray
 menu quits the application.

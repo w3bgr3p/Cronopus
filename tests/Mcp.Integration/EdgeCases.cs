@@ -1,7 +1,7 @@
 using System.Net;
 using System.Net.Sockets;
 using System.Text.Json;
-using z3nDash.Mcp;
+using Cronopus.Mcp;
 
 internal static class EdgeCases
 {
@@ -20,12 +20,12 @@ internal static class EdgeCases
         var server = Task.Run(async () =>
         {
             var status = await listener.GetContextAsync();
-            var bytes = JsonSerializer.SerializeToUtf8Bytes(new { application = "z3nDash", contract_version = 1, instance_id = "fixture", database_connected = false });
+            var bytes = JsonSerializer.SerializeToUtf8Bytes(new { application = "Cronopus", contract_version = 1, instance_id = "fixture", database_connected = false });
             status.Response.ContentType = "application/json";
             await status.Response.OutputStream.WriteAsync(bytes); status.Response.Close();
             var request = await listener.GetContextAsync();
             Interlocked.Increment(ref writes);
-            if (request.Request.Headers["X-Z3nDash-Instance"] != "fixture") throw new Exception("identity guard missing");
+            if (request.Request.Headers["X-Cronopus-Instance"] != "fixture") throw new Exception("identity guard missing");
             await Task.Delay(1600);
             request.Response.Close();
         });

@@ -1,5 +1,5 @@
 using System.Text.Json;
-namespace z3nDash;
+namespace Cronopus;
 
 public sealed class BridgeChanges(TaskerService tasker)
 {

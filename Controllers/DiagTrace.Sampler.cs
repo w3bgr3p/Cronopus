@@ -1,7 +1,7 @@
 using System.Diagnostics;
 using System.Text;
 
-namespace z3nDash;
+namespace Cronopus;
 
 public static partial class DiagTrace
 {

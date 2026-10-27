@@ -17,11 +17,11 @@
 using System.Collections.Concurrent;
 using System.Text.Json;
 using System.Xml.Linq;
-using z3nDash.Browser;
-using z3nDash.Xml;
+using Cronopus.Browser;
+using Cronopus.Xml;
 using ZennoLab.InterfacesLibrary.ProjectModel;
 
-namespace z3nDash;
+namespace Cronopus;
 
 public enum DebugState { Idle, Running, Paused, Finished, Failed }
 
@@ -66,7 +66,7 @@ internal static class ZpDebugService
 
         // Instance — обёртка ZP над браузером; сам браузер лежит в Browser.
         if (session.Instance.IsVoid ||
-            session.Instance.Browser is not z3nDash.Browser.PlaywrightInstance page)
+            session.Instance.Browser is not Cronopus.Browser.PlaywrightInstance page)
             return new { ok = false, error = "у сессии нет браузера" };
 
         try
@@ -146,7 +146,7 @@ internal static class ZpDebugService
             OnLog = LogHere
         };
 
-        var profileDir = Path.Combine(Path.GetTempPath(), "z3nDash-xml", "debug-profile");
+        var profileDir = Path.Combine(Path.GetTempPath(), "Cronopus-xml", "debug-profile");
         Log($"[dbg] браузер{(headless ? " (без окна)" : " (с окном)")}, профиль {profileDir}");
 
         // Chrome помечает профиль как «Crashed» и при следующем запуске

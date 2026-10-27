@@ -1,4 +1,4 @@
-namespace z3nDash.Bas;
+namespace Cronopus.Bas;
 
 /// <summary>
 /// Описание поиска элемента по правилам ZP. Элемент в мосте ленивый, как
