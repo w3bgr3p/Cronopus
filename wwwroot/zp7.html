@@ -43,13 +43,13 @@
         <div class="panel-header">
             <span class="panel-title">Tasks</span>
             <span class="count-badge" id="visibleCount">0</span>
-            <div style="margin-left:auto;display:flex;gap:5px;">
+            <div class="list-header-actions">
+                <input class="list-search" type="text" id="nameFilter" placeholder="Search..." aria-label="Search tasks" oninput="applyFilters()">
                 <button class="auto-badge" onclick="refreshTasks()" style="color:var(--text);">↺ Refresh</button>
             </div>
         </div>
 
         <div class="list-toolbar">
-            <input type="text" id="nameFilter" placeholder="Search..." oninput="applyFilters()">
             <select id="statusFilter" onchange="applyFilters()">
                 <option value="">All</option>
                 <option value="Perform">Perform</option>
@@ -583,6 +583,7 @@
     function updateTagFilterBar() {
         const bar = document.getElementById('tagFilterBar');
         const allTags = getAllTags();
+        bar.hidden = allTags.length === 0;
 
         // Keep only valid active filters
         if ([...taskNodes.values()].every(node => node.loaded))
