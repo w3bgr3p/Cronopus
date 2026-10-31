@@ -1,3 +1,5 @@
+    window.ActionIcons.mount(document);
+
     // ── Toast ─────────────────────────────────────────────────────────
     let _toastTimer;
     function toast(msg, type = 'ok') {
@@ -89,7 +91,7 @@
     // ── Load Storage ──────────────────────────────────────────────────
     async function loadStorage() {
         const btn = document.getElementById('refreshStorageBtn');
-        btn.innerHTML = '<span class="spinner"></span>…';
+        window.ActionIcons.set(btn, 'loading', 'Refreshing log storage…');
         btn.disabled = true;
         try {
             const r = await fetch('/config/storage');
@@ -122,7 +124,7 @@
         } catch (e) {
             toast('Storage error: ' + e.message, 'err');
         } finally {
-            btn.innerHTML = '↻ Refresh';
+            window.ActionIcons.set(btn, 'refresh', 'Refresh log storage');
             btn.disabled = false;
         }
     }
@@ -139,7 +141,7 @@
         const btnId = { all: 'clearAllBtn' }[type];
         const btn = document.getElementById(btnId);
         btn.disabled = true;
-        btn.textContent = '…';
+        window.ActionIcons.set(btn, 'loading', 'Clearing all logs…');
 
         try {
             const r = await fetch(url, { method: 'POST' });
@@ -153,7 +155,7 @@
             toast('Error: ' + e.message, 'err');
         } finally {
             btn.disabled = false;
-            btn.textContent = '☠ Clear ALL Logs';
+            window.ActionIcons.set(btn, 'delete', 'Clear ALL logs');
         }
     }
 
@@ -208,7 +210,7 @@
         const button = document.getElementById('btnTogglePgConnectionString');
         const show = input.type === 'password';
         input.type = show ? 'text' : 'password';
-        button.textContent = show ? 'Hide' : 'Show';
+        window.ActionIcons.set(button, show ? 'eyeOff' : 'eye', show ? 'Hide connection string' : 'Show connection string');
     }
 
     async function copyPgConnectionString() {
@@ -300,15 +302,16 @@
         vInp.style.cssText = kInp.style.cssText;
 
         const del = document.createElement('button');
-        del.className   = 'btn danger';
-        del.textContent = 'x';
-        del.style.cssText = 'padding:4px 9px; font-size:11px;';
+        del.className   = 'btn';
+        del.dataset.icon = 'delete';
+        del.setAttribute('aria-label', 'Remove variable');
         del.onclick = () => row.remove();
 
         row.appendChild(kInp);
         row.appendChild(vInp);
         row.appendChild(del);
         container.appendChild(row);
+        window.ActionIcons.mount(row);
     }
 
     function jvCollect() {
@@ -333,7 +336,7 @@
 
         const btn = document.getElementById('saveJVarsBtn');
         btn.disabled = true;
-        btn.textContent = '...';
+        window.ActionIcons.set(btn, 'loading', 'Saving PIN, path and variables…');
 
         const payload = btoa(unescape(encodeURIComponent(JSON.stringify({ pin, jVarsPath: path, localVars }))));
 
@@ -355,7 +358,7 @@
             toast('Error: ' + e.message, 'err');
         } finally {
             btn.disabled = false;
-            btn.textContent = '🔐 Set PIN & Path';
+            window.ActionIcons.set(btn, 'key', 'Set PIN & path');
         }
     }
 
@@ -371,9 +374,9 @@
     }
 
     async function mtPost(url, body, btn, busyText, doneText) {
-        const label = btn.textContent;
+        const label = btn.getAttribute('aria-label');
         btn.disabled = true;
-        btn.textContent = busyText;
+        window.ActionIcons.set(btn, 'loading', busyText);
         try {
             const r = await fetch(url, {
                 method:  'POST',
@@ -389,7 +392,7 @@
             toast('Error: ' + e.message, 'err');
         } finally {
             btn.disabled = false;
-            btn.textContent = label;
+            window.ActionIcons.set(btn, btn.dataset.action, label);
         }
     }
 
@@ -685,16 +688,16 @@
     }
 
     const SECTIONS = [
-        { id: 'overview', icon: '🟢', title: 'Overview',            enter: enterOverview, leave: leaveOverview },
-        { id: 'db',       icon: '🗄', title: 'Database' },
-        { id: 'server',   icon: '⚙',      title: 'Logs & Server' },
-        { id: 'browsers', icon: '🌐', title: 'Browsers API' },
-        { id: 'services', icon: '🛡', title: 'Services',            enter: enterServices, leave: leaveServices },
-        { id: 'security', icon: '🔐', title: 'Security · jVars' },
-        { id: 'maint',    icon: '🧰', title: 'Maintenance' },
-        { id: 'remote-tasker', icon: '⇄', title: 'Remote Tasker', enter: () => BridgeConfig.load() },
-        { id: 'ui',       icon: '🎨', title: 'Interface',           enter: enterInterface },
-        { id: 'about',    icon: 'ⓘ', title: 'About', enter: () => AboutUpdates.enter(), leave: () => AboutUpdates.leave() },
+        { id: 'overview', icon: 'overview', title: 'Overview',            enter: enterOverview, leave: leaveOverview },
+        { id: 'db',       icon: 'database', title: 'Database' },
+        { id: 'server',   icon: 'server', title: 'Logs & Server' },
+        { id: 'browsers', icon: 'globe', title: 'Browsers API' },
+        { id: 'services', icon: 'shield', title: 'Services',            enter: enterServices, leave: leaveServices },
+        { id: 'security', icon: 'key', title: 'Security · jVars' },
+        { id: 'maint',    icon: 'tools', title: 'Maintenance' },
+        { id: 'remote-tasker', icon: 'connection', title: 'Remote Tasker', enter: () => BridgeConfig.load() },
+        { id: 'ui',       icon: 'palette', title: 'Interface',           enter: enterInterface },
+        { id: 'about',    icon: 'info', title: 'About', enter: () => AboutUpdates.enter(), leave: () => AboutUpdates.leave() },
     ];
 
     const SEPARATORS_AFTER = ['overview', 'browsers', 'services'];
@@ -710,7 +713,7 @@
             b.className = 'cfg-rail-item';
             b.dataset.sec = sec.id;
             b.innerHTML = '<span class="icon"></span><span class="label"></span>';
-            b.querySelector('.icon').textContent  = sec.icon;
+            b.querySelector('.icon').innerHTML   = window.ActionIcons.svg(sec.icon);
             b.querySelector('.label').textContent = sec.title;
             b.addEventListener('click', () => showSection(sec.id));
             rail.appendChild(b);
@@ -803,8 +806,8 @@
         const t  = IMPORT_TYPES.find(x => x.id === id);
         document.getElementById('importStepTitle').textContent = t.label;
         document.getElementById('importStepSub').textContent   = 'Step ' + (_importIdx + 1) + ' of ' + _importQueue.length;
-        document.getElementById('importNextBtn').textContent   =
-            _importIdx < _importQueue.length - 1 ? 'Import & Next \u2192' : 'Import \u2713';
+        window.ActionIcons.set(document.getElementById('importNextBtn'), 'import',
+            _importIdx < _importQueue.length - 1 ? 'Import and continue' : 'Import');
 
         const body = document.getElementById('importStepBody');
         body.innerHTML = '';
@@ -833,7 +836,7 @@
         const endpoint = resolveEndpoint(id);
         const btn      = document.getElementById('importNextBtn');
         btn.disabled   = true;
-        btn.textContent = 'Importing\u2026';
+        window.ActionIcons.set(btn, 'loading', 'Importing…');
 
         try {
             const res  = await fetch(endpoint, { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(payload) });
@@ -849,7 +852,7 @@
             toast('Request failed: ' + e.message, 'err');
         } finally {
             btn.disabled    = false;
-            btn.textContent = _importIdx < _importQueue.length - 1 ? 'Import & Next \u2192' : 'Import \u2713';
+            window.ActionIcons.set(btn, 'import', _importIdx < _importQueue.length - 1 ? 'Import and continue' : 'Import');
         }
     }
 

@@ -119,11 +119,11 @@ public sealed partial class SchedulerService : IDisposable
         var columns = RowColumns(db);
         if (columns.Count == 0) return;
 
-        var rows = db.GetLines(string.Join(",", columns), Table, where: "\"status\" = 'running' AND \"enabled\" = 'true'");
+        var rows = db.GetLines(string.Join(",", columns), Table, where: "\"status\" = 'running'");
 
         if (rows.Count == 0) return;
 
-        _log?.Info($"[SchedulerService] Found {rows.Count} tasks with status=running, restarting...");
+        _log?.Info($"[SchedulerService] Found {rows.Count} tasks with status=running, resetting stale state...");
 
         var restoreStagger = TimeSpan.Zero;
         foreach (var row in rows)
@@ -134,6 +134,10 @@ public sealed partial class SchedulerService : IDisposable
 
             // Сбросить статус в idle и очистить last_run_id
             db.Query($"UPDATE \"{Table}\" SET \"status\" = 'idle', \"last_run_id\" = '' WHERE \"id\" = '{id}'");
+
+            // Disabled tasks also retain persisted running state after shutdown,
+            // but must not be restarted when repairing that state.
+            if (record.GetValueOrDefault("enabled") != "true") continue;
 
             _log?.Info($"[SchedulerService] Restarting task: {name} (id={id})");
 

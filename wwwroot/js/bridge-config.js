@@ -36,10 +36,10 @@
         finally{document.getElementById('brCheckFirewall').disabled=false;}
     }
     async function checkFirewall(button){
-        var label=button.textContent;button.disabled=true;button.textContent='Checking…';message('');document.getElementById('brFirewallStatus').textContent='Checking Windows Firewall…';
+        var label=button.getAttribute('aria-label');button.disabled=true;root.ActionIcons.set(button,'loading','Checking firewall…');message('');document.getElementById('brFirewallStatus').textContent='Checking Windows Firewall…';
         try{firewallStatus(await send('GET','/bridge-local/server/firewall'));var status=document.getElementById('brFirewallStatus');status.textContent='Checked '+new Date().toLocaleTimeString()+' · '+status.textContent;}
         catch(e){document.getElementById('brFirewallStatus').textContent=e.message;throw e;}
-        finally{button.disabled=false;button.textContent=label;}
+        finally{button.disabled=false;root.ActionIcons.set(button,'shieldCheck',label);}
     }
     var connections = [], controller = createConfigController({send:send}),ipRequest=0,ipEdits=0,configLoad=0,autoIpTried=false,exportKey=null;
     async function copyConnection(){
@@ -75,10 +75,14 @@
             document.getElementById('br_quota').value=s.settings.uploadQuotaBytes/1073741824;
             document.getElementById('br_rate').value=s.settings.transferBytesPerSecond/1048576;}
             document.getElementById('brIdentity').textContent = 'Node ID: ' + s.nodeId + '\nSHA-256: ' + s.fingerprint + '\nExpires: ' + s.expires + '\nURL: ' + (s.actualUrl || 'disabled') + '\n' + s.storageProtection + (s.error ? '\n' + s.error : '');
-            document.getElementById('brConnections').innerHTML = connections.map(function(c) {return '<div class="br-row"><span>' + esc(c.name) + ' · ' + esc(c.address) + '</span><button class="btn" data-br-test="' + esc(c.id) + '">Test</button><button class="btn" data-br-edit="' + esc(c.id) + '">Edit</button><button class="btn danger" data-br-delete="' + esc(c.id) + '">Remove</button></div>';}).join('') || 'No connections';
-            document.getElementById('brKeys').innerHTML = s.keys.map(function(k) {return '<div class="br-row"><span>' + esc(k.name) + (k.revoked ? ' · revoked' : '') + '</span>' + (k.revoked ? '' : '<button class="btn danger" data-br-revoke="' + esc(k.id) + '">Revoke</button>') + '</div>';}).join('');
+            document.getElementById('brConnections').innerHTML = connections.map(function(c) {return '<div class="br-row"><span>' + esc(c.name) + ' · ' + esc(c.address) + '</span>'
+                + root.ActionIcons.button('test',{label:'Test connection: '+c.name,attrs:{'data-br-test':c.id}})
+                + root.ActionIcons.button('edit',{label:'Edit connection: '+c.name,attrs:{'data-br-edit':c.id}})
+                + root.ActionIcons.button('delete',{label:'Remove connection: '+c.name,attrs:{'data-br-delete':c.id}}) + '</div>';}).join('') || 'No connections';
+            document.getElementById('brKeys').innerHTML = s.keys.map(function(k) {return '<div class="br-row"><span>' + esc(k.name) + (k.revoked ? ' · revoked' : '') + '</span>'
+                + (k.revoked ? '' : root.ActionIcons.button('shieldClosed',{label:'Revoke key: '+k.name,attrs:{'data-br-revoke':k.id}})) + '</div>';}).join('');
             var revoked=s.keys.filter(function(k){return k.revoked;}).length;
-            if(revoked)document.getElementById('brKeys').innerHTML+='<button class="btn" id="brClearRevoked">Clear revoked keys ('+revoked+')</button>';
+            if(revoked)document.getElementById('brKeys').innerHTML+=root.ActionIcons.button('delete',{label:'Clear revoked keys ('+revoked+')',attrs:{id:'brClearRevoked'}});
             if(!autoIpTried&&!s.settings.enabled&&['','127.0.0.1','0.0.0.0','::1'].includes(s.settings.advertisedAddress)){autoIpTried=true;detectIp();}
         } catch(e) {message(e.message);}
     }
@@ -105,12 +109,12 @@
                 catch(ex){keyMessage(ex.message);throw ex;}finally{el.disabled=false;}
             } else if (el.dataset.brRevoke && confirm('Revoke this key and interrupt its transfers?')) {await send('DELETE','/bridge-local/keys/'+el.dataset.brRevoke);await load({preserveServerDraft:true});keyMessage('Access key revoked.');
             } else if (el.id === 'brCreateKey') {
-                if(el.disabled)return;var label=el.textContent;el.disabled=true;el.textContent='Creating…';message('');keyMessage('Creating access key…');
+                if(el.disabled)return;var label=el.getAttribute('aria-label');el.disabled=true;root.ActionIcons.set(el,'loading','Creating access key…');message('');keyMessage('Creating access key…');
                 try{var key = await send('POST','/bridge-local/keys',{name:input('brKeyName')});
                     if(!key||typeof key.secret!=='string'||!key.secret)throw new Error('The backend did not return an access key. Check that the updated application is running.');
                     exportKey={id:key.id,secret:key.secret};var copyButton=document.getElementById('brCopyConnection');if(copyButton)copyButton.disabled=false;
                     document.getElementById('brNewKey').value=key.secret;keyMessage('Access key created. Click Copy connection to copy all connection details at once.');await load({preserveServerDraft:true});
-                }catch(e){keyMessage(e.message);throw e;}finally{el.disabled=false;el.textContent=label;}
+                }catch(e){keyMessage(e.message);throw e;}finally{el.disabled=false;root.ActionIcons.set(el,'key',label);}
             } else if (el.id === 'brRenewCertificate') {
                 if(!confirm('Renew the server certificate? Update its fingerprint in every client.'))return;
                 var existing=await send('GET','/bridge-local/server');await send('PUT','/bridge-local/server',Object.assign({},existing.settings,{renewCertificate:true}));await load({preserveServerDraft:true});message('Certificate renewed');

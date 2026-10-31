@@ -7,8 +7,10 @@
     <link rel="stylesheet" href="/css/themes.css">
     <script src="/js/diag.js"></script>
     <script src="/js/theme.js"></script>
+    <script src="/js/icons.js"></script>
     <script src="/js/nav.js"></script>
     <link rel="stylesheet" href="/css/config.css?v=20261015-firewall-id">
+    <link rel="stylesheet" href="/css/action-icons.css">
 </head>
 <body>
 
@@ -18,9 +20,9 @@
         <p class="page-sub">Runtime status · Configuration · Storage</p>
     </div>
     <div class="page-actions">
-        <button class="btn" onclick="openImport()">Fill DB</button>
-        <button class="btn" onclick="loadConfig()">Reset</button>
-        <button class="btn primary" onclick="saveConfig()">Save Config</button>
+        <button class="btn" data-icon="import" onclick="openImport()">Fill database</button>
+        <button class="btn" data-icon="refresh" onclick="loadConfig()">Reload saved configuration</button>
+        <button class="btn primary" data-icon="save" onclick="saveConfig()">Save configuration</button>
     </div>
 </div>
 
@@ -53,8 +55,8 @@
                 <p id="updateRestart" class="about-restart" role="status" hidden></p>
                 <p id="updateError" class="about-error" role="alert" hidden></p>
                 <div class="btn-row">
-                    <button class="btn" id="updateCheck" type="button" onclick="AboutUpdates.action('check')">Check for updates</button>
-                    <button class="btn primary" id="updateInstall" type="button" onclick="AboutUpdates.action('install')" disabled>Download update</button>
+                    <button class="btn" data-icon="refresh" id="updateCheck" type="button" onclick="AboutUpdates.action('check')">Check for updates</button>
+                    <button class="btn primary" data-icon="install" id="updateInstall" type="button" onclick="AboutUpdates.action('install')" disabled>Download update</button>
                 </div>
             </section>
         </section>
@@ -66,22 +68,22 @@
                 <div class="br-grid">
                     <label><input id="brEnabled" type="checkbox"> Enable HTTPS server</label>
                     <label>Bind IP<input id="br_bindAddress" value="0.0.0.0"></label>
-                    <label>Public/server IP<div class="br-ip-input"><input id="br_advertisedAddress" value="127.0.0.1"><button class="btn" id="brDetectIp" type="button">Detect IP</button></div></label>
+                    <label>Public/server IP<div class="br-ip-input"><input id="br_advertisedAddress" value="127.0.0.1"><button class="btn" data-icon="globe" id="brDetectIp" type="button">Detect public IP</button></div></label>
                     <label>HTTPS port<input id="br_port" type="number" value="38473"></label>
                     <label>Staging quota, GiB<input id="br_quota" type="number" min="1" value="40"></label>
                     <label>Upload speed, MiB/s<input id="br_rate" type="number" min="1" value="8"></label>
                 </div>
-                <button class="btn primary" id="brApplyServer">Apply server settings</button>
-                <button class="btn" id="brRenewCertificate">Renew certificate</button>
+                <button class="btn primary" data-icon="save" id="brApplyServer">Apply server settings</button>
+                <button class="btn" data-icon="shield" id="brRenewCertificate">Renew certificate</button>
                 <div class="br-firewall">
                     <label><input type="checkbox" id="brFirewallOnApply" checked> Open HTTPS port in Windows Firewall when applying</label>
-                    <div class="br-row"><button class="btn" id="brOpenFirewall">Open HTTPS port</button><button class="btn" id="brCloseFirewall">Close Cronopus rule</button><button class="btn" id="brCheckFirewall">Check firewall</button></div>
+                    <div class="br-row"><button class="btn" data-icon="shieldOpen" id="brOpenFirewall">Open HTTPS port</button><button class="btn" data-icon="shieldClosed" id="brCloseFirewall">Close Cronopus rule</button><button class="btn" data-icon="shieldCheck" id="brCheckFirewall">Check firewall</button></div>
                     <p id="brFirewallStatus" role="status">Checking Windows Firewall…</p>
                     <p class="br-ip-hint">Windows may request administrator approval. This manages the firewall on this machine; hosting-provider rules are configured separately.</p>
                 </div>
                 <p class="br-ip-hint" id="brIpStatus" role="status">Use the server's public IP (the one used for RDP). HTTPS uses its own port, default 38473. Bind IP 0.0.0.0 listens on all interfaces.</p>
                 <pre id="brIdentity" class="br-identity"></pre>
-                <div class="br-row"><input id="brKeyName" placeholder="Key name" value="Desktop"><button class="btn" id="brCreateKey">Create access key</button><button class="btn primary" id="brCopyConnection" disabled>Copy connection</button></div>
+                <div class="br-row"><input id="brKeyName" placeholder="Key name" value="Desktop"><button class="btn" data-icon="key" id="brCreateKey">Create access key</button><button class="btn primary" data-icon="copy" id="brCopyConnection" disabled>Copy connection</button></div>
                 <p class="br-ip-hint">Create a key, then Copy connection. On your other Cronopus: Tasker → New connection → paste the code.</p>
                 <textarea id="brNewKey" readonly placeholder="A new key appears here once. Copy it to your local Cronopus."></textarea>
                 <textarea id="brConnectionCode" readonly hidden aria-label="Connection code" spellcheck="false"></textarea>
@@ -98,7 +100,7 @@
                     <label>Certificate SHA-256<input id="brFingerprint" autocomplete="off"></label>
                     <label>Access key<input id="brSecret" type="password" autocomplete="new-password" placeholder="Leave empty to keep the saved key"></label>
                 </div>
-                <button class="btn primary" id="brSaveConnection">Save connection</button><button class="btn" id="brNewConnection">New connection</button>
+                <button class="btn primary" data-icon="save" id="brSaveConnection">Save connection</button><button class="btn" data-icon="add" id="brNewConnection">New connection</button>
             </section>
             <p id="brMessage" role="status"></p>
         </section>
@@ -106,7 +108,7 @@
         <section class="cfg-sec" data-sec="overview">
     <div class="card">
         <div class="card-hdr">
-            <span class="icon">🟢</span>
+            <span class="icon" data-symbol="overview"></span>
             <h2>Server Status</h2>
             <span class="badge" id="uptimeBadge">loading…</span>
         </div>
@@ -127,9 +129,9 @@
 
     <div class="card">
         <div class="card-hdr">
-            <span class="icon">💾</span>
+            <span class="icon" data-symbol="database"></span>
             <h2>Log Storage</h2>
-            <button class="btn" onclick="loadStorage()" id="refreshStorageBtn" style="margin-left:auto; padding:3px 10px; font-size:10px;">↻ Refresh</button>
+            <button class="btn" data-icon="refresh" onclick="loadStorage()" id="refreshStorageBtn" style="margin-left:auto;">Refresh log storage</button>
         </div>
 
         <div class="storage-size" id="storageTotalSize">—</div>
@@ -145,7 +147,7 @@
         <div class="file-list" id="fileList"></div>
 
         <div class="btn-row" style="margin-top:16px; justify-content:flex-start; flex-wrap:wrap; gap:8px;">
-            <button class="btn danger" id="clearAllBtn" onclick="clearLogs('all')">☠ Clear ALL Logs</button>
+            <button class="btn danger" data-icon="delete" id="clearAllBtn" onclick="clearLogs('all')">Clear ALL logs</button>
         </div>
     </div>
         </section>
@@ -175,10 +177,10 @@
                     <div class="input-actions">
                         <input id="cfgPgConnectionString" type="password"
                                placeholder="Host=localhost;Port=5432;Database=postgres;Username=postgres;Password=secret;">
-                        <button class="btn" id="btnTogglePgConnectionString" type="button"
-                                onclick="togglePgConnectionStringVisibility()">Show</button>
-                        <button class="btn" id="btnCopyPgConnectionString" type="button"
-                                onclick="copyPgConnectionString()">Copy</button>
+                        <button class="btn" data-icon="eye" id="btnTogglePgConnectionString" type="button"
+                                onclick="togglePgConnectionStringVisibility()">Show connection string</button>
+                        <button class="btn" data-icon="copy" id="btnCopyPgConnectionString" type="button"
+                                onclick="copyPgConnectionString()">Copy connection string</button>
                     </div>
                 </div>
             </div>
@@ -295,7 +297,7 @@
                 </div>
             </div>
             <div class="btn-row">
-                <button class="btn primary" onclick="saveWatchdog()">💾 Save Watchdog</button>
+                <button class="btn primary" data-icon="save" onclick="saveWatchdog()">Save Watchdog</button>
             </div>
             <p style="font-size:10px; color:var(--text-dim); text-align:right; margin-top:-6px;">
                 Over the limit the whole process tree is killed. No restart.
@@ -346,8 +348,8 @@
                 </div>
             </div>
             <div class="btn-row">
-                <button class="btn primary" onclick="saveClipConv()">💾 Save Clipboard Converter</button>
-                <button class="btn" onclick="clipConvSelfTest()">🧪 Self-test</button>
+                <button class="btn primary" data-icon="save" onclick="saveClipConv()">Save Clipboard Converter</button>
+                <button class="btn" data-icon="test" onclick="clipConvSelfTest()">Clipboard converter self-test</button>
             </div>
             <p style="font-size:10px; color:var(--text-dim); text-align:right; margin-top:-6px;">
                 Copy a FindElementByAttribute line, press Alt+G / Alt+C / Alt+S, paste.
@@ -374,13 +376,13 @@
             <div style="margin-top:10px;">
                 <div style="display:flex; align-items:center; gap:8px; margin-bottom:6px;">
                     <span style="font-size:10px; color:var(--text-dim); text-transform:uppercase; letter-spacing:0.05em;">Local vars (jVars entries)</span>
-                    <button class="btn" style="padding:2px 10px; font-size:10px;" onclick="jvAddRow()">+ Add</button>
+                    <button class="btn" data-icon="add" onclick="jvAddRow()">Add variable</button>
                 </div>
                 <div id="jvarsRows" style="display:flex; flex-direction:column; gap:5px;"></div>
             </div>
 
             <div class="btn-row">
-                <button class="btn primary" id="saveJVarsBtn" onclick="saveJVars()">🔐 Set PIN &amp; Path</button>
+                <button class="btn primary" data-icon="key" id="saveJVarsBtn" onclick="saveJVars()">Set PIN &amp; path</button>
             </div>
             <p style="font-size:10px; color:var(--text-dim); text-align:right; margin-top:4px;">
                 The PIN is never returned when the config loads. The path is stored in appsettings.
@@ -447,7 +449,7 @@
                 </div>
             </div>
             <div class="btn-row">
-                <button class="btn primary" id="mtBundleBtn" onclick="mtClientBundle()">&#128230; Build bundle</button>
+                <button class="btn primary" data-icon="package" id="mtBundleBtn" onclick="mtClientBundle()">Build client bundle</button>
             </div>
 
             <div style="font-size:10px; color:var(--text-dim); text-transform:uppercase; letter-spacing:0.05em; margin:14px 0 6px;">Update templates</div>
@@ -458,7 +460,7 @@
                 </div>
             </div>
             <div class="btn-row">
-                <button class="btn" id="mtTplBtn" onclick="mtUpdateTemplates()">&#128451; Write db_template &amp; api_template</button>
+                <button class="btn" data-icon="database" id="mtTplBtn" onclick="mtUpdateTemplates()">Write db_template &amp; api_template</button>
             </div>
             <p style="font-size:10px; color:var(--text-dim); margin-top:4px;">
                 Dev utility: the result is committed to the sources and reaches clients with an update, so point it at the repo.
@@ -486,8 +488,8 @@
             <div id="importChecks" style="display:flex; flex-direction:column; gap:8px; margin-bottom:20px;"></div>
 
             <div style="display:flex; gap:8px; justify-content:flex-end;">
-                <button class="btn" onclick="closeImport()">Cancel</button>
-                <button class="btn primary" onclick="startImport()">Next →</button>
+                <button class="btn" data-icon="close" onclick="closeImport()">Cancel import</button>
+                <button class="btn primary" data-icon="next" onclick="startImport()">Next import step</button>
             </div>
         </div>
 
@@ -497,8 +499,8 @@
             <div id="importStepSub"   style="font-size:10px; color:var(--text-dim); margin-bottom:14px;"></div>
             <div id="importStepBody" style="display:flex; flex-direction:column; gap:10px;"></div>
             <div style="display:flex; gap:8px; justify-content:flex-end; margin-top:16px;">
-                <button class="btn" onclick="closeImport()">Cancel</button>
-                <button class="btn primary" id="importNextBtn" onclick="submitStep()">Import →</button>
+                <button class="btn" data-icon="close" onclick="closeImport()">Cancel import</button>
+                <button class="btn primary" data-icon="import" id="importNextBtn" onclick="submitStep()">Import</button>
             </div>
         </div>
 

@@ -149,7 +149,10 @@
     function addConnectionOption(selector,connection){
         var option=document.createElement('option');option.value=connection.id;option.textContent=connection.name;
         var create=selector.querySelector?selector.querySelector('option[value="__new__"]'):null;
-        if(create)selector.insertBefore(option,create);else selector.appendChild(option);
+        var next=Array.from(selector.options||[]).find(function(item){
+            return item.value&&item.value!=='__new__'&&connection.name.localeCompare(item.textContent,undefined,{sensitivity:'base'})<0;
+        })||create;
+        if(next)selector.insertBefore(option,next);else selector.appendChild(option);
     }
     async function selectNode(){
         var selector=document.getElementById('bridgeNode'),id=selector.value;

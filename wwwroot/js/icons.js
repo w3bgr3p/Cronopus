@@ -22,11 +22,35 @@ window.ActionIcons = (function () {
         schedule: '<circle cx="12" cy="12" r="9"/><path d="M12 6v6l4 2"/>',
         package: '<path d="m12 3 9 5v9l-9 5-9-5V8Zm0 10 9-5M12 13 3 8m9 5v9M7.5 5.5l9 5"/>',
         install: '<path d="M12 3v12m-4-4 4 4 4-4M4 15v6h16v-6"/>',
+        save: '<path d="M4 3h13l4 4v14H3V3Zm3 0v6h10V3M7 21v-8h10v8"/>',
+        refresh: '<path d="M20 10a8 8 0 0 0-14-4L3 9m0-6v6h6m-5 5a8 8 0 0 0 14 4l3-3m0 6v-6h-6"/>',
+        import: '<path d="M14 3h6v18h-6M3 12h12m-5-5 5 5-5 5"/>',
+        add: '<path d="M12 4v16M4 12h16"/>',
+        copy: '<rect x="8" y="8" width="12" height="13" rx="1"/><path d="M16 8V3H3v13h5"/>',
+        close: '<path d="m5 5 14 14M19 5 5 19"/>',
+        next: '<path d="M3 12h18m-7-7 7 7-7 7"/>',
+        edit: '<path d="m4 16 12-12 4 4L8 20H4Zm9-9 4 4"/>',
+        test: '<path d="M9 3h6m-5 0v6L4 19v2h16v-2L14 9V3M7 15h10"/>',
+        eye: '<path d="M2 12s4-7 10-7 10 7 10 7-4 7-10 7S2 12 2 12Z"/><circle cx="12" cy="12" r="3"/>',
+        eyeOff: '<path d="m3 3 18 18M9 5.5c7-2 13 6.5 13 6.5a22 22 0 0 1-4 4M6 6c-3 2-4 6-4 6s4 7 10 7a11 11 0 0 0 5-1M10 10a3 3 0 0 0 4 4"/>',
+        overview: '<path d="M3 13h4l3-8 4 14 3-8h4"/>',
+        database: '<ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M3 5v14c0 4 18 4 18 0V5M3 12c0 4 18 4 18 0"/>',
+        server: '<rect x="3" y="3" width="18" height="8" rx="1"/><rect x="3" y="13" width="18" height="8" rx="1"/><path d="M7 7h.01M7 17h.01m5-10h5m-5 10h5"/>',
+        globe: '<circle cx="12" cy="12" r="9"/><ellipse cx="12" cy="12" rx="4" ry="9"/><path d="M3 12h18"/>',
+        shield: '<path d="m12 3 9 4v6c0 5-9 9-9 9s-9-4-9-9V7Z"/>',
+        shieldOpen: '<path d="m12 3 9 4v6c0 5-9 9-9 9s-9-4-9-9V7ZM12 8v8m-4-4h8"/>',
+        shieldClosed: '<path d="m12 3 9 4v6c0 5-9 9-9 9s-9-4-9-9V7Zm-4 9h8"/>',
+        shieldCheck: '<path d="m12 3 9 4v6c0 5-9 9-9 9s-9-4-9-9V7Zm-5 9 3 3 5-6"/>',
+        key: '<circle cx="8" cy="8" r="5"/><path d="m12 12 9 9m-3-3 3-3m-6 0 3-3"/>',
+        tools: '<path d="M14 6a5 5 0 0 0-6 6L3 17v4h4l5-5a5 5 0 0 0 6-6l-3 3-4-4Z"/>',
+        connection: '<path d="M3 7h18m-4-4 4 4-4 4M21 17H3m4-4-4 4 4 4"/>',
+        palette: '<path d="M12 3a9 9 0 1 0 0 18h2a2 2 0 0 0 0-4 2 2 0 0 1 0-4h4a3 3 0 0 0 3-3c0-4-5-7-9-7Z"/><path d="M7 9h.01M11 6h.01M16 7h.01M6 14h.01"/>',
+        info: '<circle cx="12" cy="12" r="9"/><path d="M12 11v6m0-10h.01"/>',
         loading: '<path d="M12 3a9 9 0 1 1-9 9"/>',
         error: '<path d="m8 3-5 5v8l5 5h8l5-5V8l-5-5ZM12 7v6m0 4h.01"/>'
     };
     var tones = { run: 'green', pause: 'yellow', interrupt: 'red', restart: 'yellow',
-        resume: 'green', delete: 'red', resetSuccess: 'green', resetFails: 'red', error: 'red' };
+        resume: 'green', save: 'green', delete: 'red', shieldClosed: 'red', resetSuccess: 'green', resetFails: 'red', error: 'red' };
     function attr(value) {
         return String(value).replace(/[&<>"']/g, function (c) {
             return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
@@ -54,7 +78,20 @@ window.ActionIcons = (function () {
         button.setAttribute('aria-busy', name === 'loading' ? 'true' : 'false');
         button.classList.toggle('action-busy', name === 'loading');
     }
-    return Object.freeze({ svg: svg, button: button, set: set });
+    function mount(container) {
+        container.querySelectorAll('button[data-icon]').forEach(function (el) {
+            var name = el.dataset.icon;
+            var label = el.getAttribute('aria-label') || el.title || el.textContent.trim();
+            el.classList.remove('primary', 'danger');
+            el.classList.add('z3n-action', 'action-' + (tones[name] || 'neutral'));
+            el.dataset.action = name;
+            set(el, name, label);
+        });
+        container.querySelectorAll('[data-symbol]').forEach(function (el) {
+            el.innerHTML = svg(el.dataset.symbol);
+        });
+    }
+    return Object.freeze({ svg: svg, button: button, set: set, mount: mount });
 })();
 
 // Navigation and executor artwork. Action toolbars use ActionIcons above.

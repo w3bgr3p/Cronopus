@@ -1,5 +1,14 @@
 # Changelog
 
+## 1.1.3.2
+
+- Tasker: use segmented controls for schedule mode, frequency, start, repeat and finish options; distinguish enabling a schedule from running a task.
+- Traffic: show the journal tab only for XML tasks and return to Execution when switching to an unsupported executor.
+- Scheduler: clear stale Running status for disabled tasks during startup without restarting them.
+- Remote Tasker: sort saved connections alphabetically in the node selector.
+- Interface: align ZP7 styling with Tasker and use shared SVG actions throughout Config and Remote Tasker, including loading states and tooltips.
+- Documentation: expand the external Tasker HTTP API reference with request fields, revision handling, payload operations and task-copy examples.
+
 ## 1.1.3.1
 
 First release under the Cronopus name, following z3nDash 1.1.3.

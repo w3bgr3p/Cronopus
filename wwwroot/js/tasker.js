@@ -663,7 +663,7 @@ function renderDetailActions(s) {
         + '<input type="number" class="form-input" id="runCount" value="' + escHtml(countVal) + '" min="1" max="' + MAX_BURST + '"'
         +   ' aria-label="Runs to queue" title="How many runs to queue. They start as threads free up." style="width:54px;text-align:center;padding:2px 4px">'
         + action('run', (_isJs(s.executor) && !many ? 'Run npm script' : 'Run') + onTitle, many ? 'runSelected()' : 'runNow(' + arg + ')')
-        + (scheduled ? action(anyOn ? 'pause' : 'run',
+        + (scheduled ? action(anyOn ? 'pause' : 'schedule',
             (anyOn ? 'Pause schedule (running instances continue; use Interrupt to stop them)' : 'Enable schedule')
                 + (many ? ' — ' + schedSel.length + ' scheduled of ' + n + ' selected' : ''),
             many ? 'toggleEnabledSelected()' : 'toggleEnabled(' + arg + ',' + JSON.stringify(s.enabled || 'true') + ')',

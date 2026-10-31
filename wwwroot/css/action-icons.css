@@ -43,3 +43,9 @@
 .detail-actions .action-group:empty { display: none; }
 .detail-actions #runCount { height: 30px; }
 .action-selection { color: var(--text2); font-size: var(--fs-10); white-space: nowrap; }
+.cfg-rail-item .action-icon, .card-hdr [data-symbol] .action-icon {
+    width: 20px;
+    height: 20px;
+    display: block;
+    flex: none;
+}

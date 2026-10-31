@@ -196,6 +196,10 @@ and the run log's `[launch]` line. Invalid argument conversion stops the run at
 Control from a running script without looking up an ID: [[Task API]].
 Deferring the next run, pausing and resuming the schedule are available.
 
+External agents use [[MCP]]. For dashboard HTTP integrations, see
+[[Task API#Driving the application from outside]] for request bodies, string field
+types, revisions, responses and the create/copy sequence for settings and payload.
+
 Main routes:
 
 - `GET /tasker/list`

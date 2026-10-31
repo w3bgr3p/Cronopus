@@ -5,6 +5,9 @@ using ModelContextProtocol;
 using Cronopus;
 using Cronopus.Mcp;
 
+await SchedulerStatusCases.Run();
+if (args.Contains("--scheduler-status-only")) return;
+
 var root = Path.Combine(Path.GetTempPath(), "cronopus-mcp-" + Guid.NewGuid().ToString("N"));
 Directory.CreateDirectory(root);
 var manifest = Path.Combine(root, "mcp.json");
