@@ -106,6 +106,15 @@ body {
 select.form-input { cursor: pointer; }
 .form-section { grid-column: 1 / -1; margin-top: var(--sp-6); padding: var(--sp-4) 0 var(--sp-4) var(--sp-8); border-left: 2px solid var(--accent); color: var(--text2); font-size: var(--fs-10); text-transform: uppercase; letter-spacing: 0.5px; }
 .form-actions { grid-column: 1 / -1; display: flex; gap: var(--sp-6); margin-top: var(--sp-4); flex-wrap: wrap; }
+#scheduleBody { margin-top: var(--sp-10); }
+.schedule-choices { max-width: 100%; flex-wrap: wrap; }
+.schedule-choices button { flex: 1 0 auto; }
+.schedule-mode-switch { display: inline-flex; justify-self: start; overflow: hidden; border: 1px solid var(--border); border-radius: var(--radius-sm); }
+.schedule-mode-switch button { border: 0; border-radius: 0; padding: var(--sp-6) var(--sp-12); background: var(--bg2); color: var(--text2); font: inherit; font-size: var(--fs-11); cursor: pointer; }
+.schedule-mode-switch button + button { border-left: 1px solid var(--border); }
+.schedule-mode-switch button:hover { background: var(--bg3); color: var(--text); }
+.schedule-mode-switch button[aria-pressed="true"] { background: var(--accent); color: var(--on-accent); }
+.schedule-mode-switch button:focus-visible { outline: 2px solid var(--text-hi); outline-offset: -3px; }
 .toggle2 { display: inline-flex; align-items: center; gap: var(--sp-6); }
 .toggle2 .t2-label { font-size: var(--fs-11); color: var(--text2); cursor: pointer; user-select: none; }
 .switch { position: relative; display: inline-block; width: 40px; height: 22px; flex: none; vertical-align: middle; }

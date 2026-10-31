@@ -912,6 +912,7 @@ function showBottomPanels(s) {
 }
 
 function renderDetail(s) {
+    syncTrafficTab(s);
     if      (activeTab === 'settings') renderSettings(s);
     else if (activeTab === 'payload') renderPayloadTab(s);
     else if (activeTab === 'schedule') renderSchedule(s);
@@ -931,6 +932,19 @@ function _captureBaseline() {
     Object.keys(fields).forEach(function(k) {
         if (!formDirty || !(k in _formBaseline)) _formBaseline[k] = fields[k];
     });
+}
+
+function syncTrafficTab(s) {
+    var available = s.executor === 'xml';
+    document.querySelector('.dtab[data-tab="traffic"]').style.display = available ? '' : 'none';
+    if (!available) {
+        closeSse();
+        if (activeTab === 'traffic') {
+            activeTab = 'execution';
+            setActiveTab(activeTab);
+            _PS.save({ activeTab: activeTab });
+        }
+    }
 }
 
 function renderTrafficTab(s) {
@@ -1201,6 +1215,7 @@ function execSpec(executor) {
 }
 
 function renderSettings(s) {
+    syncTrafficTab(s);
     var id   = s.id || '';
     var spec = execSpec(s.executor);
 
@@ -1531,18 +1546,26 @@ function renderSchedule(s) {
     document.getElementById('detailBody').innerHTML =
         '<div class="form-grid">'
         + '<div class="form-label">Schedule</div>'
-        + '<select class="form-input" id="f_schedule_mode" onchange="onScheduleModeChange()">'
-        + '<option value="off"  ' + (mode === 'off'  ? 'selected' : '') + '>Disabled</option>'
-        + '<option value="zp"   ' + (mode === 'zp'   ? 'selected' : '') + '>ZP style</option>'
-        + '<option value="cron" ' + (mode === 'cron' ? 'selected' : '') + '>Cron</option>'
-        + '</select>'
+        + '<input type="hidden" id="f_schedule_mode" value="' + escHtml(mode) + '">'
+        + '<div class="schedule-mode-switch" role="group" aria-label="Schedule mode">'
+        + [['off', 'Disabled'], ['zp', 'ZP style'], ['cron', 'Cron']].map(function(option) {
+            return '<button type="button" data-mode="' + option[0] + '" aria-pressed="' + (mode === option[0])
+                + '" onclick="onScheduleModeChange(\'' + option[0] + '\')">' + option[1] + '</button>';
+          }).join('')
+        + '</div>'
         + '</div>'
         + '<div id="scheduleBody"></div>';
 
     renderScheduleBody(s, mode);
 }
 
-function onScheduleModeChange() {
+function onScheduleModeChange(mode) {
+    var input = document.getElementById('f_schedule_mode');
+    if (input.value === mode) return;
+    input.value = mode;
+    document.querySelectorAll('.schedule-mode-switch:not(.schedule-choices) button').forEach(function(button) {
+        button.setAttribute('aria-pressed', String(button.dataset.mode === mode));
+    });
     captureTaskDraft();
     formDirty = true;
     var s = taskDraft || {};
@@ -1598,14 +1621,32 @@ function previewBoxHtml() {
     return '<div id="schedulePreview" style="margin:6px 0;font-size:10px;color:var(--text2);"></div>';
 }
 
+function scheduleChoicesHtml(id, label, value, options) {
+    return '<div class="schedule-mode-switch schedule-choices" id="' + id + '_choices" role="group" aria-label="' + label + '">'
+        + '<input type="hidden" id="' + id + '" value="' + escHtml(value) + '">'
+        + options.map(function(option) {
+            return '<button type="button" data-value="' + option[0] + '" aria-pressed="' + (value === option[0])
+                + '" onclick="selectScheduleChoice(this)">' + option[1] + '</button>';
+          }).join('') + '</div>';
+}
+
+function selectScheduleChoice(button) {
+    var group = button.parentElement;
+    var input = group.querySelector('input');
+    if (input.value === button.dataset.value) return;
+    input.value = button.dataset.value;
+    group.querySelectorAll('button').forEach(function(option) {
+        option.setAttribute('aria-pressed', String(option === button));
+    });
+    zpSyncRows();
+    markTaskDirty();
+}
+
 function zpFormHtml(s) {
     var z = _zp;
     return '<div class="form-grid">'
         + '<div class="form-label">Frequency</div>'
-        + '<select class="form-input" id="z_how" onchange="zpSyncRows()">'
-        + [['once','Once'],['daily','Every day'],['weekly','Every week'],['monthly','Every month']]
-            .map(function(o) { return '<option value="' + o[0] + '"' + (z.how === o[0] ? ' selected' : '') + '>' + o[1] + '</option>'; }).join('')
-        + '</select>'
+        + scheduleChoicesHtml('z_how', 'Frequency', z.how, [['once','Once'],['daily','Every day'],['weekly','Every week'],['monthly','Every month']])
         + '<div class="form-label" id="z_weekdays_label">Weekdays</div>'
         + '<div id="z_weekdays_wrap"><div style="display:flex;gap:4px;flex-wrap:wrap" id="z_weekdays">'
         + WEEKDAY_NAMES.map(function(d, i) {
@@ -1616,10 +1657,7 @@ function zpFormHtml(s) {
         + '<input class="form-input" id="z_monthdays" value="' + escHtml(z.monthdays) + '" placeholder="1-5, 10, 20">'
 
         + '<div class="form-label">Begins</div>'
-        + '<select class="form-input" id="z_start_mode" onchange="zpSyncRows()">'
-        + '<option value="now"' + (z.start.mode === 'now' ? ' selected' : '') + '>Right away</option>'
-        + '<option value="date"' + (z.start.mode === 'date' ? ' selected' : '') + '>On a date</option>'
-        + '</select>'
+        + scheduleChoicesHtml('z_start_mode', 'Begins', z.start.mode, [['now','Right away'],['date','On a date']])
         + '<div class="form-label" id="z_start_at_label">Date and time</div>'
         + '<input class="form-input" id="z_start_at" type="datetime-local" value="' + escHtml(z.start.at || '') + '">'
 
@@ -1634,18 +1672,12 @@ function zpFormHtml(s) {
         + '</div>'
 
         + '<div class="form-label" id="z_repeat_label">Repeat mode</div>'
-        + '<select class="form-input" id="z_repeat_mode" onchange="zpSyncRows()">'
-        + [['back_to_back','Back to back'],['pause','Back to back with a pause'],['regular','At a fixed rate'],['spread','Spread over the window']]
-            .map(function(o) { return '<option value="' + o[0] + '"' + (z.repeat.mode === o[0] ? ' selected' : '') + '>' + o[1] + '</option>'; }).join('')
-        + '</select>'
+        + scheduleChoicesHtml('z_repeat_mode', 'Repeat mode', z.repeat.mode, [['back_to_back','Back to back'],['pause','With a pause'],['regular','Fixed rate'],['spread','Spread over window']])
         + '<div class="form-label" id="z_repeat_min_label">Minutes</div>'
         + rangeInputsHtml('z_repeat', z.repeat.min, z.repeat.max)
 
         + '<div class="form-label" id="z_end_label">Finish</div>'
-        + '<select class="form-input" id="z_end_mode" onchange="zpSyncRows()">'
-        + [['never','Never'],['date','On a date'],['count','After N repeats']]
-            .map(function(o) { return '<option value="' + o[0] + '"' + (z.end.mode === o[0] ? ' selected' : '') + '>' + o[1] + '</option>'; }).join('')
-        + '</select>'
+        + scheduleChoicesHtml('z_end_mode', 'Finish', z.end.mode, [['never','Never'],['date','On a date'],['count','After N repeats']])
         + '<div class="form-label" id="z_end_at_label">Date and time</div>'
         + '<input class="form-input" id="z_end_at" type="datetime-local" value="' + escHtml(z.end.at || '') + '">'
         + '<div class="form-label" id="z_end_count_label">Repeats</div>'
@@ -1678,11 +1710,11 @@ function zpSyncRows() {
     _row('z_windows_label',   'z_windows_wrap',   !once);
 
     _show('z_repeat_section', !once);
-    _row('z_repeat_label',    'z_repeat_mode',    !once);
+    _row('z_repeat_label',    'z_repeat_mode_choices', !once);
     _row('z_repeat_min_label','z_repeat_wrap',    !once && (repeat === 'pause' || repeat === 'regular'));
 
     _show('z_end_section',    !once);
-    _row('z_end_label',       'z_end_mode',       !once);
+    _row('z_end_label',       'z_end_mode_choices', !once);
     _row('z_end_at_label',    'z_end_at',         !once && end === 'date');
     _row('z_end_count_label', 'z_end_count_wrap', !once && end === 'count');
 
