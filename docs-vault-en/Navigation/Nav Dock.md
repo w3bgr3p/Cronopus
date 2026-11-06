@@ -11,6 +11,7 @@ The theme and the screen edge are set there too; the dock has no theme button. `
 |---|---|---|
 | `tasker` | [[Tasker]] | `Alt+1` |
 | `zp7` | [[ZP7]] | `Alt+2` |
+| `bas` | [[BAS]] (Beta) | — |
 | `browser` | [[Browser]] | `Alt+3` |
 | `har` | [[HAR]] | — |
 | `zpXml` | [[zpXml]] | — |

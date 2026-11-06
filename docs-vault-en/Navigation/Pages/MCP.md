@@ -35,6 +35,12 @@ as `node`; the default is `local`. Credentials remain in the bridge store.
 MCP exposes Tasker; terminal, database editors and secret configuration are
 outside this tool catalog.
 
+## File hashes (1.2.0.0)
+
+`get_file_hashes(root, paths, node="local")` reads files without modifying them. `root` must be an absolute folder on the selected node; `paths` contains at most 64 distinct relative file paths. Binary files are supported. The reply contains `root` and `items`: each item has `path` and `status` (`ok`, `missing` or `error`). An `ok` item includes `sha256`, `size` in bytes and `modified_utc`; an error includes `error`. Empty `paths` checks the folder without enumerating it. Paths outside the root and paths through links are rejected.
+
+Remote nodes must advertise the `file-hashes` capability; update the remote Cronopus if it is missing. The tool is available in `--read-only` mode. The Bridge equivalent is `POST /bridge/v1/files/hashes` with `{"root":"C:\\Projects","paths":["job.xml"]}` and the existing authenticated connection. MCP does not expose BAS control tools in this release; use [[BAS]] for those operations.
+
 The compact English contract is `cronopus://docs/mcp` / `Mcp/AGENT.md`.
 Setup, TOML configuration and full reference: `read_document(topic=setup)`
 or `Mcp/README.md` alongside the application.

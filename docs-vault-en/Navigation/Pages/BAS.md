@@ -4,6 +4,8 @@
 
 Open **BAS** in the dock, or `/bas.html`, to run ordinary saved BrowserAutomationStudio XML projects locally or on saved Remote Tasker nodes. Premium, cloud publication and manual compilation are not required.
 
+Local execution requires Windows. Download the prerelease from the [1.2.0.0 Beta release](https://github.com/w3bgr3p/Cronopus/releases/tag/v1.2.0.0); automatic updates continue to select stable releases.
+
 ## Run a project
 
 1. Select **Local** or a saved HTTPS connection. Manage connections in **Config → Remote Tasker**.

@@ -11,6 +11,7 @@ Dock подключается страницами через `wwwroot/js/nav.js
 |---|---|---|
 | `tasker` | [[Tasker]] | `Alt+1` |
 | `zp7` | [[ZP7]] | `Alt+2` |
+| `bas` | [[BAS]] (Beta) | — |
 | `browser` | [[Browser]] | `Alt+3` |
 | `har` | [[HAR]] | — |
 | `zpXml` | [[zpXml]] | — |

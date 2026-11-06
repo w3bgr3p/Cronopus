@@ -4,12 +4,14 @@ For external agents: [[MCP]] — connection setup, tools and bundled documentati
 
 Cronopus is a dashboard for schedules, ZennoPoster nodes, logs, HTTP traffic and a set of supporting tools.
 
+In **1.2.0.0 Beta**, only the new [[BAS]] module is in development, not fully tested or feature-complete, and may contain bugs. The other modules retain their stable status. Download this prerelease from the [1.2.0.0 Beta release](https://github.com/w3bgr3p/Cronopus/releases/tag/v1.2.0.0); the automatic updater selects stable releases.
+
 The dashboard itself runs on the machine that started it: the embedded server listens on `localhost` only. The nodes it drives can be anywhere on the network.
 
 [[Remote Tasker]] connects other Cronopus instances through a separate, optional
 HTTPS server. Configure it in [[Config]], then select a node in [[Tasker]].
 
-The windowed build targets Windows. The `net10.0` target builds without WinForms: there is no window, the dashboard address is printed to the console and opened in the system browser. Off Windows only [[System Snapshot]] is unavailable — it reads Windows counters and services.
+The windowed build targets Windows. The `net10.0` target builds without WinForms: there is no window, the dashboard address is printed to the console and opened in the system browser. Local [[BAS]] execution, Windows startup registration and [[System Snapshot]] require Windows.
 
 ## Start-up
 
@@ -24,6 +26,7 @@ The windowed build targets Windows. The `net10.0` target builds without WinForms
 |---|---|---|
 | [[Tasker]] | Schedules and manual task runs | `Alt+1` |
 | [[ZP7]] | Task state and control through ZP nodes | `Alt+2` |
+| [[BAS]] | BrowserAutomationStudio XML projects locally or on remote Windows nodes (Beta) | — |
 | [[Browser]] | ZennoBrowser and ShardX profiles: start, proxy, create | `Alt+3` |
 | [[Logs]] | Shared ZP7 log history, a window on [[ZP7]] | `Alt+4` |
 | [[Traffic]] | HTTP traffic and replay, a window on [[ZP7]] | `Alt+5` |

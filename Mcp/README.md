@@ -78,7 +78,7 @@ stdout contains MCP JSON-RPC only. Invalid CLI options exit with code 1.
 ## Tools
 
 Tools expose concise English descriptions, typed input schemas and operation
-annotations. Read-only mode exposes the first nine tools only. A repeated generic
+annotations. Read-only mode exposes only tools marked read-only, including file hashes. A repeated generic
 output schema is deliberately omitted from the catalog.
 
 | Tool | Purpose / important arguments |
@@ -86,6 +86,7 @@ output schema is deliberately omitted from the catalog.
 | `get_status` | Identity, version, DB state, actual URL and read-only flag |
 | `read_document` | English topic; offset/limit paging, 4000 characters by default |
 | `list_nodes` | Saved remote connections without keys; use connection `id` as `node` |
+| `get_file_hashes` | Read SHA-256, size and UTC modification time for up to 64 relative files under an absolute `root`; optional `node` |
 | `list_tasks` | Name search, 20 compact rows by default; include_details is opt-in |
 | `get_task` | Settings and _revision; include_payload is opt-in |
 | `get_task_payload` | Payload schema/values as native JSON |

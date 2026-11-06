@@ -54,6 +54,8 @@ For PostgreSQL the schema comes from `Search Path`. The connection string can be
 
 ## Logs & Server
 
+**Windows startup → Start with Windows** launches Cronopus when the current user signs in. It is off by default and applies when configuration is saved, using the current user's `Software\Microsoft\Windows\CurrentVersion\Run` entry named `Cronopus`; administrator rights are not required. Clearing it removes that entry. The stored setting is `StartupConfig.StartWithWindows` and is also reconciled on dashboard startup. If registration fails while saving, the previous configuration is restored.
+
 The dashboard port and the working folders are set here.
 
 The server listens on `localhost` only. Do not change that: the routes require no

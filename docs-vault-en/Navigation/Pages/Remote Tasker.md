@@ -36,6 +36,8 @@ client fingerprints. Revoking a key interrupts its streams and uploads.
 
 ## Tasks and files
 
+The separate [[BAS]] page (Beta) uses these saved connections to run BrowserAutomationStudio XML projects on Windows nodes. Both ends need the BAS-capable Cronopus version. Its commands have their own runs, native reports and operation-journal checks; they do not create Tasker schedules. See [[MCP]] for read-only SHA-256 file inspection and the required remote `file-hashes` capability.
+
 Settings, payload, From Script, scheduling, run/stop, pause/resume, cloning and queue
 controls operate on the selected server. Scheduling is evaluated by the server;
 the API reports UTC. Stale edits are rejected: reload before saving again.

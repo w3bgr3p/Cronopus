@@ -12,6 +12,10 @@ Tasker is the `/tasker.html` page that stores schedules and runs local tasks.
 
 Tasks are read from the `schedules` table. The list shows the name, the state and the main run parameters.
 
+Within each group, running tasks and enabled schedules that are neither paused nor deferred come first. The remaining tasks follow; each category is sorted alphabetically by name. Running tasks stay in the first category even if their schedule is disabled.
+
+BrowserAutomationStudio XML projects use the separate [[BAS]] page (Beta), not the ZennoPoster `xml` executor below.
+
 Set dot-separated name grouping in **Config → Interface → Tasker grouping depth**.
 Changes save automatically: `0` gives a flat list, `1` is the default single level,
 `2` gives two levels, and so on. For example, `Project.Accounts.Register` at depth `2`
