@@ -356,9 +356,9 @@ function buildTaskTree(items, level) {
             children: buildTaskTree(tasks, level + 1) });
     });
     rows.sort(function(a, b) {
-        var disabledA = (a.schedule_mode || 'off') !== 'off' && a.enabled === 'false';
-        var disabledB = (b.schedule_mode || 'off') !== 'off' && b.enabled === 'false';
-        if (disabledA !== disabledB) return disabledA ? 1 : -1;
+        var activeA = a.status === 'running' || ((a.schedule_mode || 'off') !== 'off' && a.enabled !== 'false' && !scheduleHeld(a));
+        var activeB = b.status === 'running' || ((b.schedule_mode || 'off') !== 'off' && b.enabled !== 'false' && !scheduleHeld(b));
+        if (activeA !== activeB) return activeA ? -1 : 1;
         return (a.name || '').localeCompare(b.name || '', undefined, { sensitivity: 'base' });
     });
     rows.forEach(function(s) { nodes.push({ task: s, depth: level }); });

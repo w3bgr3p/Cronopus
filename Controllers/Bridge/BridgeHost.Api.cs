@@ -9,6 +9,7 @@ public sealed partial class BridgeHost
     private async Task DispatchApi(HttpContext ctx, string key, CancellationToken ct)
     {
         var path = ctx.Request.Path.Value!;
+        if (path.StartsWith("/bridge/v1/bas/", StringComparison.Ordinal)) { await BasApi(ctx, key, ct); return; }
         if (await OutputApi(ctx,key,ct)) return;
         if (await UploadApi(ctx,key,ct)) return;
         if (await FileApi(ctx, ct)) return;

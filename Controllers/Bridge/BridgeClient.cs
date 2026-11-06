@@ -34,7 +34,7 @@ public sealed class BridgeClient(BridgeStore store)
         using var request = new HttpRequestMessage(method, uri) { Content = content };
         request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", connection.Secret);
         if (method != HttpMethod.Get) request.Headers.Add("X-Request-ID", requestId??Guid.NewGuid().ToString("N"));
-        using var timeout = CancellationTokenSource.CreateLinkedTokenSource(ct); timeout.CancelAfter(path.StartsWith("/bridge/v1/uploads")?TimeSpan.FromMinutes(5):TimeSpan.FromSeconds(15));
+        using var timeout = CancellationTokenSource.CreateLinkedTokenSource(ct); timeout.CancelAfter(path.StartsWith("/bridge/v1/uploads")?TimeSpan.FromMinutes(5):path=="/bridge/v1/files/hashes"?TimeSpan.FromSeconds(55):TimeSpan.FromSeconds(15));
         return await client.SendAsync(request, HttpCompletionOption.ResponseHeadersRead, timeout.Token);
     }
     public async Task<JsonElement> CheckAsync(string id, CancellationToken ct)

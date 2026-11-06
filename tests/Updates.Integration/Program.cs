@@ -2,6 +2,8 @@ using System.IO.Compression;
 using System.Security.Cryptography;
 using Cronopus;
 
+StartupCases.Run();
+
 var root = Path.Combine(Path.GetTempPath(), "cronopus-update-test-" + Guid.NewGuid().ToString("N"));
 Directory.CreateDirectory(root);
 try

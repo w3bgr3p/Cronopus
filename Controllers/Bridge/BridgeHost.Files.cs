@@ -9,6 +9,12 @@ public sealed partial class BridgeHost
     private async Task<bool> FileApi(HttpContext ctx, CancellationToken ct)
     {
         var path = ctx.Request.Path.Value!;
+        if (path == "/bridge/v1/files/hashes" && ctx.Request.Method == "POST")
+        {
+            var body = await JsonSerializer.DeserializeAsync<JsonElement>(ctx.Request.Body, cancellationToken: ct);
+            await ctx.Response.WriteAsJsonAsync(await BridgeFileHashes.Inspect(body, ct), ct);
+            return true;
+        }
         if (path == "/bridge/v1/files/text" && ctx.Request.Method is "GET" or "PUT")
         {
             try

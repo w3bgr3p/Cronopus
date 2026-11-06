@@ -33,11 +33,32 @@ public sealed class McpRuntime(int port, DbConnectionService database, TaskerSer
         object result;
         try
         {
-            if (context.Request.HttpMethod != "GET") { context.Response.StatusCode = 405; return true; }
+            var hashRequest = context.Request.Url!.AbsolutePath == "/mcp/file-hashes" && context.Request.HttpMethod == "POST";
+            if (context.Request.HttpMethod != "GET" && !hashRequest) { context.Response.StatusCode = 405; return true; }
             var query = context.Request.QueryString;
             int Number(string key, int fallback, int max) => query[key] == null ? fallback :
                 int.TryParse(query[key], out var n) && n >= 0 && n <= max ? n : throw new ArgumentException("Invalid " + key);
             if (context.Request.Url!.AbsolutePath == "/mcp/status") result = Status();
+            else if (hashRequest)
+            {
+                var origin = context.Request.Headers["Origin"];
+                if (context.Request.Headers["X-Bridge-Local"] != "1" ||
+                    origin != null && origin != context.Request.Url.GetLeftPart(UriPartial.Authority))
+                { context.Response.StatusCode = 403; return true; }
+                if (context.Request.ContentLength64 > 512 * 1024)
+                    throw new ArgumentException("File inspection body must be bounded to 512 KiB");
+                using var timeout = new CancellationTokenSource(TimeSpan.FromSeconds(60));
+                using var buffer = new MemoryStream();
+                var block = new byte[16384];
+                int count;
+                while ((count = await context.Request.InputStream.ReadAsync(block, timeout.Token)) > 0)
+                {
+                    if (buffer.Length + count > 512 * 1024) throw new ArgumentException("File inspection body exceeds 512 KiB");
+                    buffer.Write(block, 0, count);
+                }
+                using var body = JsonDocument.Parse(buffer.ToArray());
+                result = await BridgeFileHashes.Inspect(body.RootElement, timeout.Token);
+            }
             else if (!database.IsConnected) { context.Response.StatusCode = 503; result = new { error = "DB not connected" }; }
             else if (context.Request.Url.AbsolutePath == "/mcp/tasks")
                 result = tasker.Page(Number("limit", 100, 500), query["cursor"], query["search"] ?? "");

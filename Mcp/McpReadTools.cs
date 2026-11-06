@@ -30,6 +30,19 @@ public sealed class McpReadTools(McpConnection connection, McpDocuments document
     public Task<CallToolResult> Nodes(CancellationToken ct) => McpResults.Execute(async () =>
         McpViews.Nodes(await connection.Request("GET", "/bridge-local/connections", null, ct)));
 
+    [McpServerTool(Name = "get_file_hashes", ReadOnly = true, OpenWorld = false)]
+    [Description("Read SHA-256, byte size and UTC modification time for up to 64 reference-relative files. Missing and unreadable files have explicit statuses. No file writes; binary files supported.")]
+    public Task<CallToolResult> FileHashes(
+        [Description("Absolute working folder on the selected node")] string root,
+        [Description("Relative file paths under root, at most 64; empty checks the folder")] string[] paths,
+        CancellationToken ct,
+        [Description("local or saved connection id")] string node = "local") => McpResults.Execute(async () =>
+    {
+        if (paths.Length > 64) throw new ArgumentException("At most 64 file paths per call");
+        var route = node == "local" ? "/mcp/file-hashes" : Remote(node, "files/hashes");
+        return await connection.Request("POST", route, new { root, paths }, ct);
+    });
+
     [McpServerTool(Name = "list_tasks", ReadOnly = true, OpenWorld = false)]
     [Description("Search task names. Compact rows by default. Reuse next_cursor with the same search/node; null ends paging.")]
     public Task<CallToolResult> Tasks(CancellationToken ct,

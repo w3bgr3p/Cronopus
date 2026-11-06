@@ -41,6 +41,7 @@ window.PageState = {
         if (p.toLowerCase().includes('docsvault')) return 'docsVault';
         if (p.toLowerCase().includes('dllgraph') || q.includes('page=dllGraph')) return 'dllGraph';
         if (p.includes('tasker')) return 'tasker';
+        if (p.includes('bas.html') || q.includes('page=bas')) return 'bas';
         if (q.includes('page=zp7'))     return 'zp7';
         if (q.includes('page=logs'))   return 'logs';
         if (p.includes('har'))         return 'har';

@@ -8,6 +8,7 @@ public sealed partial class BridgeLocalHandler
     {
         var path = ctx.Request.Url!.AbsolutePath["/bridge-local".Length..].Trim('/');
         var method = ctx.Request.HttpMethod;
+        if (path.StartsWith("bas/", StringComparison.Ordinal)) { await BasRoute(ctx, path[4..]); return; }
         if(path=="server/firewall"){await Firewall(ctx);return;}
         if(path=="server/public-ip"&&method=="GET"){
             try{await Write(ctx,new{address=await BridgePublicAddress.DetectAsync(PublicIpClient,CancellationToken.None)});}

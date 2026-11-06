@@ -1,5 +1,16 @@
 # Changelog
 
+## 1.2.0.0 Beta
+
+The Beta designation applies only to the new BrowserAutomationStudio (BAS) module. BAS is still in development, is not fully tested or feature-complete, and may contain bugs. All other Cronopus modules retain their stable, fully operational status.
+
+- BAS (Beta): add a dedicated page to manage and run saved BrowserAutomationStudio XML projects locally or on saved remote Windows nodes, without Premium, cloud publication or manual compilation.
+- BAS (Beta): edit supported XML resources, prepare versioned engines, inspect native reports and logs, stop owned process trees, and release or delete saved projects without changing source XML.
+- Config: add an optional Start with Windows setting for the current user, applied when configuration is saved.
+- MCP and Bridge: add read-only SHA-256, size and UTC modification-time inspection for batches of up to 64 relative files, with explicit missing/error statuses and remote capability checks.
+- Tasker: sort running tasks and active, unheld schedules before inactive tasks within each group.
+- Documentation: add the BAS usage and lifecycle guide and document the MCP file-hash tool.
+
 ## 1.1.3.2
 
 - Tasker: use segmented controls for schedule mode, frequency, start, repeat and finish options; distinguish enabling a schedule from running a task.

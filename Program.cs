@@ -66,6 +66,8 @@ try
 
     LegacyDataImport.Run();
     Config.Init();
+    try { WindowsStartup.Apply(Config.StartupConfig.StartWithWindows); }
+    catch (Exception ex) { Console.WriteLine($"[startup] {ex.GetType().Name}: {ex.Message}"); }
     var logsConfig = Config.IsConfigured ? Config.LogsConfig : new LogsConfig { DashboardPort = "33333" };
 
     var dbConnectionService = new DbConnectionService();
@@ -102,6 +104,7 @@ try
     dashboardService.RegisterHandler(mcpRuntime);
     var bridgeStore = new BridgeStore();
     var bridgeHost = new BridgeHost(bridgeStore, taskerService, schedulerService);
+    await using var basControl = bridgeHost.Bas;
     dashboardService.RegisterHandler(new BridgeLocalHandler(bridgeStore, bridgeHost));
     dashboardService.RegisterHandler(new TaskControlHandler(schedulerService));
     dashboardService.RegisterHandler(new TasksControlHandler(schedulerService));

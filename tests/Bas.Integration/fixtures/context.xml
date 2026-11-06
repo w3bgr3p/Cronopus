@@ -1,0 +1,127 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<BrowserAutomationStudioProject>
+     <Script><![CDATA[section(1,1,1,0,function(){
+section_start("\u007b\u0022n\u0022:\u0022BAS root and tracebacks folder\u0022\u007d", 990160001)!
+/*Dat:eyJzIjoiY3VzdG9tIiwidiI6MSwiZiI6W10sInV3IjoiMCIsInV0IjoiMCIsInV0byI6IjEiLCJ1bSI6IjAiLCJ1ZSI6IjAiLCJ1c3AiOiIwIiwiZCI6W3siaWQiOiJDb2RlIiwidHlwZSI6ImNvbnN0ciIsImRhdGEiOiJmdW5jdGlvbiBiYXNQcm9qZWN0RGlyZWN0b3J5KCl7XG52YXIgX3BhdGg9e2lzUGF0aFNlcGFyYXRvcjpmdW5jdGlvbihjKXtyZXR1cm4gYz09PTQ3fHxjPT09OTI7fSxkaXJuYW1lOmZ1bmN0aW9uKHApe3JldHVybiBKU09OLnBhcnNlKG5hdGl2ZShcImZpbGVzeXN0ZW1cIixcImZpbGVpbmZvXCIscCkpLmRpcmVjdG9yeTt9fTtcblx0dmFyIHBhdGggPSBwcm9qZWN0X3BhdGgoKTtcblx0dmFyIGMgPSAnJztcblx0dmFyIHMgPSAwO1xuXHR2YXIgZW5kID0gLTE7XG5cdGZvcih2YXIgaSA9IHBhdGgubGVuZ3RoIC0gMTsgaSA+IC0xOyBpLS0pe1xuXHRcdGlmKF9wYXRoLmlzUGF0aFNlcGFyYXRvcihwYXRoLmNoYXJDb2RlQXQoaSkpKXtcblx0XHRcdHMrKztcblx0XHRcdGlmKGM9PT0nYXBwc3JlbW90ZScgfHwgYz09PSdhcHBzbG9jYWwnKXtcblx0XHRcdFx0ZW5kID0gaTtcblx0XHRcdFx0YnJlYWs7XG5cdFx0XHR9ZWxzZXtcblx0XHRcdFx0aWYocz09PTEpe1xuXHRcdFx0XHRcdGVuZCA9IGk7XG5cdFx0XHRcdFx0aWYoIShjPT09J3Byb2plY3QueG1sJykpe1xuXHRcdFx0XHRcdFx0YnJlYWs7XG5cdFx0XHRcdFx0fTtcblx0XHRcdFx0fTtcblx0XHRcdFx0aWYocz09PTIgJiYgIShjPT09J2VuZ2luZScpKXtcblx0XHRcdFx0XHRicmVhaztcblx0XHRcdFx0fTtcblx0XHRcdFx0YyA9ICcnO1xuXHRcdFx0fTtcblx0XHR9ZWxzZXtcblx0XHRcdGMgPSBwYXRoLmNoYXJBdChpKSArIGM7XG5cdFx0fTtcblx0fTtcblx0cmV0dXJuIGVuZD09PS0xID8gX3BhdGguZGlybmFtZShwYXRoKSA6IHBhdGguc2xpY2UoMCwgZW5kKTtcbn07XG5cbi8qIFJlc29sdmUgc2hhcmVkIG1vZHVsZXMgaW5kZXBlbmRlbnRseSBmcm9tIHRoZSBydW5uYWJsZSBYTUwgbG9jYXRpb24uICovXG5bW0JBU19SVU5fUk9PVF1dPVN0cmluZyhiYXNQcm9qZWN0RGlyZWN0b3J5KCkpLnNwbGl0KCdcXFxcJykuam9pbignLycpLnJlcGxhY2UoL1xcLyskLywnJyk7XG5bW0JBU19TT1VSQ0VfRklMRV1dPVN0cmluZyhwcm9qZWN0X3BhdGgoKSkuc3BsaXQoJ1xcXFwnKS5qb2luKCcvJyk7XG5pZighW1tCQVNfU09VUkNFX0ZJTEVdXXx8IS9bXi9dK1xcLnhtbCQvaS50ZXN0KFtbQkFTX1NPVVJDRV9GSUxFXV0pKWZhaWxfdXNlcignQkFTX1NPVVJDRV9GSUxFX1VOQVZBSUxBQkxFJyxmYWxzZSk7XG5bW0JBU19ST09UXV09KGZ1bmN0aW9uKHN0YXJ0KXtcbiAgdmFyIGNhbmRpZGF0ZT1zdGFydDtcbiAgZm9yKHZhciBpPTA7aTw3O2krKyl7XG4gICAgdmFyIGVzc2VudGlhbHM9SlNPTi5wYXJzZShuYXRpdmUoJ2ZpbGVzeXN0ZW0nLCdmaWxlaW5mbycsY2FuZGlkYXRlKycvRXNzZW50aWFscycpKTtcbiAgICB2YXIgZGF0YT1KU09OLnBhcnNlKG5hdGl2ZSgnZmlsZXN5c3RlbScsJ2ZpbGVpbmZvJyxjYW5kaWRhdGUrJy9kYXRhJykpO1xuICAgIGlmKGVzc2VudGlhbHMuZXhpc3RzJiZlc3NlbnRpYWxzLmlzX2RpcmVjdG9yeSYmZGF0YS5leGlzdHMmJmRhdGEuaXNfZGlyZWN0b3J5KXJldHVybiBjYW5kaWRhdGU7XG4gICAgdmFyIHBhcmVudD1jYW5kaWRhdGUucmVwbGFjZSgvXFwvW15cXC9dKyQvLCcnKTtcbiAgICBpZihwYXJlbnQ9PT1jYW5kaWRhdGUpYnJlYWs7XG4gICAgY2FuZGlkYXRlPXBhcmVudDtcbiAgfVxuICBmYWlsX3VzZXIoJ0JBU19TSEFSRURfUk9PVF9OT1RfRk9VTkQnLGZhbHNlKTtcbiAgcmV0dXJuICcnO1xufSkoW1tCQVNfUlVOX1JPT1RdXSk7XG52YXIgYmFzRGF0ZT1uZXcgRGF0ZSgpO1xuW1tCQVNfREFZXV09YmFzRGF0ZS5nZXRGdWxsWWVhcigpKyctJysoJzAnKyhiYXNEYXRlLmdldE1vbnRoKCkrMSkpLnNsaWNlKC0yKSsnLScrKCcwJytiYXNEYXRlLmdldERhdGUoKSkuc2xpY2UoLTIpO1xuW1tCQVNfVEJdXT1bW0JBU19ST09UXV0rJy90cmFjZWJhY2tzLycrW1tCQVNfREFZXV0rJy91YmVyJztcbm5hdGl2ZSgnZmlsZXN5c3RlbScsJ2NyZWF0ZWRpcicsW1tCQVNfUk9PVF1dKycvdHJhY2ViYWNrcycpO1xubmF0aXZlKCdmaWxlc3lzdGVtJywnY3JlYXRlZGlyJyxbW0JBU19ST09UXV0rJy90cmFjZWJhY2tzLycrW1tCQVNfREFZXV0pO1xubmF0aXZlKCdmaWxlc3lzdGVtJywnY3JlYXRlZGlyJyxbW0JBU19UQl1dKTsiLCJpc19kZWYiOmZhbHNlLCJjbGFzcyI6ImV4cHJlc3Npb24ifV0sInV0aSI6IjE1In0=*/
+function basProjectDirectory(){
+var _path={isPathSeparator:function(c){return c===47||c===92;},dirname:function(p){return JSON.parse(native("filesystem","fileinfo",p)).directory;}};
+	var path = project_path();
+	var c = '';
+	var s = 0;
+	var end = -1;
+	for(var i = path.length - 1; i > -1; i--){
+		if(_path.isPathSeparator(path.charCodeAt(i))){
+			s++;
+			if(c==='appsremote' || c==='appslocal'){
+				end = i;
+				break;
+			}else{
+				if(s===1){
+					end = i;
+					if(!(c==='project.xml')){
+						break;
+					};
+				};
+				if(s===2 && !(c==='engine')){
+					break;
+				};
+				c = '';
+			};
+		}else{
+			c = path.charAt(i) + c;
+		};
+	};
+	return end===-1 ? _path.dirname(path) : path.slice(0, end);
+};
+
+/* Resolve shared modules independently from the runnable XML location. */
+VAR_BAS_RUN_ROOT=String(basProjectDirectory()).split('\\').join('/').replace(/\/+$/,'');
+VAR_BAS_SOURCE_FILE=String(project_path()).split('\\').join('/');
+if(!VAR_BAS_SOURCE_FILE||!/[^/]+\.xml$/i.test(VAR_BAS_SOURCE_FILE))fail_user('BAS_SOURCE_FILE_UNAVAILABLE',false);
+VAR_BAS_ROOT=(function(start){
+  var candidate=start;
+  for(var i=0;i<7;i++){
+    var essentials=JSON.parse(native('filesystem','fileinfo',candidate+'/Essentials'));
+    var data=JSON.parse(native('filesystem','fileinfo',candidate+'/data'));
+    if(essentials.exists&&essentials.is_directory&&data.exists&&data.is_directory)return candidate;
+    var parent=candidate.replace(/\/[^\/]+$/,'');
+    if(parent===candidate)break;
+    candidate=parent;
+  }
+  fail_user('BAS_SHARED_ROOT_NOT_FOUND',false);
+  return '';
+})(VAR_BAS_RUN_ROOT);
+log("CRONOPUS_PROJECT_PATH="+project_path())
+log("CRONOPUS_SHARED_ROOT="+VAR_BAS_ROOT)
+section_end()!
+})!
+]]></Script>
+     <ModuleInfo><![CDATA[{
+}
+]]></ModuleInfo>
+     <Modules/>
+     <EmbeddedData><![CDATA[[]]]></EmbeddedData>
+     <DatabaseId>Database.1408</DatabaseId>
+     <Schema/>
+     <ConnectionIsRemote>false</ConnectionIsRemote>
+     <ConnectionServer/>
+     <ConnectionPort/>
+     <ConnectionLogin/>
+     <ConnectionPassword/>
+     <HideDatabase>false</HideDatabase>
+     <DatabaseAdvanced>true</DatabaseAdvanced>
+     <DatabaseAdvancedDisabled>false</DatabaseAdvancedDisabled>
+     <ScriptName/>
+     <ProtectionStrength>4</ProtectionStrength>
+     <UnusedModules>JSON;PhoneVerification;URL;AICaptcha;Path;BrowserControlTools;QRCode;ThreadSync;2FA;AI;ClickCaptcha;InMail;String</UnusedModules>
+     <ScriptIcon/>
+     <IsCustomIcon>false</IsCustomIcon>
+     <HideBrowsers>false</HideBrowsers>
+     <URLWithServerConfig/>
+     <ShowAdvanced>false</ShowAdvanced>
+     <IntegrateScheduler>false</IntegrateScheduler>
+     <SingleInstance>false</SingleInstance>
+     <CopySilent>false</CopySilent>
+     <IsEnginesInAppData>false</IsEnginesInAppData>
+     <CompileType>NoProtection</CompileType>
+     <ScriptVersion/>
+     <AvailableLanguages>en,ru</AvailableLanguages>
+     <EngineVersion>31.1.0</EngineVersion>
+     <ChromeCommandLine>--disk-cache-size=5000000
+--disable-features=OptimizationGuideModelDownloading,AutoDeElevate
+--lang=en
+--disable-auto-reload</ChromeCommandLine>
+     <ModulesMetaJson>{
+    "Archive": false,
+    "FTP": false,
+    "Excel": false,
+    "SQL": false,
+    "ReCaptcha": false,
+    "FunCaptcha": false,
+    "HCaptcha": false,
+    "GeeTest": false,
+    "SmsReceive": false,
+    "Checksum": false,
+    "MailDeprecated": false
+}
+</ModulesMetaJson>
+     <OutputTitle1 en="First Results" ru="First Results"/>
+     <OutputTitle2 en="Second Results" ru="Second Results"/>
+     <OutputTitle3 en="Third Results" ru="Third Results"/>
+     <OutputTitle4 en="Fourth Results" ru="Fourth Results"/>
+     <OutputTitle5 en="Fifth Results" ru="Fifth Results"/>
+     <OutputTitle6 en="Sixth Results" ru="Sixth Results"/>
+     <OutputTitle7 en="Seventh Results" ru="Seventh Results"/>
+     <OutputTitle8 en="Eighth Results" ru="Eighth Results"/>
+     <OutputTitle9 en="Ninth Results" ru="Ninth Results"/>
+     <OutputVisible1>1</OutputVisible1>
+     <OutputVisible2>1</OutputVisible2>
+     <OutputVisible3>1</OutputVisible3>
+     <OutputVisible4>0</OutputVisible4>
+     <OutputVisible5>0</OutputVisible5>
+     <OutputVisible6>0</OutputVisible6>
+     <OutputVisible7>0</OutputVisible7>
+     <OutputVisible8>0</OutputVisible8>
+     <OutputVisible9>0</OutputVisible9>
+     <ModelList/>
+</BrowserAutomationStudioProject>

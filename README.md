@@ -123,6 +123,7 @@ See [MCP setup and tool reference](Mcp/README.md).
 |---|---|
 | Tasker | Configure, run, stop, and monitor scheduled tasks |
 | ZP7 | Manage ZennoPoster workers and jobs |
+| BAS (Beta) | Run local XML projects on this or saved remote Windows nodes without compilation; inspect native reports/logs and stop owned processes. In development, not fully tested, and may contain bugs; other modules remain stable. |
 | Browser | Manage ZennoBrowser or ShardX profiles: start, stop, proxy, create |
 | allLogs | Combined ZP7 log history from every node (modal on ZP7) |
 | Traffic | Inspect and replay HTTP traffic from the nodes and Cronopus (modal on ZP7) |

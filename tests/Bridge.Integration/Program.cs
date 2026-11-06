@@ -69,6 +69,7 @@ try
     Check((await anonymous.SendAsync(runRequest)).IsSuccessStatusCode, "pause API failed");
     var rootsResponse = await anonymous.GetAsync(new Uri(uri, "/bridge/v1/files/roots"));
     Check(rootsResponse.IsSuccessStatusCode, "server disk API unavailable");
+    await FileHashCases.Run(root, anonymous, uri);
     await BridgeCases.FileText(root, anonymous, uri);
     if(args.Contains("--file-text")){if(args.Contains("--serve"))await BrowserFixture.Serve(root,(BridgeStore)reopened,uri,(string)good.Secret);await host.StopAsync(CancellationToken.None);return;}
     var uploadDir = Path.Combine(root, "destination"); Directory.CreateDirectory(uploadDir);

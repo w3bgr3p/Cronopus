@@ -1280,6 +1280,7 @@ public sealed partial class TaskerService
     /// <summary>Фильтр по типу задачи — чтобы не искать .xml среди всего подряд.</summary>
     private static string FilterFor(string ext) => ext switch
     {
+        "bas"     => "BrowserAutomationStudio XML (*.xml)|*.xml",
         "xml"     => "Шаблон ZennoPoster (*.xml)|*.xml|Все файлы (*.*)|*.*",
         "csx"     => "Скрипт C# (*.csx)|*.csx|Все файлы (*.*)|*.*",
         "py"      => "Python (*.py)|*.py|Все файлы (*.*)|*.*",

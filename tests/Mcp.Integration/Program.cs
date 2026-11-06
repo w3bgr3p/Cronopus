@@ -142,6 +142,14 @@ try
         var readTools = await readOnly.ListToolsAsync();
         Check(readTools.All(t => !new[] { "run_task", "delete_task", "create_task", "update_task", "pause_task" }.Contains(t.Name)), "write tools exposed in read-only mode");
         await Call(readOnly, "get_status");
+        var hashFile = Path.Combine(root, "mcp-hash.bin");
+        await File.WriteAllBytesAsync(hashFile, new byte[] { 0, 255, 1 });
+        var hashes = await Call(readOnly, "get_file_hashes", new { root, paths = new[] { "mcp-hash.bin", "missing.bin" } });
+        Check(hashes.GetProperty("items")[0].GetProperty("sha256").GetString() ==
+            Convert.ToHexString(System.Security.Cryptography.SHA256.HashData(new byte[] { 0, 255, 1 })), "MCP hash mismatch");
+        Check(hashes.GetProperty("items")[1].GetProperty("status").GetString() == "missing", "MCP missing status lost");
+        await Call(readOnly, "get_file_hashes", new { root, paths = new[] { "../outside" } }, "invalid_argument");
+        Console.WriteLine("PASS read-only MCP file hashes and containment");
         try
         {
             await readOnly.CallToolAsync("run_task", new Dictionary<string, object?> { ["id"] = id });

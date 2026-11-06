@@ -17,6 +17,7 @@ window.NAV_CONFIG = {
 
         { id: 'tasker', label: 'Tasker',  href: '/tasker.html', hotkey: '1' },
         { id: 'zp7',       label: 'ZP7',         href: '/?page=zp7',     hotkey: '2' },
+        { id: 'bas',       label: 'BAS',         href: '/bas.html',     hotkey: '' },
         { id: 'browser',   label: 'Browser',    href: '/?page=browser',  hotkey: '3' },
         { id: 'har',       label: 'HAR',        href: '/har.html',       hotkey: '' },
         { id: 'zpXml',  label: 'zpXml',   href: '/?page=zpxml.html',       hotkey: '' },

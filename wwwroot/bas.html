@@ -1,0 +1,46 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+    <title>Cronopus | BAS</title>
+    <link rel="stylesheet" href="/css/themes.css"><link rel="stylesheet" href="/css/bas.css">
+    <script src="/js/theme.js"></script><script src="/js/nav.js"></script>
+</head>
+<body>
+<header><strong>BAS</strong><label>Node <select id="node"><option value="">Local</option></select></label>
+    <a href="/?page=config#remote-tasker">Connections</a><button id="refresh">Refresh</button>
+    <span id="status" role="status">Connecting…</span><button id="recover" hidden>Check command</button><button id="dismiss" hidden>Dismiss pending</button></header>
+<div id="error" role="alert" hidden></div>
+<main>
+    <aside><div class="section-title"><strong>Projects</strong><button id="new">+ New</button></div>
+        <div id="projects"></div></aside>
+    <section class="workspace">
+        <form id="editor">
+            <div class="section-title"><strong id="projectTitle">New project</strong><span id="engineState">idle</span></div>
+            <div class="fields">
+                <label>Name<input id="name" required maxlength="200"></label>
+                <label>XML project on selected node<span class="project-picker"><input id="projectPath" required readonly placeholder="Choose a BAS XML project"><button id="pickProject" type="button">Choose XML…</button></span></label>
+            </div>
+            <section class="resources">
+                <div class="resource-heading"><strong>Resources</strong><button id="loadResources" type="button">From XML</button><label id="advancedResourcesLabel" hidden><input id="advancedResources" type="checkbox">Advanced</label><span id="resourceStatus" role="status">Select an XML project to load its resources.</span></div>
+                <div id="resourceFields"></div>
+                <details id="resourceJson"><summary>JSON overrides</summary>
+                    <label>Parameters are generated from the fields above. Unchanged fields use XML defaults.<textarea id="parameters" rows="3" spellcheck="false">{}</textarea></label>
+                </details>
+            </section>
+            <div class="actions"><button id="save" type="submit">Save</button><button id="delete" type="button">Delete</button>
+                <span class="spacer"></span>
+                <button id="run" type="button">Run</button><button id="stop" type="button">Stop all</button>
+                <button id="unload" type="button">Release runtime</button></div>
+            <p id="hint">Run saved XML directly. Threads and execution limits come from the project; no compilation or Premium required.</p>
+        </form>
+        <section class="runs"><div class="section-title"><strong>Runs</strong><span id="runStats">0 active</span></div>
+            <div class="table-scroll"><table><thead><tr><th>Started</th><th>Run</th><th>Status</th><th>Report / error</th><th></th></tr></thead><tbody id="runs"></tbody></table></div>
+        </section>
+        <section class="logs"><div class="section-title"><strong>Log</strong><button id="clearLog">Clear view</button></div>
+            <div id="log" role="log" aria-label="BAS log"></div></section>
+    </section>
+</main>
+<script src="/js/tasker-files.js"></script><script src="/js/bas-log.js"></script><script src="/js/bas-resources.js"></script><script src="/js/bas.js"></script>
+</body>
+</html>

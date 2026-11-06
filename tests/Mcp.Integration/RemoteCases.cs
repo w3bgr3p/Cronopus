@@ -22,6 +22,14 @@ internal static class RemoteCases
         var nodes = await Call("list_nodes");
         if (nodes.GetRawText().Contains(key.Secret)) throw new Exception("Remote credential leaked");
         var node = remote.Id;
+        var hashRoot = Path.Combine(store.Root, "hashes");
+        Directory.CreateDirectory(hashRoot);
+        await File.WriteAllTextAsync(Path.Combine(hashRoot, "reference.txt"), "remote bytes");
+        var hashes = await Call("get_file_hashes", new { node, root = hashRoot, paths = new[] { "reference.txt" } });
+        if (hashes.GetProperty("items")[0].GetProperty("sha256").GetString() !=
+            Convert.ToHexString(System.Security.Cryptography.SHA256.HashData(System.Text.Encoding.UTF8.GetBytes("remote bytes"))))
+            throw new Exception("Remote MCP hash mismatch");
+        Console.WriteLine("PASS remote MCP file hashes over authenticated HTTPS proxy");
         var created = (await Call("create_task", new { node, settings = new { name = "mcp remote fixture", executor = "cmd", script_path = "echo remote" } }));
         var id = created.GetProperty("id").GetString();
         var detail = (await Call("get_task", new { id, node }));

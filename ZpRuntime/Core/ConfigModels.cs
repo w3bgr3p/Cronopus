@@ -17,6 +17,11 @@ public class DbConfig
 
 }
 
+public class StartupConfig
+{
+    public bool StartWithWindows { get; set; } = false;
+}
+
 public class LogsConfig
 {
     public string DashboardPort { get; set; } = string.Empty;

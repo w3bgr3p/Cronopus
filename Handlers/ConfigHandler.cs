@@ -97,6 +97,7 @@ internal sealed class ConfigHandler
         dict["DbConfig"] = Config.DbConfig;
         dict["securityConfig"] = new { jVarsPath = Config.SecurityConfig.JVarsPath };
         dict["browsersApi"] = Config.BrowsersApi;
+        dict["startupConfig"] = Config.StartupConfig;
 
         await HttpHelpers.WriteJson(response, dict);
     }
@@ -124,6 +125,7 @@ internal sealed class ConfigHandler
                 ["logsConfig"] = "LogsConfig",
                 ["apiConfig"]  = "ApiConfig",
                 ["browsersApi"] = "BrowsersApi",
+                ["startupConfig"] = "StartupConfig",
                 ["crx"]        = "Crx",
             };
 
@@ -154,11 +156,25 @@ internal sealed class ConfigHandler
             }
 
             stage = "write";
+            var startupSection = existing.FirstOrDefault(kv => kv.Key.Equals("StartupConfig", StringComparison.OrdinalIgnoreCase));
+            var startup = startupSection.Key == null ? new StartupConfig()
+                : startupSection.Value.Deserialize<StartupConfig>(new JsonSerializerOptions { PropertyNameCaseInsensitive = true })
+                  ?? throw new JsonException("StartupConfig must be an object.");
             var opts    = new JsonSerializerOptions { WriteIndented = true };
             string json = JsonSerializer.Serialize(existing, opts);
 
+            var previousConfig = File.Exists(cfgPath) ? await File.ReadAllBytesAsync(cfgPath) : null;
             if (File.Exists(cfgPath)) File.Copy(cfgPath, cfgPath + ".bak", overwrite: true);
             await File.WriteAllTextAsync(cfgPath, json, Encoding.UTF8);
+
+            stage = "windows-startup";
+            try { WindowsStartup.Apply(startup.StartWithWindows); }
+            catch
+            {
+                if (previousConfig != null) await File.WriteAllBytesAsync(cfgPath, previousConfig);
+                else File.Delete(cfgPath);
+                throw;
+            }
 
             // Connect заодно создаёт таблицы в новой базе (подписчики Connected).
             stage = "reload";

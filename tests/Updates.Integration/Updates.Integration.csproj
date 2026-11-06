@@ -7,5 +7,6 @@
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="../../App/Updates/UpdatePackage.cs" Link="UpdatePackage.cs" />
+    <Compile Include="../../App/Config/WindowsStartup.cs" Link="WindowsStartup.cs" />
   </ItemGroup>
 </Project>

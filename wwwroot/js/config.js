@@ -170,6 +170,8 @@
             const logsConfig = d.logsConfig ?? d.LogsConfig ?? {};
             const apiConfig  = d.apiConfig  ?? d.ApiConfig  ?? {};
             const browsersApi = d.browsersApi ?? d.BrowsersApi ?? {};
+            const startupConfig = d.startupConfig ?? d.StartupConfig ?? {};
+            document.getElementById('cfgStartWithWindows').checked = startupConfig.startWithWindows ?? startupConfig.StartWithWindows ?? false;
             const zennoBrowser = browsersApi.zennoBrowser ?? browsersApi.ZennoBrowser ?? {};
             const shardX = browsersApi.shardX ?? browsersApi.ShardX ?? {};
 
@@ -234,6 +236,9 @@
     // ── Save Config ───────────────────────────────────────────────────
     async function saveConfig() {
         const payload = {
+            startupConfig: {
+                startWithWindows: document.getElementById('cfgStartWithWindows').checked,
+            },
             dbConfig: {
                 type:             document.getElementById('cfgDbType').value,
                 sqlitePath:       document.getElementById('cfgSqlitePath').value,

@@ -1,6 +1,7 @@
 [Setup]
 AppName=Cronopus
-AppVersion=1.1.3.2
+AppVersion=1.2.0.0
+AppVerName=Cronopus 1.2.0.0 Beta
 ; По умолчанию предлагаем локальную папку, но даем ВЫБОР
 DefaultDirName={localappdata}\Cronopus
 DefaultGroupName=Cronopus

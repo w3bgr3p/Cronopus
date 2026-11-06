@@ -97,6 +97,7 @@ window.ActionIcons = (function () {
 // Navigation and executor artwork. Action toolbars use ActionIcons above.
 // Inline SVG — no CDN, no font dependency, works offline, consistent cross-OS rendering
 window.ICONS = {
+    bas: `<svg viewBox="0 0 256 256" role="img" aria-label="BrowserAutomationStudio"><image href="/static/icons/bas.png" width="256" height="256"/></svg>`,
     tasker:  `
                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256">
                   <path fill="none" d="M0 0h256v256H0z"/>

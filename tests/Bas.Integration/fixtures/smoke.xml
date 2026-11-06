@@ -1,0 +1,76 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<BrowserAutomationStudioProject>
+     <Script><![CDATA[section(1,1,1,0,function(){
+    section_start("Initialize", 0)!
+    section_end()!
+})!
+]]></Script>
+     <ModuleInfo><![CDATA[{
+}
+]]></ModuleInfo>
+     <Modules/>
+     <EmbeddedData><![CDATA[[]]]></EmbeddedData>
+     <DatabaseId>Database.1408</DatabaseId>
+     <Schema></Schema>
+     <ConnectionIsRemote>false</ConnectionIsRemote>
+     <ConnectionServer></ConnectionServer>
+     <ConnectionPort></ConnectionPort>
+     <ConnectionLogin></ConnectionLogin>
+     <ConnectionPassword></ConnectionPassword>
+     <HideDatabase>false</HideDatabase>
+     <DatabaseAdvanced>true</DatabaseAdvanced>
+     <DatabaseAdvancedDisabled>false</DatabaseAdvancedDisabled>
+     <ScriptName></ScriptName>
+     <ProtectionStrength>4</ProtectionStrength>
+     <UnusedModules>JSON;PhoneVerification;URL;AICaptcha;Path;BrowserControlTools;QRCode;ThreadSync;2FA;AI;ClickCaptcha;InMail;String</UnusedModules>
+     <ScriptIcon></ScriptIcon>
+     <IsCustomIcon>false</IsCustomIcon>
+     <HideBrowsers>false</HideBrowsers>
+     <URLWithServerConfig></URLWithServerConfig>
+     <ShowAdvanced>false</ShowAdvanced>
+     <IntegrateScheduler>false</IntegrateScheduler>
+     <SingleInstance>false</SingleInstance>
+     <CopySilent>false</CopySilent>
+     <IsEnginesInAppData>false</IsEnginesInAppData>
+     <CompileType>NoProtection</CompileType>
+     <ScriptVersion></ScriptVersion>
+     <AvailableLanguages>en,ru</AvailableLanguages>
+     <EngineVersion>31.1.0</EngineVersion>
+     <ChromeCommandLine>--disk-cache-size=5000000
+--disable-features=OptimizationGuideModelDownloading,AutoDeElevate
+--lang=en
+--disable-auto-reload</ChromeCommandLine>
+     <ModulesMetaJson>{
+    &quot;Archive&quot;: false,
+    &quot;FTP&quot;: false,
+    &quot;Excel&quot;: false,
+    &quot;SQL&quot;: false,
+    &quot;ReCaptcha&quot;: false,
+    &quot;FunCaptcha&quot;: false,
+    &quot;HCaptcha&quot;: false,
+    &quot;GeeTest&quot;: false,
+    &quot;SmsReceive&quot;: false,
+    &quot;Checksum&quot;: false,
+    &quot;MailDeprecated&quot;: false
+}
+</ModulesMetaJson>
+     <OutputTitle1 en="First Results" ru="First Results"/>
+     <OutputTitle2 en="Second Results" ru="Second Results"/>
+     <OutputTitle3 en="Third Results" ru="Third Results"/>
+     <OutputTitle4 en="Fourth Results" ru="Fourth Results"/>
+     <OutputTitle5 en="Fifth Results" ru="Fifth Results"/>
+     <OutputTitle6 en="Sixth Results" ru="Sixth Results"/>
+     <OutputTitle7 en="Seventh Results" ru="Seventh Results"/>
+     <OutputTitle8 en="Eighth Results" ru="Eighth Results"/>
+     <OutputTitle9 en="Ninth Results" ru="Ninth Results"/>
+     <OutputVisible1>1</OutputVisible1>
+     <OutputVisible2>1</OutputVisible2>
+     <OutputVisible3>1</OutputVisible3>
+     <OutputVisible4>0</OutputVisible4>
+     <OutputVisible5>0</OutputVisible5>
+     <OutputVisible6>0</OutputVisible6>
+     <OutputVisible7>0</OutputVisible7>
+     <OutputVisible8>0</OutputVisible8>
+     <OutputVisible9>0</OutputVisible9>
+     <ModelList/>
+</BrowserAutomationStudioProject>

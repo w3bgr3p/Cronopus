@@ -10,6 +10,7 @@ public class Config
     
     public static DbConfig DbConfig { get; private set; } = new();
     public static LogsConfig LogsConfig { get; private set; } = new();
+    public static StartupConfig StartupConfig { get; private set; } = new();
     public static ApiConfig ApiConfig { get; private set; } = new();
     public static BrowsersApiConfig BrowsersApi { get; private set; } = new();
     
@@ -35,6 +36,7 @@ public class Config
         
         DbConfig = config.GetSection("DbConfig").Get<DbConfig>() ?? new();
         LogsConfig = config.GetSection("LogsConfig").Get<LogsConfig>() ?? new();
+        StartupConfig = config.GetSection("StartupConfig").Get<StartupConfig>() ?? new();
         ApiConfig = config.GetSection("ApiConfig").Get<ApiConfig>() ?? new();
         var browsersSection = config.GetSection("BrowsersApi");
         BrowsersApi = browsersSection.Get<BrowsersApiConfig>() ?? new();

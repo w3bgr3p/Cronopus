@@ -1,5 +1,14 @@
 # Repository-local source and tooling
 tests/*
+!tests/Bas.Integration/
+!tests/Bas.Integration/*.cs
+!tests/Bas.Integration/*.csproj
+!tests/Bas.Integration/fixtures/
+!tests/Bas.Integration/fixtures/*.xml
+!tests/bas_browser.py
+!tests/bas_navigation_browser.py
+!tests/bas_inputs_browser.py
+!tests/bas_logs_browser.py
 *.test.js
 *.spec.js
 /z3nStub/z3nStub/StubSmokeTest.cs

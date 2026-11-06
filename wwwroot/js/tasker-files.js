@@ -4,7 +4,7 @@
     if(typeof module!=='undefined')module.exports={initialFolder:initialFolder};
     if(typeof document==='undefined')return;
     async function open(options){
-        var bridge=root.TaskerBridge,context=bridge.context(),connection=options.connection||bridge.connection();
+        var bridge=options.bridge||root.TaskerBridge,context=bridge.context(),connection=options.connection||bridge.connection();
         async function api(path,opts){
             if(!options.connection)return bridge.api(path,opts);
             return fetch('/bridge-local/'+encodeURIComponent(connection.id)+'/api/'+path,Object.assign({},opts,{headers:Object.assign({},opts&&opts.headers,{'X-Bridge-Local':'1'})}));
@@ -17,6 +17,7 @@
             var editing=options.mode==='edit',editButton=document.createElement('button');editButton.className='btn';editButton.textContent='Edit text';editButton.setAttribute('aria-pressed',String(editing));overlay.querySelector('.br-file-toolbar').appendChild(editButton);
             function title(){overlay.querySelector('h3').textContent=(connection?connection.name:'Server')+' · '+(editing?'Choose text file':options.mode==='folder'?'Choose folder':'Choose script');editButton.setAttribute('aria-pressed',String(editing));}
             title();editButton.onclick=function(){editing=!editing;title();};
+            if(options.readOnly){editButton.hidden=true;overlay.querySelector('[data-new]').hidden=true;}
             var list=overlay.querySelector('.br-file-list'),input=overlay.querySelector('input'),message=overlay.querySelector('p'),current='',parent=null,cursor=null,seq=0,items=[];
             var select=overlay.querySelector('[data-select]');select.hidden=options.mode!=='folder';
             function changed(){close(null);}
@@ -30,6 +31,7 @@
                     if(request!==seq||!bridge.isCurrent(context))return;
                     if(!more)items=[];current=path||'';input.value=current;parent=data.parent;cursor=data.next_cursor;overlay.querySelector('[data-more]').hidden=!cursor;
                     items=items.concat(Array.isArray(data)?data:data.items);
+                    if(options.extension)items=items.filter(function(item){return item.kind==='directory'||(item.name||item.path).toLowerCase().endsWith('.'+options.extension.toLowerCase());});
                     items.sort(function(a,b){return Number(b.kind==='directory')-Number(a.kind==='directory')||(a.name||a.path).localeCompare(b.name||b.path);});
                     list.textContent='';
                     items.forEach(function(item){var button=document.createElement('button');button.className='br-file-entry';button.textContent=(item.kind==='directory'?'▸ ':'  ')+(item.name||item.path)+(item.link?' ↗':'');

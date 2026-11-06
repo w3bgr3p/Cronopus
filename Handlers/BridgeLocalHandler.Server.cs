@@ -31,9 +31,11 @@ public sealed partial class BridgeLocalHandler
     {
         var split = path.IndexOf("/api/", StringComparison.Ordinal); var id = path[..split]; var api = path[(split + 5)..];
         var method = ctx.Request.HttpMethod;
-        var allowed = api.StartsWith("tasker/") && TaskerService.RemoteRoutes.Contains(method + " /" + api)
+        var allowed = api.StartsWith("bas/") && BasControlService.Allows(method, api[4..])
+            || api.StartsWith("tasker/") && TaskerService.RemoteRoutes.Contains(method + " /" + api)
             || api == "info" && method == "GET" || api is "tasks" or "changes" && method == "GET"
             || api is "files/roots" or "files/list" && method == "GET"
+            || api == "files/hashes" && method == "POST"
             || api == "files/text" && method is "GET" or "PUT"
             || api == "files/directories" && method == "POST"
             || System.Text.RegularExpressions.Regex.IsMatch(api,"^tasks/[A-Za-z0-9_-]{1,128}/output(/stream)?$") && method == "GET"
@@ -41,7 +43,10 @@ public sealed partial class BridgeLocalHandler
             || System.Text.RegularExpressions.Regex.IsMatch(api,"^tasks/[A-Za-z0-9_-]{1,128}/actions/(install|build|ensure-venv)$") && method == "POST"
             || api.StartsWith("operations/") && method == "GET";
         if (!allowed) { ctx.Response.StatusCode = 404; return; }
-        await _client.CheckAsync(id, CancellationToken.None);
+        var info = await _client.CheckAsync(id, CancellationToken.None);
+        if (api == "files/hashes" && (!info.TryGetProperty("capabilities", out var capabilities) ||
+            !capabilities.EnumerateArray().Any(c => c.GetString() == "file-hashes")))
+            throw new ArgumentException("Update the server Cronopus: file-hashes capability is required");
         HttpContent? body = method == "GET" ? null : new StringContent((await Body(ctx)).GetRawText(), Encoding.UTF8, "application/json");
         using var response = await _client.SendAsync(id, new HttpMethod(method), "/bridge/v1/" + api + ctx.Request.Url!.Query, body, CancellationToken.None,ctx.Request.Headers["X-Request-ID"]);
         ctx.Response.StatusCode = (int)response.StatusCode;

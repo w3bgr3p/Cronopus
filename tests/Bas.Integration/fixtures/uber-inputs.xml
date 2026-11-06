@@ -1,0 +1,163 @@
+<?xml version='1.0' encoding='utf-8'?>
+<BrowserAutomationStudioProject><EngineVersion>31.1.0</EngineVersion><Script>fixture only; never execute</Script><ModelList><Model>
+               <Name>DiagLog</Name>
+               <Description ru="diag log" en="diag log" />
+               <SectionName ru="" en="" />
+               <HintVisible>1</HintVisible>
+               <Hint ru="false: только важные сообщения. true: дополнительно все BAS DIAG." en="false: key messages only. true: include all BAS DIAG messages." />
+               <VisibilityConditionValue />
+               <VisibilityConditionVariable />
+               <Type>Select</Type>
+               <IsAdvanced>0</IsAdvanced>
+               <Visible>1</Visible>
+               <Enabled>1</Enabled>
+               <AllowedTypes>Select</AllowedTypes>
+               <Values>false
+true</Values>
+               <Selected>0</Selected>
+               <SelectType>0</SelectType>
+          </Model>
+          
+<Defaults /><Model>
+               <Name>Mode</Name>
+               <Description ru="Service" en="Service" />
+               <SectionName ru="" en="" />
+               <HintVisible>1</HintVisible>
+               <Hint ru="Uber registration up to the SMS code and its confirmation." en="Uber registration up to the SMS code and its confirmation." />
+               <VisibilityConditionValue />
+               <VisibilityConditionVariable />
+               <Type>Select</Type>
+               <IsAdvanced>0</IsAdvanced>
+               <Visible>0</Visible>
+               <Enabled>1</Enabled>
+               <AllowedTypes>Select</AllowedTypes>
+               <Values>Uber</Values>
+               <Selected>0</Selected>
+               <SelectType>0</SelectType>
+          </Model>
+          <Defaults /><Model>
+               <Name>BuildVersion</Name>
+               <Description ru="Версия скрипта" en="Версия скрипта" />
+               <SectionName ru="" en="" />
+               <HintVisible>1</HintVisible>
+               <Hint ru="Та же версия выводится в начале журнала каждого запуска." en="Та же версия выводится в начале журнала каждого запуска." />
+               <VisibilityConditionValue />
+               <VisibilityConditionVariable />
+               <Type>FixedString</Type>
+               <IsAdvanced>0</IsAdvanced>
+               <Visible>0</Visible>
+               <Enabled>0</Enabled>
+               <AllowedTypes>FixedString</AllowedTypes>
+               <Value>1.0.0</Value>
+               <NotEmpty>0</NotEmpty>
+               <MultiLine>0</MultiLine>
+               <Rows>0</Rows>
+          </Model>
+          <Defaults /><Model>
+               <Name>ServiceInfo_Uber_MailProvider</Name>
+               <Description ru="Почта" en="Почта" />
+               <SectionName ru="" en="" />
+               <HintVisible>0</HintVisible>
+               <Hint ru="" en="" />
+               <VisibilityConditionValue>Uber</VisibilityConditionValue>
+               <VisibilityConditionVariable>Mode</VisibilityConditionVariable>
+               <Type>FixedString</Type>
+               <IsAdvanced>0</IsAdvanced>
+               <Visible>0</Visible>
+               <Enabled>0</Enabled>
+               <AllowedTypes>FixedString</AllowedTypes>
+               <Value>Simail/APMW</Value>
+               <NotEmpty>0</NotEmpty>
+               <MultiLine>0</MultiLine>
+               <Rows>1</Rows>
+          </Model>
+          <Defaults /><Model>
+               <Name>UberService</Name>
+               <Description ru="Simroute service code" en="Simroute service code" />
+               <SectionName ru="" en="" />
+               <HintVisible>1</HintVisible>
+               <Hint ru="ub for production; ot for the test pool." en="ub for production; ot for the test pool." />
+               <VisibilityConditionValue />
+               <VisibilityConditionVariable />
+               <Type>FixedString</Type>
+               <IsAdvanced>0</IsAdvanced>
+               <Visible>1</Visible>
+               <Enabled>1</Enabled>
+               <AllowedTypes>FixedString</AllowedTypes>
+               <Value>ub</Value>
+               <NotEmpty>0</NotEmpty>
+               <MultiLine>0</MultiLine>
+               <Rows>1</Rows>
+          </Model>
+          <Defaults /><Model>
+               <Name>UberCountry</Name>
+               <Description ru="number ISO; default proxy ISO" en="number ISO; default proxy ISO" />
+               <SectionName ru="" en="" />
+               <HintVisible>1</HintVisible>
+               <Hint ru="Two-letter ISO of the number country, e.g. za. Also used in the first URL www.uber.com/&lt;iso&gt;/en/." en="Two-letter ISO of the number country, e.g. za. Also used in the first URL www.uber.com/&lt;iso&gt;/en/." />
+               <VisibilityConditionValue />
+               <VisibilityConditionVariable />
+               <Type>FixedString</Type>
+               <IsAdvanced>0</IsAdvanced>
+               <Visible>1</Visible>
+               <Enabled>1</Enabled>
+               <AllowedTypes>FixedString</AllowedTypes>
+               <Value>za</Value>
+               <NotEmpty>0</NotEmpty>
+               <MultiLine>0</MultiLine>
+               <Rows>1</Rows>
+          </Model>
+          <Defaults /><Model>
+               <Name>UberProxyCountry</Name>
+               <Description ru="override proxy ISO" en="override proxy ISO" />
+               <SectionName ru="" en="" />
+               <HintVisible>1</HintVisible>
+               <Hint ru="Empty = proxy country is the number country." en="Empty = proxy country is the number country." />
+               <VisibilityConditionValue />
+               <VisibilityConditionVariable />
+               <Type>FixedString</Type>
+               <IsAdvanced>0</IsAdvanced>
+               <Visible>1</Visible>
+               <Enabled>1</Enabled>
+               <AllowedTypes>FixedString</AllowedTypes>
+               <Value />
+               <NotEmpty>0</NotEmpty>
+               <MultiLine>0</MultiLine>
+               <Rows>1</Rows>
+          </Model>
+          <Defaults /><Model>
+               <Name>UberProvider</Name>
+               <Description ru="Simroute provider ID of the number; empty = not selected" en="Simroute provider ID of the number; empty = not selected" />
+               <SectionName ru="" en="" />
+               <HintVisible>1</HintVisible>
+               <Hint ru="Empty = provider not selected." en="Empty = provider not selected." />
+               <VisibilityConditionValue />
+               <VisibilityConditionVariable />
+               <Type>FixedString</Type>
+               <IsAdvanced>0</IsAdvanced>
+               <Visible>1</Visible>
+               <Enabled>1</Enabled>
+               <AllowedTypes>FixedString</AllowedTypes>
+               <Value />
+               <NotEmpty>0</NotEmpty>
+               <MultiLine>0</MultiLine>
+               <Rows>1</Rows>
+          </Model>
+          <Defaults /><Model>
+               <Name>Thread</Name>
+               <Description ru="Threads" en="Threads" />
+               <SectionName ru="" en="" />
+               <HintVisible>1</HintVisible>
+               <Hint ru="" en="" />
+               <VisibilityConditionValue />
+               <VisibilityConditionVariable />
+               <Type>FixedInteger</Type>
+               <IsAdvanced>0</IsAdvanced>
+               <Visible>1</Visible>
+               <Enabled>1</Enabled>
+               <AllowedTypes>FixedInteger</AllowedTypes>
+               <Value>1</Value>
+               <MinValue>1</MinValue>
+               <MaxValue>100</MaxValue>
+          </Model>
+          <Defaults /></ModelList></BrowserAutomationStudioProject>
